@@ -395,11 +395,14 @@ class AcquisitionObject:
           self._has_processor = False
           return
 
+      with self._file_lock:
+        if self._file is not None:
+          self.save(data)
+
       # buffer the current data
       self.results = results
 
   def rmdir(self, path):
-    # print('rming from acq obj') #TODO: are we using this? if not get rid of it
     for root, dirs, files in os.walk(path, topdown=False):
       for name in files:
         os.remove(os.path.join(root, name))

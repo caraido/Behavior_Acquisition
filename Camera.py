@@ -67,6 +67,7 @@ class Camera(AcquisitionObject):
       # TODO: is there a better to handle recording during calibration?
       if process['mode']=='extrinsic':
         path = os.path.join(TEMP_PATH,'config_extrinsic_%s_temp.MOV'%self.device_serial_number)
+        # temporarily save recorded video to path
         self.file = path
 
       return process
@@ -108,8 +109,6 @@ class Camera(AcquisitionObject):
 
     elif process['mode']=='extrinsic':
       result = process['calibrator'].ex_calibrate(data, data_count)
-      # save temp data to .MOV
-      self._file.stdin.write(data.tobytes())
       return result, None
 
   def capture(self, data):

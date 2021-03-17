@@ -72,7 +72,7 @@ def detect_aruco(gray, intrinsics, board):
 	params = cv2.aruco.DetectorParameters_create()
 	params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
 	params.adaptiveThreshWinSizeMin = 100
-	params.adaptiveThreshWinSizeMax = 600
+	params.adaptiveThreshWinSizeMax = 700
 	params.adaptiveThreshWinSizeStep = 50
 	params.adaptiveThreshConstant = 5
 

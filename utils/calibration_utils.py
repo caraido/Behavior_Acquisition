@@ -350,6 +350,7 @@ class Calib:
       self.type = calib_type
       self.x = 3
       self.y = 5
+
     else:
       raise ValueError("wrong type!")
 

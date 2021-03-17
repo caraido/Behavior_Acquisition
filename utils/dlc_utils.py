@@ -4,37 +4,54 @@ from utils.geometry_utils import Gaze_angle
 
 
 def dlc_analysis(root_path, dlc_config_path):
-	processed_path = os.path.join(root_path, 'processed')
-	config_path = os.path.join(root_path,'config')
-	things = os.listdir(processed_path)
-	movie = [a for a in things if '.MOV' in a and '17391304']
-	if len(movie)==0:
-		things=os.listdir(root_path)
-		movie= [a for a in things if '.MOV' in a and '17391304']
-		print("didn't find the processed videos. Analyzing on the raw video")
-	movie_path = os.path.join(processed_path, movie[0])
+	if dlc_config_path is list:
+		top_config = dlc_config_path[0]
+		side_config = dlc_config_path[1]
+		processed_path = os.path.join(root_path, 'processed')
+		config_path = os.path.join(root_path,'config')
+		things = os.listdir(processed_path)
 
-	deeplabcut.analyze_videos(dlc_config_path,
-							  [movie_path],
-							  save_as_csv=True,
-							  videotype='mov',
-							  shuffle=1,
-							  gputouse=0)
-	deeplabcut.create_labeled_video(dlc_config_path,
-									[movie_path],
-									save_frames=False,
-									trailpoints=5,
-									videotype='mov',
-									draw_skeleton='True')
+		top = [a for a in things if '.MOV' in a and '17391304' in a]
+		top_path = [os.path.join(processed_path, top[i]) for i in range(len(top))]
+		side = [a for a in things if '.MOV' in a and '17391304' not in a]
+		side_path = [os.path.join(processed_path, side[i]) for i in range(len(side))]
 
-	gaze_model =Gaze_angle(config_path)
-	gaze_model.gazePoint=0.5725
-	bino=gaze_model(processed_path,save=True)
-	gaze_model.gazePoint=0
-	mono=gaze_model(processed_path,save=True)
+		# top camera
+		deeplabcut.analyze_videos(top_config,
+								  top_path,
+								  save_as_csv=True,
+								  videotype='mov',
+								  shuffle=1,
+								  gputouse=0)
+		deeplabcut.create_labeled_video(top_config,
+										top_path,
+										save_frames=False,
+										trailpoints=1,
+										videotype='mov',
+										draw_skeleton='True')
+		# side cameras
+		deeplabcut.analyze_videos(side_config,
+								  side_path,
+								  save_as_csv=True,
+								  videotype='mov',
+								  shuffle=1,
+								  gputouse=0)
+		deeplabcut.create_labeled_video(side_config,
+										side_path,
+										save_frames=False,
+										trailpoints=1,
+										videotype='mov',
+										draw_skeleton='True')
 
-	gaze_model.plot(bino)
-	gaze_model.plot(mono)
+		# gaze analysis on top camera
+		gaze_model =Gaze_angle(config_path)
+		gaze_model.gazePoint=0.5725
+		bino=gaze_model(processed_path,cutoff=0.6,save=True)
+		gaze_model.gazePoint=0
+		mono=gaze_model(processed_path,cutoff=0.6,save=True)
+
+		gaze_model.plot(bino)
+		gaze_model.plot(mono)
 
 
 

@@ -30,7 +30,7 @@
 # delete SSD folder
 
 from utils.path_operation_utils import copy_config, global_config_path
-from utils.calibration_utils import undistort_videos, undistort_markers, Calib, TOP_CAM
+from utils.calibration_utils import undistort_videos,  Calib, TOP_CAM
 from utils.dlc_utils import dlc_analysis
 from utils.geometry_utils import find_board_center_and_windows
 import os
@@ -41,7 +41,12 @@ import toml
 import time
 from utils.calibration_3d_utils import get_extrinsics
 
-model_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\config.yaml'
+
+# top camera dlc config
+top_config  = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\config.yaml'
+# side camera dlc config
+side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras-Devon-2021-03-10\config.yaml'
+dlc_path = [top_config,side_config]
 HDD_path = r'E:\behavior_data_archive'
 
 
@@ -55,7 +60,7 @@ class ProcessingGroup:
 		self.al_calib = Calib('alignment')
 		self.ex_calib = Calib('extrinsic')
 
-	def __call__(self, rootpath, dlcpath=model_path):
+	def __call__(self, rootpath, dlcpath=dlc_path):
 		self.dlcpath = dlcpath
 		self.rootpath = rootpath
 		self.processpath = os.path.join(self.rootpath, 'processed')  # make it a property
@@ -155,6 +160,7 @@ class ProcessingGroup:
 		video_list = []
 		board = self.ex_calib.board
 
+
 		for item in items:
 			if 'intrinsic' in item and 'temp' not in item:
 				intrinsic_path = os.path.join(self.global_config_path, item)
@@ -216,7 +222,7 @@ class ProcessingGroup:
 				toml.dump(results, f, encoder=toml.TomlNumpyEncoder())
 
 	def dlc_analysis(self):
-		# dlc anlysis on TOP CAMERA only
+		# dlc anlysis on both top and side cameras
 		dlc_analysis(self.rootpath, self.dlcpath)
 
 	def dsqk_analysis(self):
@@ -248,6 +254,19 @@ if __name__ == '__main__':
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
 
+	item=r'2021-03-09_h5-2053'
+	path = os.path.join(working_dir,item)
+	pg(path)
+	pg.post_process(intrinsic=False,
+						alignment=False,
+						extrinsic=True,
+						undistort=False,
+						copy=True,
+						dlc=False,
+						dsqk=False,
+						server=False,
+						HDD=False)
+	'''
 	for item in tqdm.tqdm(items):
 		path = os.path.join(working_dir,item)
 		pg(path)
@@ -260,3 +279,4 @@ if __name__ == '__main__':
 						dsqk=False,
 						server=False,
 						HDD=False)
+	'''
