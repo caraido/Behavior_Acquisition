@@ -46,6 +46,7 @@ from utils.calibration_3d_utils import get_extrinsics
 top_config  = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\config.yaml'
 # side camera dlc config
 side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras-Devon-2021-03-10\config.yaml'
+side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras_distorted-Devon-2021-03-17\config.yaml'
 dlc_path = [top_config,side_config]
 HDD_path = r'E:\behavior_data_archive'
 
@@ -257,11 +258,11 @@ if __name__ == '__main__':
 	item=r'2021-03-09_h5-2053'
 	path = os.path.join(working_dir,item)
 	pg(path)
-	pg.post_process(intrinsic=False,
+	pg.post_process(intrinsic=True,
 						alignment=False,
-						extrinsic=True,
+						extrinsic=False,
 						undistort=False,
-						copy=True,
+						copy=False,
 						dlc=False,
 						dsqk=False,
 						server=False,

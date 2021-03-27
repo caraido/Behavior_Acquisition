@@ -98,7 +98,7 @@ def reformat(ids):
   return np.array(new_ids)
 
 
-def trim_corners(allCorners, allIds,allCornersWorld, maxBoards=85):
+def trim_corners(allCorners, allIds, maxBoards=85):
   '''
   only take "maxBoard" number of optimal allCorners
   '''
@@ -107,23 +107,24 @@ def trim_corners(allCorners, allIds,allCornersWorld, maxBoards=85):
   sufficient_corners = np.greater_equal(counts, 6)
   sort = -counts + np.random.random(size=counts.shape) / 10
   subs = np.argsort(sort)[:maxBoards]
-  allCorners = [allCorners[ix] for ix in subs if sufficient_corners[ix]]
-  allIds = [allIds[ix] for ix in subs if sufficient_corners[ix]]
-  allCornersWorld = [allCornersWorld[ix] for ix in subs if sufficient_corners[ix]]
-  return allCorners, allIds,allCornersWorld
+  allCorners = [np.array(allCorners[ix]).astype('float32') for ix in subs if sufficient_corners[ix]]
+  allIds = [np.array(allIds[ix]).astype(int) for ix in subs if sufficient_corners[ix]]
+  #allIds=transform_ids(allIds)
+  #allCornersWorld = [allCornersWorld[ix] for ix in subs if sufficient_corners[ix]]
+  return allCorners, allIds#,allCornersWorld
 
 
-def reformat_corners(allCorners, allIds,allCornersWorld):
+def reformat_corners(allCorners, allIds):
   markerCounter = np.array([len(cs) for cs in allCorners])
   allCornersConcat = itertools.chain.from_iterable(allCorners)
   allIdsConcat = itertools.chain.from_iterable(allIds)
-  allCornersWorldConcat = itertools.chain.from_iterable(allCornersWorld)
+  #allCornersWorldConcat = itertools.chain.from_iterable(allCornersWorld)
 
   allCornersConcat = np.array(list(allCornersConcat))
-  allIdsConcat = np.array(list(allIdsConcat))
-  allCornersWorldConcat = np.array(list(allCornersWorldConcat))
+  allIdsConcat = np.array(list(allIdsConcat)).astype(int)
+  #allCornersWorldConcat = np.array(list(allCornersWorldConcat))
 
-  return allCornersConcat, allIdsConcat, allCornersWorldConcat,markerCounter
+  return allCornersConcat, allIdsConcat,markerCounter
 
 
 def quick_calibrate_charuco(allCorners, allIds, board, width, height):
@@ -144,8 +145,8 @@ def quick_calibrate_charuco(allCorners, allIds, board, width, height):
   calib_flags4 = cv2.CALIB_RATIONAL_MODEL
 
   error, cameraMat, distCoeffs, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
-      allCorners, allIds, board,
-      dim, cameraMat, distCoeffs,
+      charucoCorners=allCorners, charucoIds=allIds, board=board,
+      imageSize=dim, cameraMatrix=cameraMat, distCoeffs=distCoeffs,
       flags=calib_flags4)
 
   tend = time.time()
@@ -157,6 +158,8 @@ def quick_calibrate_charuco(allCorners, allIds, board, width, height):
   out['error'] = error
   out['camera_mat'] = cameraMat.tolist()
   out['dist_coeff'] = distCoeffs.tolist()
+  out['rvec']=rvecs
+  out['tvec']=tvecs
   out['width'] = width
   out['height'] = height
 
@@ -197,21 +200,23 @@ def quick_calibrate_fisheye(someCorners,width,height):
     out['error'] = error
     out['camera_mat'] = cameraMat.tolist()
     out['dist_coeff'] = distCoeffs.tolist()
+    out['rvec']=rvecs
+    out['tvec']=tvecs
     out['width'] = width
     out['height'] = height
     return out
 
 
-def quick_calibrate(someCorners, someIds, cornersWorld,board, width, height):
+def quick_calibrate(someCorners, someIds,board, width, height):
   allCorners = []
   allIds = []
 
   allCorners.extend(someCorners)
   allIds.extend(someIds)
 
-  allCorners, allIds,allCornersWorld = trim_corners(allCorners, allIds, cornersWorld, maxBoards=100)
-  allCornersConcat, allIdsConcat, allcornersWorldConcat,markerCounter = reformat_corners(
-      allCorners, allIds,allCornersWorld)
+  allCorners, allIds = trim_corners(allCorners, allIds, maxBoards=100)
+  allCornersConcat, allIdsConcat,markerCounter = reformat_corners(
+      allCorners, allIds)
 
   expected_markers = get_expected_corners(board)+1
 

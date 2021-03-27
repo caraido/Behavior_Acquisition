@@ -176,7 +176,8 @@ class Camera(AcquisitionObject):
                       cv2.FONT_HERSHEY_PLAIN, 4.0, (255, 0, 125), 2)
 
           if str(self.device_serial_number) != str(TOP_CAM) and process['mode']=='intrinsic':
-            cv2.drawChessboardCorners(frame, (process['calibrator'].x,process['calibrator'].y), results['corners'], results['ret'])
+            if 'calibrator' in process.keys():
+              cv2.drawChessboardCorners(frame, (process['calibrator'].x,process['calibrator'].y), results['corners'], results['ret'])
           else:
             if len(results['corners']) != 0:
               cv2.aruco.drawDetectedMarkers(
