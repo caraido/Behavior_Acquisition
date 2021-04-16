@@ -206,7 +206,7 @@ class Camera(AcquisitionObject):
               text = 'Missing board or intrinsic calibration file'
               cv2.putText(frame, text, (500, 1000),
                           cv2.FONT_HERSHEY_PLAIN, 2.0, (255, 0, 255), 2)
-    return frame
+    return frame #gets drawn to screen
 
 #  def end_run(self):
 #    if self.file:
