@@ -13,8 +13,9 @@ import os
 FRAME_TIMEOUT = 100  # time in milliseconds to wait for pyspin to retrieve the frame
 DLC_RESIZE = 0.6  # resize the frame by this factor for DLC
 DLC_UPDATE_EACH = 3  # frame interval for DLC update
-TOP_CAM='17391304'
+TOP_CAM = '17391304'
 TEMP_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
+
 
 class Camera(AcquisitionObject):
 
@@ -25,6 +26,7 @@ class Camera(AcquisitionObject):
 
     # hardware triggering
     self._spincam.AcquisitionMode.SetValue(PySpin.AcquisitionMode_Continuous)
+    # self._spincam.AcquisitionMode.SetValue(PySpin.AcquisitionMode_SingleFrame)
     # trigger has to be off to change source
     self._spincam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
     self._spincam.TriggerSource.SetValue(PySpin.TriggerSource_Line0)
@@ -65,8 +67,9 @@ class Camera(AcquisitionObject):
       process['calibrator'] = Calib(options['mode'])
       process['calibrator'].load_in_config(self.device_serial_number)
       # TODO: is there a better to handle recording during calibration?
-      if process['mode']=='extrinsic':
-        path = os.path.join(TEMP_PATH,'config_extrinsic_%s_temp.MOV'%self.device_serial_number)
+      if process['mode'] == 'extrinsic':
+        path = os.path.join(
+            TEMP_PATH, 'config_extrinsic_%s_temp.MOV' % self.device_serial_number)
         # temporarily save recorded video to path
         self.file = path
 
@@ -100,14 +103,15 @@ class Camera(AcquisitionObject):
       else:
         return process['DLCLive'].get_pose(data), None
     elif process['mode'] == 'intrinsic':
-      result = process['calibrator'].in_calibrate(data, data_count,self.device_serial_number)
+      result = process['calibrator'].in_calibrate(
+          data, data_count, self.device_serial_number)
       return result, None
 
     elif process['mode'] == 'alignment':
       result = process['calibrator'].al_calibrate(data, data_count)
       return result, None
 
-    elif process['mode']=='extrinsic':
+    elif process['mode'] == 'extrinsic':
       result = process['calibrator'].ex_calibrate(data, data_count)
       return result, None
 
@@ -116,9 +120,14 @@ class Camera(AcquisitionObject):
       # get the image from spinview
       try:
         im = self._spincam.GetNextImage(FRAME_TIMEOUT)
+
       except PySpin.SpinnakerException as e:
         self.print(f'Error in spinnaker: {e}. Assumed innocuous.')
         continue
+
+      # for single frame mode:
+      # self._spincam.EndAcquisition()
+      # self._spincam.BeginAcquisition()
 
       if im.IsIncomplete():
         status = im.GetImageStatus()
@@ -175,9 +184,10 @@ class Camera(AcquisitionObject):
           cv2.putText(frame, f"Performing {process['mode']} calibration", (50, 50),
                       cv2.FONT_HERSHEY_PLAIN, 4.0, (255, 0, 125), 2)
 
-          if str(self.device_serial_number) != str(TOP_CAM) and process['mode']=='intrinsic':
+          if str(self.device_serial_number) != str(TOP_CAM) and process['mode'] == 'intrinsic':
             if 'calibrator' in process.keys():
-              cv2.drawChessboardCorners(frame, (process['calibrator'].x,process['calibrator'].y), results['corners'], results['ret'])
+              cv2.drawChessboardCorners(
+                  frame, (process['calibrator'].x, process['calibrator'].y), results['corners'], results['ret'])
           else:
             if len(results['corners']) != 0:
               cv2.aruco.drawDetectedMarkers(
@@ -195,7 +205,7 @@ class Camera(AcquisitionObject):
             if results['ids'] is None:
               text = 'Missing board or intrinsic calibration file'
               cv2.putText(frame, text, (500, 1000),
-                        cv2.FONT_HERSHEY_PLAIN, 2.0, (255, 0, 255), 2)
+                          cv2.FONT_HERSHEY_PLAIN, 2.0, (255, 0, 255), 2)
     return frame
 
 #  def end_run(self):
