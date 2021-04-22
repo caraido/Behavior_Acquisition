@@ -32,11 +32,43 @@ class Camera(AcquisitionObject):
 
     self.device_serial_number, self.height, self.width = self.get_camera_properties()
 
+    # set the buffer
+    self.set_buffer(nbuffer_frame=2000)
+
     AcquisitionObject.__init__(
         self, parent, frame_rate, (self.width, self.height), address)
     self.is_top = True if self.device_serial_number == TOP_CAM else False
 
+    self.save_count=0
+    self.capture_count=0
+    self.diplay_count = 0
+
   # TODO: make sure this step should be in prepare_display or prepare_run
+
+  def set_buffer(self,nbuffer_frame=10): #default is 10
+    ## use this to handle buffer. Example in BufferHandling.py in PySpin api
+    # Retrieve Buffer Handling Mode Information
+    nodemap_tlstream = self._spincam.GetTLStreamNodeMap()
+    handling_mode = PySpin.CEnumerationPtr(nodemap_tlstream.GetNode('StreamBufferHandlingMode'))
+    handling_mode_entry = PySpin.CEnumEntryPtr(handling_mode.GetCurrentEntry())
+
+    # Set stream buffer Count Mode to manual
+    stream_buffer_count_mode = PySpin.CEnumerationPtr(nodemap_tlstream.GetNode('StreamBufferCountMode'))
+    stream_buffer_count_mode_manual = PySpin.CEnumEntryPtr(stream_buffer_count_mode.GetEntryByName('Manual'))
+    stream_buffer_count_mode.SetIntValue(stream_buffer_count_mode_manual.GetValue())
+    print('Stream Buffer Count Mode set to manual...')
+
+    # Retrieve and modify Stream Buffer Count
+    buffer_count = PySpin.CIntegerPtr(nodemap_tlstream.GetNode('StreamBufferCountManual'))
+
+    # Display Buffer Info
+    print('Default Buffer Handling Mode: %s' % handling_mode_entry.GetDisplayName())
+    print('Default Buffer Count: %d' % buffer_count.GetValue())
+    print('Maximum Buffer Count: %d' % buffer_count.GetMax())
+
+    buffer_count.SetValue(nbuffer_frame)
+
+    print('Buffer count now set to: %d' % buffer_count.GetValue())
 
   def prepare_run(self):  # TODO: prepare_run?
     self._spincam.BeginAcquisition()
@@ -65,10 +97,10 @@ class Camera(AcquisitionObject):
       process['calibrator'] = Calib(options['mode'])
       process['calibrator'].load_in_config(self.device_serial_number)
       # TODO: is there a better to handle recording during calibration?
-      if process['mode']=='extrinsic':
-        path = os.path.join(TEMP_PATH,'config_extrinsic_%s_temp.MOV'%self.device_serial_number)
+      #if process['mode']=='extrinsic':
+      #  path = os.path.join(TEMP_PATH,'config_extrinsic_%s_temp.MOV'%self.device_serial_number)
         # temporarily save recorded video to path
-        self.file = path
+      #  self.file = path
 
       return process
       # process['calibrator'].root_config_path= self.file # does this return the file path?
@@ -111,7 +143,14 @@ class Camera(AcquisitionObject):
       result = process['calibrator'].ex_calibrate(data, data_count)
       return result, None
 
+  def display(self):
+    self.diplay_count += 1
+    print("calling 'display()' method for camera serial number %s for %d time(s)"%(str(self.device_serial_number),self.diplay_count))
+    AcquisitionObject.display(self)
+
   def capture(self, data):
+    self.capture_count+=1
+    print("calling 'capture()' method for camera serial number %s for %d time(s)" %(str(self.device_serial_number),self.capture_count))
     while True:
       # get the image from spinview
       try:
@@ -126,6 +165,7 @@ class Camera(AcquisitionObject):
         raise Exception(f"Image incomplete with image status {status} ...")
       data = im.GetNDArray()
       im.Release()
+
       yield data
 
   def open_file(self, filepath):
@@ -145,6 +185,8 @@ class Camera(AcquisitionObject):
     del fileObj
 
   def save(self, data):
+    self.save_count+=1
+    print("calling 'save()' method for camera serial number %s for %d time(s)"%(str(self.device_serial_number),self.save_count))
     self._file.stdin.write(data.tobytes())
 
   def get_camera_properties(self):
@@ -160,6 +202,7 @@ class Camera(AcquisitionObject):
     # TODO: still get frame as input? but should return some kind of dictionary? or array?
     # TODO: where does this get called from?
     # TODO: make sure text is not overlapping
+
     process = self.processing
     #######
     # data_count = self.data_count

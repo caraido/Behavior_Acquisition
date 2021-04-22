@@ -32,9 +32,10 @@
 from utils.path_operation_utils import copy_config, global_config_path
 from utils.calibration_utils import undistort_videos,  Calib, TOP_CAM
 from utils.dlc_utils import dlc_analysis
-from utils.geometry_utils import find_board_center_and_windows
+from utils.geometry_utils import find_board_center_and_windows,Gaze_angle
 import os
 import numpy as np
+import warnings
 
 import shutil
 import toml
@@ -45,7 +46,7 @@ from utils.calibration_3d_utils import get_extrinsics
 # top camera dlc config
 top_config  = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\config.yaml'
 # side camera dlc config
-side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras-Devon-2021-03-10\config.yaml'
+#side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras-Devon-2021-03-10\config.yaml'
 side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras_distorted-Devon-2021-03-17\config.yaml'
 dlc_path = [top_config,side_config]
 HDD_path = r'E:\behavior_data_archive'
@@ -61,7 +62,9 @@ class ProcessingGroup:
 		self.al_calib = Calib('alignment')
 		self.ex_calib = Calib('extrinsic')
 
-	def __call__(self, rootpath, dlcpath=dlc_path):
+	def __call__(self, rootpath, dlcpath=None):
+		if dlcpath is None:
+			dlcpath = dlc_path
 		self.dlcpath = dlcpath
 		self.rootpath = rootpath
 		self.processpath = os.path.join(self.rootpath, 'processed')  # make it a property
@@ -104,6 +107,7 @@ class ProcessingGroup:
 					 undistort=True,
 					 copy=True,
 					 dlc=True,
+					 gaze=True,
 					 dsqk=True,
 					 server=True,
 					 HDD=True):
@@ -131,6 +135,8 @@ class ProcessingGroup:
 			self.dsqk_analysis()
 		if dlc:
 			self.dlc_analysis()
+		if gaze:
+			self.gaze_analysis()
 		if server:
 			self.SSD2server()
 		if HDD:
@@ -226,6 +232,22 @@ class ProcessingGroup:
 		# dlc anlysis on both top and side cameras
 		dlc_analysis(self.rootpath, self.dlcpath)
 
+	def gaze_analysis(self):
+		# gaze analysis on top camera
+
+		warnings.filterwarnings('ignore') # ignore warning
+		gaze_model = Gaze_angle(self.config_path)
+
+		# binocular gaze
+		gaze_model.gazePoint = 0.5725
+		bino = gaze_model(self.rootpath, cutoff=0.6, save=True)
+		gaze_model.plot(bino, savepath=self.rootpath)
+
+		# monocular gaze
+		gaze_model.gazePoint = 0
+		mono = gaze_model(self.rootpath, cutoff=0.6, save=True)
+		gaze_model.plot(mono,savepath=self.rootpath)
+
 	def dsqk_analysis(self):
 		pass
 
@@ -255,15 +277,16 @@ if __name__ == '__main__':
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
 
-	item=r'2021-03-09_h5-2053'
+	item=r'2021-03-23_T1-2045'
 	path = os.path.join(working_dir,item)
 	pg(path)
-	pg.post_process(intrinsic=True,
+	pg.post_process(intrinsic=False,
 						alignment=False,
-						extrinsic=False,
+						extrinsic=True,
 						undistort=False,
 						copy=False,
 						dlc=False,
+						gaze=False,
 						dsqk=False,
 						server=False,
 						HDD=False)
@@ -273,10 +296,11 @@ if __name__ == '__main__':
 		pg(path)
 		pg.post_process(intrinsic=False,
 						alignment=False,
-						extrinsic=False,
-						undistort=True,
-						copy=True,
+						extrinsic=True,
+						undistort=False,
+						copy=False,
 						dlc=False,
+						gaze=False,
 						dsqk=False,
 						server=False,
 						HDD=False)

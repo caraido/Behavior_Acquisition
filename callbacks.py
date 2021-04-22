@@ -74,7 +74,18 @@ def initCallbacks(ag, status):
       cam_num=ag.camera_order.index(cam_id)
       type = state['calibration type']
       process={'mode':type}
-      ag.process(cam_num,options=process)
+      # extrinsic calibration will trigger saving temp video to config path
+      if type=='extrinsic':
+        camera_list = []
+        for i in range(ag.nCameras):
+          camera_list.append(ag.cameras[i].device_serial_number)
+        config_filepaths=pop.get_extrinsic_path(camera=camera_list)
+        ag.stop()
+        ag.start(filepaths=config_filepaths)
+        ag.process(cam_num, options=process)
+        #ag.run()
+      else:
+        ag.process(cam_num,options=process)
 
       status['initialization'].immutable()
 

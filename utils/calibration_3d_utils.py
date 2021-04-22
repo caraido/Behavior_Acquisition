@@ -113,10 +113,15 @@ def estimate_pose_aruco(gray, intrinsics, board):
 
 	INTRINSICS_K = np.array(intrinsics['camera_mat'])
 	INTRINSICS_D = np.array(intrinsics['dist_coeff'])
-
-	ret, rvec, tvec = cv2.aruco.estimatePoseCharucoBoard(
-		detectedCorners, detectedIds, board, INTRINSICS_K, INTRINSICS_D,
-		rvec=np.array([]), tvec=np.array([]), useExtrinsicGuess=False)
+	if len(INTRINSICS_D)==4:
+		undistortedCorners=cv2.fisheye.undistortPoints(detectedCorners,INTRINSICS_K,INTRINSICS_D)
+		ret,rvec,tvec= cv2.aruco.estimatePoseCharucoBoard(undistortedCorners,detectedIds,board,cameraMatrix=np.eye(3),
+														  distCoeffs=np.zeros([5]),rvec=np.array([]),tvec=np.array([]),useExtrinsicGuess=False)
+	else:
+		undistortedCorners=cv2.undistortPoints(detectedCorners,INTRINSICS_K,INTRINSICS_D)
+		ret, rvec, tvec = cv2.aruco.estimatePoseCharucoBoard(
+			undistortedCorners, detectedIds, board, cameraMatrix=np.eye(3), distCoeffs=np.zeros([5]),
+			rvec=np.array([]), tvec=np.array([]), useExtrinsicGuess=False)
 
 	if not ret or rvec is None or tvec is None:
 		return False, None
@@ -204,7 +209,7 @@ def mean_transform_robust(M_list, approx=None, error=0.3):
 	return mean_transform(M_list_robust)
 
 
-def get_matrices(vid_indices, videos, intrinsics_dict, board, skip=40):
+def get_matrices(vid_indices, videos, intrinsics_dict, board, skip=80):
 	minlen = np.inf
 	caps = dict()
 	for vid_idx, vid in zip(vid_indices, videos):
@@ -570,8 +575,11 @@ def bundle_adjust(all_points, vid_indices, cam_mats, loss='linear'):
 	return extrinsics_new
 
 
-def get_extrinsics(vid_indices, videos, intrinsics_dict, cam_align, board, skip=40):
+def get_extrinsics(vid_indices, videos, intrinsics_dict, cam_align, board, skip=2):
 	matrix_list, point_list = get_matrices(vid_indices, videos, intrinsics_dict, board, skip=skip)
+	# additional saving (deletable)
+	#path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config\matrix_list.npy'
+	#np.save(path, np.array(matrix_list))
 
 	# pairs = get_all_matrix_pairs(matrix_list, sorted(vid_indices))
 	graph = get_calibration_graph(matrix_list, vid_indices)

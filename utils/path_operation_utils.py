@@ -42,6 +42,12 @@ def change_path_prefix(input_prefix):
 	else:
 		raise NotADirectoryError("The specified path doesn't exist!")
 
+def get_extrinsic_path(camera:list,config_path=global_config_path):
+	path=list(map(lambda x: os.path.join(config_path,'config_extrinsic_%s_temp.MOV'%x),camera))
+	path.append(None)
+	path.append(None)
+	return path
+
 def reformat_filepath(path,name,camera:list):
 	date= time.strftime("%Y-%m-%d_",time.localtime())
 	if path == '':

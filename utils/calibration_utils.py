@@ -259,6 +259,7 @@ class CharucoBoard:
   def __init__(self, x, y, marker_size=0.8,type=None):
     self.x = x
     self.y = y
+    self.square_size = 0.74 ## inch
     self.marker_size = marker_size
     self.default_dictionary = type
     self.cornersWorldWhole=[]
@@ -271,8 +272,8 @@ class CharucoBoard:
   def board(self):
     this_board = cv2.aruco.CharucoBoard_create(self.x,
                                                self.y,
-                                               1,
-                                               self.marker_size,
+                                               self.square_size,
+                                               self.square_size*self.marker_size,
                                                self.dictionary)
     return this_board
 
@@ -294,9 +295,9 @@ class CharucoBoard:
   @default_dictionary.setter
   def default_dictionary(self, type):
     if type == 'intrinsic' or type == 'extrinsic':
-      self._default_dictionary = cv2.aruco.DICT_5X5_50
+      self._default_dictionary = cv2.aruco.DICT_5X5_250
     elif type == 'alignment':
-      self._default_dictionary = cv2.aruco.DICT_4X4_50
+      self._default_dictionary = cv2.aruco.DICT_4X4_250
     else:
       raise ValueError('wrong type')
 
@@ -355,6 +356,8 @@ class Calib:
       self.type = calib_type
       self.x = 3
       self.y = 5
+      #self.x=16
+      #self.y=16
 
     else:
       raise ValueError("wrong type!")

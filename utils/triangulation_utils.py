@@ -7,24 +7,32 @@ from tqdm import trange
 import time
 from scipy.sparse import dok_matrix
 from numba import jit
+from scipy.spatial.transform import Rotation as R
+from collections import defaultdict
+import itertools
 
-THRESHOLD = 0.8
-
-def reprojection_error2(p3d, points2d, camera_mats):
-    proj = np.dot(camera_mats, p3d)
-    proj = proj[:, :2] / proj[:, 2, None]
-    errors = np.linalg.norm(proj - points2d, axis=1)
-    return np.mean(errors)
+THRESHOLD = 0.7
 
 
-def reprojection_error(p3d, p2d,camera_mats):
-    out = np.dot(p3d,camera_mats)
-    out = out[:, :2] / out[:, 2, None]
-    proj = out.reshape(p2d.shape)
-    return p2d - proj
+def project(p3d,in_mat,ex_mat):
+    points=p3d.reshape(-1,1,3)
+    matrix = in_mat['camera_mat']
+    dist = in_mat['dist_coeff']
+    r_matrix = ex_mat[0:3,0:3]
+    tvec = ex_mat[0:3,3]
+    rvec_process =R.from_matrix(r_matrix)
+    rvec = rvec_process.as_rotvec()
+    out,_ =cv2.projectPoints(points,rvec,tvec,
+                             matrix.astype('float64'),
+                             dist.astype('float64'))
+    return out
+
+def reprojection_error(p3d, p2d, in_mat,ex_mat):
+    proj = project(p3d,in_mat,ex_mat).reshape(p2d.shape)
+    return p2d-proj
 
 #@jit(nopython=True, parallel=True, forceobj=True)
-def reproject_error(p3ds, p2ds, camera_mats,mean=False):
+def reproject_error(p3ds, p2ds, in_mats,ex_mats,mean=False):
     """Given an Nx3 array of 3D points and an CxNx2 array of 2D points,
     where N is the number of points and C is the number of cameras,
     this returns an CxNx2 array of errors.
@@ -44,7 +52,9 @@ def reproject_error(p3ds, p2ds, camera_mats,mean=False):
     errors = np.empty((n_cams, n_points, 2))
 
     for n_cams in range(n_cams):
-        errors[n_cams] = reprojection_error(p3ds, p2ds[n_cams],camera_mats=camera_mats[n_cams])
+        errors[n_cams] = reprojection_error(p3ds, p2ds[n_cams],
+                                            in_mat=in_mats[n_cams],
+                                            ex_mat=ex_mats[n_cams])
 
     if mean:
         errors_norm = np.linalg.norm(errors, axis=2)
@@ -62,7 +72,13 @@ def reproject_error(p3ds, p2ds, camera_mats,mean=False):
 
     return errors
 
-'''
+def reprojection_error2(p3d, points2d, camera_mats):
+    p3d=np.concatenate([p3d,np.array([1])])
+    proj = np.dot(camera_mats, p3d)
+    proj = proj[:, :2] / proj[:, 2, None]
+    errors = np.linalg.norm(proj - points2d, axis=1)
+    return np.mean(errors)
+
 def triangulate_points(the_points, cam_mats):
     p3ds = []
     errors = []
@@ -70,13 +86,13 @@ def triangulate_points(the_points, cam_mats):
         points = the_points[ptnum]
         good = ~np.isnan(points[:, 0])
         p3d = triangulate_simple(points[good], cam_mats[good])
-        err = reprojection_error(p3d, points[good], cam_mats[good])
+        err = reprojection_error2(p3d, points[good], cam_mats[good])
         p3ds.append(p3d)
         errors.append(err)
     p3ds = np.array(p3ds)
     errors = np.array(errors)
     return p3ds, errors
-'''
+
 
 def triangulate_simple(points, camera_mats):
     num_cams = len(camera_mats)
@@ -89,8 +105,134 @@ def triangulate_simple(points, camera_mats):
     u, s, vh = np.linalg.svd(A, full_matrices=True)
     p3d = vh[-1]
     p3d = p3d / p3d[3]
-    return p3d
+    return p3d[0:3]
 
+def triangulate(points, cam_mats,progress=False):
+    """Given an CxNx2 array, this returns an Nx3 array of points,
+    where N is the number of points and C is the number of cameras"""
+
+    one_point = False
+    if len(points.shape) == 2:
+        points = points.reshape(-1, 1, 2)
+        one_point = True
+
+
+    n_cams, n_points, _ = points.shape
+
+    out = np.empty((n_points, 3))
+    out[:] = np.nan
+
+    #cam_mats = np.array([cam.get_extrinsics_mat() for cam in self.cameras])
+
+    if progress:
+        iterator = trange(n_points, ncols=70)
+    else:
+        iterator = range(n_points)
+
+    for ip in iterator:
+        subp = points[:, ip, :]
+        good = ~np.isnan(subp[:, 0])
+        if np.sum(good) >= 2:
+            out[ip] = triangulate_simple(subp[good], cam_mats[good])
+
+    if one_point:
+        out = out[0]
+
+    return out
+
+def triangulate_ransac(points, in_mats,ex_mats, min_cams=2, progress=False):
+    """Given an CxNx2 array, this returns an Nx3 array of points,
+    where N is the number of points and C is the number of cameras"""
+
+    n_cams, n_points, _ = points.shape
+
+    points_ransac = points.reshape(n_cams, n_points, 1, 2)
+
+    return triangulate_possible(points_ransac,
+                                     in_mats=in_mats,
+                                     ex_mats=ex_mats,
+                                     min_cams=min_cams,
+                                     progress=progress)
+
+def triangulate_possible(points, in_mats,ex_mats,
+                             min_cams=2, progress=False, threshold=0.5):
+        """Given an CxNxPx2 array, this returns an Nx3 array of points
+        by triangulating all possible points and picking the ones with
+        best reprojection error
+        where:
+        C: number of cameras
+        N: number of points
+        P: number of possible options per point
+        """
+
+        n_cams, n_points, n_possible, _ = points.shape
+
+        cam_nums, point_nums, possible_nums = np.where(
+            ~np.isnan(points[:, :, :, 0]))
+
+        all_iters = defaultdict(dict)
+
+        for cam_num, point_num, possible_num in zip(cam_nums, point_nums,
+                                                    possible_nums):
+            if cam_num not in all_iters[point_num]:
+                all_iters[point_num][cam_num] = []
+            all_iters[point_num][cam_num].append((cam_num, possible_num))
+
+        for point_num in all_iters.keys():
+            for cam_num in all_iters[point_num].keys():
+                all_iters[point_num][cam_num].append(None)
+
+        out = np.full((n_points, 3), np.nan, dtype='float64')
+        picked_vals = np.zeros((n_cams, n_points, n_possible), dtype='bool')
+        errors = np.zeros(n_points, dtype='float64')
+        points_2d = np.full((n_cams, n_points, 2), np.nan, dtype='float64')
+
+        if progress:
+            iterator = trange(n_points, ncols=70)
+        else:
+            iterator = range(n_points)
+
+        for point_ix in iterator:
+            best_point = None
+            best_error = 800
+
+            n_cams_max = len(all_iters[point_ix])
+
+            for picked in itertools.product(*all_iters[point_ix].values()):
+                picked = [p for p in picked if p is not None]
+                if len(picked) < min_cams and len(picked) != n_cams_max:
+                    continue
+
+                cnums = [p[0] for p in picked]
+                xnums = [p[1] for p in picked]
+
+                pts = points[cnums, point_ix, xnums]
+
+                p3d = triangulate(pts, cam_mats=ex_mats[cnums])
+                err = reproject_error(p3d, pts, in_mats=in_mats,ex_mats=ex_mats,mean=True)
+
+                if err < best_error:
+                    best_point = {
+                        'error': err,
+                        'point': p3d[:3],
+                        'points': pts,
+                        'picked': picked,
+                        'joint_ix': point_ix
+                    }
+                    best_error = err
+                    if best_error < threshold:
+                        break
+
+            if best_point is not None:
+                out[point_ix] = best_point['point']
+                picked = best_point['picked']
+                cnums = [p[0] for p in picked]
+                xnums = [p[1] for p in picked]
+                picked_vals[cnums, point_ix, xnums] = True
+                errors[point_ix] = best_point['error']
+                points_2d[cnums, point_ix] = best_point['points']
+
+        return out, picked_vals, points_2d, errors
 
 def distort_points_cams(points, camera_mats):
     out = []
@@ -103,6 +245,7 @@ def distort_points_cams(points, camera_mats):
 
 
 def reprojection_error_und(p3d, points2d, camera_mats, camera_mats_dist):
+    p3d=np.append(p3d,[1])
     proj = np.dot(camera_mats, p3d)
     proj = proj[:, :2] / proj[:, 2, None]
     proj_d = distort_points_cams(proj, camera_mats_dist)
@@ -117,6 +260,18 @@ def get_bp_interested(data: pd.DataFrame):
     head = list(set(head))
     head.remove('bodyparts')
     return head
+
+
+def load_constraints(constraints_names, bodyparts, key='constraints'):
+    #constraints_names = config['triangulation'].get(key, [])
+    bp_index = dict(zip(bodyparts, range(len(bodyparts))))
+    constraints = []
+    for a, b in constraints_names:
+        assert a in bp_index, 'Bodypart {} from constraints not found in list of bodyparts'.format(a)
+        assert b in bp_index, 'Bodypart {} from constraints not found in list of bodyparts'.format(b)
+        con = [bp_index[a], bp_index[b]]
+        constraints.append(con)
+    return constraints
 
 
 def read_single_2d_data(data: pd.DataFrame):
@@ -164,7 +319,8 @@ def undistort_points(all_points_raw, intrinsics: dict,fisheyes:list):
             if isFisheye:
                 points_new = cv2.fisheye.undistortPoints(points.astype('float64'),
                                                          arr(calib['camera_mat']).astype('float64'),
-                                                         arr(calib['dist_coeff']).astype('float64'))
+                                                         arr(calib['dist_coeff']).astype('float64'),
+                                                         )
             else:
                 points_new = cv2.undistortPoints(points.astype('float64'),
                                                  arr(calib['camera_mat']).astype('float64'),
@@ -328,7 +484,7 @@ def _jac_sparsity_triangulation(p2ds,
     return A_sparse
 
 @jit(nopython=True, forceobj=True, parallel=True)
-def _error_fun_triangulation(params, p2ds, cam_mats,
+def _error_fun_triangulation(params, p2ds, in_mats,ex_mats,
                              constraints=None,
                              constraints_weak=None,
                              scores=None,
@@ -356,7 +512,7 @@ def _error_fun_triangulation(params, p2ds, cam_mats,
     # reprojection errors
     p3ds_flat = p3ds.reshape(-1, 3)
     p2ds_flat = p2ds.reshape((n_cams, -1, 2))
-    errors = reproject_error(p3ds_flat, p2ds_flat,cam_mats)
+    errors = reproject_error(p3ds_flat, p2ds_flat,in_mats,ex_mats)
     if scores is not None:
         scores_flat = scores.reshape((n_cams, -1))
         errors = errors * scores_flat[:, :, None]
@@ -394,7 +550,7 @@ def _error_fun_triangulation(params, p2ds, cam_mats,
                       errors_lengths, errors_lengths_weak])
 
 
-def optim_points(points, p3ds,cam_mats,
+def optim_points(points, p3ds,in_mats,ex_mats,
                  constraints=None,
                  constraints_weak=None,
                  scale_smooth=4,
@@ -447,7 +603,8 @@ def optim_points(points, p3ds,cam_mats,
                                   ftol=1e-3,
                                   verbose=2*verbose,
                                   args=(points,
-                                        cam_mats,
+                                        in_mats,
+                                        ex_mats,
                                         constraints,
                                         constraints_weak,
                                         scores,
@@ -474,11 +631,16 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
     :param pose_dict: aligned with camera ids
     :return:
     '''
+    bodypart = ['snout', 'leftear', 'rightear', 'tailbase']
 
     in_mat_list = []
     ex_mat_list = []
     for i, key in enumerate(intrinsic_dict.keys()):
-        in_mat = np.array(intrinsic_dict[key]['camera_mat'])
+        #in_mat = np.array(intrinsic_dict[key]['camera_mat'])
+        cam_mat = np.array(intrinsic_dict[key]['camera_mat'])
+        dist=np.array(intrinsic_dict[key]['dist_coeff'])
+        in_mat = {'camera_mat':cam_mat,
+                  'dist_coeff':dist}
         ex_mat = np.array(extrinsic_3d[str(i)])
 
         in_mat_list.append(in_mat)
@@ -512,11 +674,15 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
 
     all_points[all_scores < THRESHOLD] = np.nan
     n_cams=all_points.shape[1] # TODO:need to check
+
     '''
-    for cam_num in range(all_points.shape[1]):
-        points=all_points[:,cam_num,:,:].swapaxes(0,1)
-        p3d = triangulate_ransac(points,ex_mat_list,in_mat_list[cam_num])
-        #p3d = triangulate(points,ex_mat_list)
+    points_2d = all_points
+    points_shaped = points_2d.reshape(n_cams, length * len(bodypart), 2)
+    all_points_3d,_,_,_ = triangulate_ransac(points_shaped,
+                                        in_mats=in_mat_list,
+                                        ex_mats=ex_mat_list,
+                                        min_cams=2)
+    all_points_3d = all_points_3d.reshape((length, shape[1], 3))
     '''
 
     # triangulate
@@ -527,11 +693,19 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
             if np.sum(good) >= 2:
                 p3d = triangulate_simple(pts[good], ex_mat_list[good])
                 all_points_3d[i, j] = p3d[:3]
-                errors[i, j] = reprojection_error_und(p3d, pts[good], ex_mat_list[good], in_mat_list[good])
+                #errors[i, j] = reprojection_error_und(p3d, pts[good], ex_mat_list[good], in_mat_list[good])
                 num_cams[i, j] = np.sum(good)
                 scores_3d[i, j] = np.min(all_scores[i, :, j][good])
 
+    # get constraints
+    #constaints_name=[['leftear','rightear']]
+    weak_constraints_name = [['leftear','rightear'],['snout','leftear'],['snout','rightear']]
+    bodypart =['snout','leftear','rightear','tailbase']
+    #constraints = load_constraints(constaints_name,bodypart)
+    weak_constraints= load_constraints(weak_constraints_name,bodypart)
+
     # optimization
+
     c = np.isfinite(all_points_3d[:, :, 0])
     points_2d = all_points
     if np.sum(c) < 20:
@@ -540,10 +714,11 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
     else:
         points_3d = optim_points(
             points_2d, all_points_3d,
-            cam_mats=in_mat_list,
+            in_mats=in_mat_list,
+            ex_mats=ex_mat_list,
             constraints=[],
-            constraints_weak=[],
-            # scores=scores_2d,
+            constraints_weak=weak_constraints,
+            scores=all_scores,
             scale_smooth=25,
             scale_length=10,
             scale_length_weak=2,
@@ -555,11 +730,10 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
     points_3d_flat = points_3d.reshape(-1, 3)
 
     errors = reproject_error(
-        points_3d_flat, points_2d_flat, camera_mats=in_mat_list,mean=True)
+        points_3d_flat, points_2d_flat, in_mats=in_mat_list,ex_mats=ex_mat_list,mean=True)
     good_points = ~np.isnan(all_points[:, :, :, 0])
     num_cams = np.sum(good_points, axis=1).astype('float')
 
-    all_points_3d = points_3d
     all_errors = errors.reshape(shape[0], shape[1])
 
     all_scores[~good_points] = 2
@@ -586,7 +760,7 @@ if __name__ =='__main__':
     import pandas as pd
     import toml
 
-    rootpath = r'D:\Desktop\2021-03-09_h5-2053'
+    rootpath = r'D:\Desktop\2021-03-17_h7-2052'
     #processed_path=os.path.join(rootpath,'processed')
     processed_path=rootpath
     config_path = os.path.join(rootpath,'config')

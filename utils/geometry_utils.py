@@ -1,4 +1,3 @@
-
 import numpy as np
 import cv2
 import toml
@@ -219,11 +218,11 @@ class Config:
         self.config_rig=None
         self.config_top_cam=None
         self._load_config()
-        if self.config_rig:
-            self.circle_center=np.array(self.config_rig['recorded_center'])
-            self.window_A = np.array(self.config_rig['window_A'])
-            self.window_B = np.array(self.config_rig['window_B'])
-            self.window_C = np.array(self.config_rig['window_C'])
+        if self.config_top_cam:
+            self.circle_center=np.array(self.config_top_cam['recorded_center'])
+            self.window_A = np.array([self.config_top_cam['A1'],self.config_top_cam['A2']])
+            self.window_B = np.array([self.config_top_cam['B1'],self.config_top_cam['B2']])
+            self.window_C = np.array([self.config_top_cam['C1'],self.config_top_cam['C2']])
 
         self.save_center=save_center
 
@@ -231,8 +230,12 @@ class Config:
         self.img = cv2.imread(path)
         if self.img is None:
             cap=cv2.VideoCapture(path)
-            ret,frame = cap.read()
-            self.img=frame
+            ret =True
+            while ret:
+                ret,frame = cap.read()
+                if ret:
+                    self.img=frame
+                    ret=False
             cap.release()
 
     def _load_config(self):
@@ -243,13 +246,13 @@ class Config:
                 if 'behavior_rig' in item:
                     path = os.path.join(self.config_folder_path, item)
                     self.config_rig=toml.load(path)
-                if 'extrinsic_17391304' in item:
+                if 'alignment' in item:
                     path = os.path.join(self.config_folder_path,item)
                     self.config_top_cam = toml.load(path)
         elif '.toml' in last:
             if 'behavior_rig' in last:
                 self.config_rig = toml.load(self.config_folder_path)
-            if 'extrinsic_17391304' in last:
+            if 'alignment' in last:
                 self.config_top_cam = toml.load(self.config_folder_path)
 
 
@@ -303,7 +306,7 @@ class Gaze_angle:
         else:
             main_config = Config(config_folder_path)
             local_config = main_config.config_top_cam
-        self.corners = main_config.config_top_cam['corners']
+        self.corners = main_config.config_top_cam['undistorted_corners']
         self.inner_r = main_config.config_rig['inner_r']
         self.outer_r = main_config.config_rig['outer_r_']
         self.board_size = main_config.config_rig['board_size']
@@ -329,6 +332,7 @@ class Gaze_angle:
         # get the pose estimation path
         # coord_path = 'C:\\Users\\SchwartzLab\\Downloads\\Acclimation_videos_1\\'
         self.title_name = os.path.split(root_path)[-1]
+        print(self.title_name)
         all_file = os.listdir(root_path)
         name = [a for a in all_file if 'second' in a and 'csv' in a]
         coord = os.path.join(root_path,name[0])
@@ -431,7 +435,7 @@ class Gaze_angle:
             # save file
             if save:
                 self.save(root_path, result)
-                print('saved')
+                print('saved gaze')
 
             return result
         else:
@@ -476,8 +480,8 @@ class Gaze_angle:
             filename = os.path.join(path,'gaze_angle_%d.mat'%int(self.gazePoint*180/np.pi))
             sio.savemat(filename,data)
 
-    def plot(self,thing,savepath=None,show=False):
-        if thing is not None:
+    def plot(self,things,savepath=None,show=False):
+        if things is not None:
             keys = ['inner_left','inner_right','outer_left','outer_right','body_position']
             row=4
             col=2
@@ -519,19 +523,20 @@ class Gaze_angle:
             if show:
                 plt.show()
 
+
 if __name__ == '__main__':
     #import matlab.engine
-    '''
-    config_folder_path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\config'
+
+    #config_folder_path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\config'
     img_path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\test.png'
   
-    path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\multimedia\\unprocessed_videos'
-    folders = os.listdir(path)[8:]
-    for folder in folders:
-        ob = Config(path + '\\' + folder, save_center=True)
-        video_path = path + '\\' + folder + '\\camera_17391304.MOV'
-        ob.set_img(video_path)
-        ob.get_loc_pixel()
+    path = r'D:\Desktop\2021-02-22_h2-2045\processed'
+    ob = Config(path, save_center=True)
+    video_path = path + '\\undistorted_camera_19412282.MOV'
+    ob.set_img(video_path)
+    ob.get_loc_pixel()
+
+
     '''
 
     videopaths =  'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\multimedia\\videos'
@@ -546,3 +551,4 @@ if __name__ == '__main__':
             result = gaze_model(os.path.join(videopaths,video),save=True)
             gaze_model.plot(result,savepath=os.path.join(videopaths,video),show=False)
             #Gaze_model.plot(result,flag='mono', savepath=videopaths + '\\' + video)           
+    '''

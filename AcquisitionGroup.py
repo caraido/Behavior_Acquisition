@@ -77,11 +77,11 @@ class AcquisitionGroup:
       self.print('started camera ' + child.device_serial_number)
 
     # start mic
-    self.mic.start(filepath=self.filepaths[-2], display=isDisplayed[-2])
+    self.mic.start(filepath=self.filepaths[-2], display=False)
     self.print('started mic')
 
     # once the camera BeginAcquisition methods are called, we can start triggering
-    self.nidaq.start(filepath=self.filepaths[-1], display=False)
+    self.nidaq.start(filepath=self.filepaths[-1], display=isDisplayed[-1])
     self.print('started nidaq')
 
     self.started = True
@@ -114,7 +114,7 @@ class AcquisitionGroup:
 
   def process(self, i, options):
     # if it's recording, process() shouldn't be run. except dlc
-    if not any(self.filepaths) or options['mode'] == 'DLC':
+    if not all(self.filepaths) or options['mode'] == 'DLC':
       if self._processors[i] is None or not self._processors[i].is_alive():
 
         # turn on top camera processing
