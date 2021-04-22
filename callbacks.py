@@ -68,7 +68,9 @@ def initCallbacks(ag, status):
       # state['camera serial number'].current #gives the current camera SN
       # state['type'].current == 'Intrinsic' #intrinsice or extrinsic?
 
-
+      #ag.stop()
+      #ag.start(with_filepaths) #<-- key line
+      #ag.run()
 
       cam_id=state['camera serial number']
       cam_num=ag.camera_order.index(cam_id)

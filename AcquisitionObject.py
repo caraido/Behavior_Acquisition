@@ -106,13 +106,12 @@ class AcquisitionObject:
     # self._has_filepath = False
     self._has_displayer = False
 
-
     self.address = address
     self._sock = initTCP(address)  # TODO: move elsewhere
     self._recipients = []
 
     self.parent = parent
-    self.is_top=False
+    self.is_top = False
 
   @property
   def running(self):
@@ -297,7 +296,7 @@ class AcquisitionObject:
     if pause_time > 0:
       time.sleep(pause_time)
 
-  def display(self):
+  def display(self):  # run only by ag._displayers
     if self._has_displayer:
       return  # only 1 runner at a time
 
@@ -335,7 +334,7 @@ class AcquisitionObject:
         sendData(data.astype(np.uint8).tobytes(), self._recipients)
     self._has_displayer = False
 
-  def run(self):
+  def run(self):  # performed only by ag._runners
     if self._has_runner:
       return  # only 1 runner at a time
 
@@ -364,7 +363,7 @@ class AcquisitionObject:
       # buffer the current data
       self.data = data
 
-  def run_processing(self):
+  def run_processing(self):  # performed only by ag._processors
     if self._has_processor:
       return  # only 1 runner at a time
 
@@ -394,10 +393,6 @@ class AcquisitionObject:
         else:
           self._has_processor = False
           return
-
-      with self._file_lock:
-        if self._file is not None:
-          self.save(data)
 
       # buffer the current data
       self.results = results
