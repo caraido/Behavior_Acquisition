@@ -158,8 +158,6 @@ def quick_calibrate_charuco(allCorners, allIds, board, width, height):
   out['error'] = error
   out['camera_mat'] = cameraMat.tolist()
   out['dist_coeff'] = distCoeffs.tolist()
-  out['rvec']=rvecs
-  out['tvec']=tvecs
   out['width'] = width
   out['height'] = height
 
@@ -200,8 +198,6 @@ def quick_calibrate_fisheye(someCorners,width,height):
     out['error'] = error
     out['camera_mat'] = cameraMat.tolist()
     out['dist_coeff'] = distCoeffs.tolist()
-    out['rvec']=rvecs
-    out['tvec']=tvecs
     out['width'] = width
     out['height'] = height
     return out

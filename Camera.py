@@ -10,11 +10,12 @@ from utils.image_draw_utils import draw_dots
 import os
 
 
-FRAME_TIMEOUT = 100  # time in milliseconds to wait for pyspin to retrieve the frame
+FRAME_TIMEOUT = 10  # time in milliseconds to wait for pyspin to retrieve the frame
 DLC_RESIZE = 0.6  # resize the frame by this factor for DLC
 DLC_UPDATE_EACH = 3  # frame interval for DLC update
 TOP_CAM='17391304'
 TEMP_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
+N_BUFFER=2000
 
 class Camera(AcquisitionObject):
 
@@ -34,7 +35,7 @@ class Camera(AcquisitionObject):
     self.device_serial_number, self.height, self.width = self.get_camera_properties()
 
     # set the buffer
-    self.set_buffer(nbuffer_frame=2000)
+    self.set_buffer(nbuffer_frame=N_BUFFER)
 
     AcquisitionObject.__init__(
         self, parent, frame_rate, (self.width, self.height), address)
@@ -49,18 +50,19 @@ class Camera(AcquisitionObject):
   def set_buffer(self,nbuffer_frame=10): #default is 10
     ## use this to handle buffer. Example in BufferHandling.py in PySpin api
     # Retrieve Buffer Handling Mode Information
-    nodemap_tlstream = self._spincam.GetTLStreamNodeMap()
-    handling_mode = PySpin.CEnumerationPtr(nodemap_tlstream.GetNode('StreamBufferHandlingMode'))
+    self.nodemap_tlstream = self._spincam.GetTLStreamNodeMap()
+    #self.stream_buffer_count = PySpin.CIntegerPtr(nodemap_tlstream.GetNode('StreamTotalBufferCount'))
+    handling_mode = PySpin.CEnumerationPtr(self.nodemap_tlstream.GetNode('StreamBufferHandlingMode'))
     handling_mode_entry = PySpin.CEnumEntryPtr(handling_mode.GetCurrentEntry())
 
     # Set stream buffer Count Mode to manual
-    stream_buffer_count_mode = PySpin.CEnumerationPtr(nodemap_tlstream.GetNode('StreamBufferCountMode'))
+    stream_buffer_count_mode = PySpin.CEnumerationPtr(self.nodemap_tlstream.GetNode('StreamBufferCountMode'))
     stream_buffer_count_mode_manual = PySpin.CEnumEntryPtr(stream_buffer_count_mode.GetEntryByName('Manual'))
     stream_buffer_count_mode.SetIntValue(stream_buffer_count_mode_manual.GetValue())
     print('Stream Buffer Count Mode set to manual...')
 
     # Retrieve and modify Stream Buffer Count
-    buffer_count = PySpin.CIntegerPtr(nodemap_tlstream.GetNode('StreamBufferCountManual'))
+    buffer_count = PySpin.CIntegerPtr(self.nodemap_tlstream.GetNode('StreamBufferCountManual'))
 
     # Display Buffer Info
     print('Default Buffer Handling Mode: %s' % handling_mode_entry.GetDisplayName())
@@ -146,13 +148,13 @@ class Camera(AcquisitionObject):
       return result, None
 
   def display(self):
-    self.diplay_count += 1
-    print("calling 'display()' method for camera serial number %s for %d time(s)"%(str(self.device_serial_number),self.diplay_count))
+    #self.diplay_count += 1
+    #print("calling 'display()' method for camera serial number %s for %d time(s)"%(str(self.device_serial_number),self.diplay_count))
     AcquisitionObject.display(self)
 
   def capture(self, data):
-    self.capture_count+=1
-    print("calling 'capture()' method for camera serial number %s for %d time(s)" %(str(self.device_serial_number),self.capture_count))
+    #self.capture_count+=1
+    #print("calling 'capture()' method for camera serial number %s for %d time(s)" %(str(self.device_serial_number),self.capture_count))
     while True:
       # get the image from spinview
       try:
@@ -170,6 +172,8 @@ class Camera(AcquisitionObject):
         status = im.GetImageStatus()
         im.Release()
         raise Exception(f"Image incomplete with image status {status} ...")
+
+      # get ndarry form of the image
       data = im.GetNDArray()
       im.Release()
       yield data
