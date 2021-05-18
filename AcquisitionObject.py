@@ -295,7 +295,6 @@ class AcquisitionObject:
     pause_time = last + self.run_interval - time.time()-0.005
     if pause_time > 0:
       time.sleep(pause_time)
-      print(pause_time)
 
   def display(self):  # run only by ag._displayers
     if self._has_displayer:

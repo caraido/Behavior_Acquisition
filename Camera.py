@@ -196,7 +196,7 @@ class Camera(AcquisitionObject):
 
   def save(self, data):
     self.save_count+=1
-    print("calling 'save()' method for camera serial number %s for %d time(s)"%(str(self.device_serial_number),self.save_count))
+    #print("calling 'save()' method for camera serial number %s for %d time(s)"%(str(self.device_serial_number),self.save_count))
     self._file.stdin.write(data.tobytes())
 
   def get_camera_properties(self):

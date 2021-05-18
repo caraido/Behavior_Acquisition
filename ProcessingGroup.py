@@ -33,9 +33,12 @@ from utils.path_operation_utils import copy_config, global_config_path
 from utils.calibration_utils import undistort_videos,  Calib, TOP_CAM
 from utils.dlc_utils import dlc_analysis
 from utils.geometry_utils import find_board_center_and_windows,Gaze_angle
+from kalman_filter import triangulate_kalman
+from reproject_3d_to_2d import reproject_3d_to_2d
 import os
 import numpy as np
 import warnings
+import cv2
 
 import shutil
 import toml
@@ -44,7 +47,7 @@ from utils.calibration_3d_utils import get_extrinsics
 
 
 # top camera dlc config
-top_config  = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\config.yaml'
+top_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\config.yaml'
 # side camera dlc config
 #side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras-Devon-2021-03-10\config.yaml'
 side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras_distorted-Devon-2021-03-17\config.yaml'
@@ -67,7 +70,7 @@ class ProcessingGroup:
 			dlcpath = dlc_path
 		self.dlcpath = dlcpath
 		self.rootpath = rootpath
-		self.processpath = os.path.join(self.rootpath, 'processed')  # make it a property
+		self.processpath = os.path.join(self.rootpath, 'undistorted')  # make it a property
 		self.config_path = os.path.join(self.rootpath, 'config')  # make it a property
 		if not os.path.exists(self.processpath):
 			os.mkdir(self.processpath)
@@ -107,8 +110,11 @@ class ProcessingGroup:
 					 undistort=True,
 					 copy=True,
 					 dlc=True,
+					 triangulate=True,
+					 reproject=True,
 					 gaze=True,
 					 dsqk=True,
+					 reorganize=True,
 					 server=True,
 					 HDD=True):
 
@@ -137,6 +143,12 @@ class ProcessingGroup:
 			self.dlc_analysis()
 		if gaze:
 			self.gaze_analysis()
+		if triangulate:
+			triangulate_kalman(self.rootpath)
+		if reproject:
+			reproject_3d_to_2d(self.rootpath)
+		if reorganize:
+			self.reorganize()
 		if server:
 			self.SSD2server()
 		if HDD:
@@ -164,6 +176,7 @@ class ProcessingGroup:
 		# get item list
 		items = os.listdir(self.global_config_path)
 		intrinsic_list = []
+		alignment_list=[]
 		video_list = []
 		board = self.ex_calib.board
 
@@ -175,8 +188,14 @@ class ProcessingGroup:
 			if 'MOV' in item:
 				video_path = os.path.join(self.global_config_path, item)
 				video_list.append(video_path)
+			if 'alignment' in item and 'temp' not in item:
+				alignment_list.append(os.path.join(self.global_config_path, item))
 
 		if len(video_list)==4:
+			alignment=toml.load(alignment_list[0])
+			recorded_center=np.array(alignment['recorded_center']).astype('int')
+
+			# get intrinsic matrices and video list
 			intrinsic_list.sort()
 			video_list.sort()
 			loaded = [toml.load(path) for path in intrinsic_list]
@@ -251,6 +270,35 @@ class ProcessingGroup:
 	def dsqk_analysis(self):
 		pass
 
+	def reorganize(self):
+		items = os.listdir(self.rootpath)
+		if 'reproject' in str(items):
+			os.mkdir(os.path.join(self.rootpath,'reproject'))
+			for item in items:
+				if 'reproject' in item:
+					file=os.path.join(self.rootpath,item)
+					file2=os.path.join(self.rootpath,'reproject',item)
+					shutil.move(file,file2)
+		items = os.listdir(self.rootpath)
+		if 'DLC' in str(items):
+			os.mkdir(os.path.join(self.rootpath, 'DLC'))
+			for item in items:
+				if 'DLC' in item:
+					file = os.path.join(self.rootpath, item)
+					file2 = os.path.join(self.rootpath, 'DLC', item)
+					shutil.move(file, file2)
+		items = os.listdir(self.rootpath)
+		if '.MOV' in str(items):
+			os.mkdir(os.path.join(self.rootpath, 'raw'))
+			for item in items:
+				if '.MOV' in item:
+					file = os.path.join(self.rootpath, item)
+					file2 = os.path.join(self.rootpath, 'raw', item)
+					shutil.move(file, file2)
+
+		print('finish reorganizing folder %s'%self.rootpath)
+
+
 	def SSD2server(self):
 		# copy and paste
 		pass
@@ -276,32 +324,37 @@ if __name__ == '__main__':
 	working_dir = r'D:\Desktop'
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
-
-	item=r'2021-03-23_T1-2045'
+	'''
+	item=r'2021-04-30_Ta3-2053'
 	path = os.path.join(working_dir,item)
 	pg(path)
 	pg.post_process(intrinsic=False,
 						alignment=False,
-						extrinsic=True,
+						extrinsic=False,
 						undistort=False,
 						copy=False,
 						dlc=False,
+						triangulate=False,
+						reproject=True,
 						gaze=False,
 						dsqk=False,
 						server=False,
 						HDD=False)
 	'''
 	for item in tqdm.tqdm(items):
-		path = os.path.join(working_dir,item)
-		pg(path)
-		pg.post_process(intrinsic=False,
-						alignment=False,
-						extrinsic=True,
-						undistort=False,
-						copy=False,
-						dlc=False,
-						gaze=False,
-						dsqk=False,
-						server=False,
-						HDD=False)
-	'''
+		if 'T' in item and 'T1-2045' not in item:
+			path = os.path.join(working_dir,item)
+			pg(path)
+			pg.post_process(intrinsic=False,
+							alignment=False,
+							extrinsic=False,
+							undistort=True,
+							copy=True,
+							dlc=True,
+							triangulate=True,
+							reproject=True,
+							reorganize=True,
+							gaze=True,
+							dsqk=False,
+							server=False,
+							HDD=False)

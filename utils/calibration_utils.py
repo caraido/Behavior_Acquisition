@@ -327,9 +327,14 @@ class Calib:
     self._get_type(calib_type)
     # TODO: how to set the local config path without assigning it?? Or should we
     self.root_config_path = GLOBAL_CONFIG_PATH
+    self.top_intrinsic=self.get_top_intrinsic(calib_type)
 
     self.allCorners = []
     self.allIds = []
+
+    # for pose estimation in alignment
+    self.rvec=[]
+    self.tvec=[]
 
     self.config = None
     self.temp_file=None
@@ -338,6 +343,15 @@ class Calib:
     self.board = self.charuco_board.board
 
     self.max_size = get_expected_corners(self.board)
+
+  def get_top_intrinsic(self,calib_type):
+    if calib_type=='alignment':
+      try:
+        path = os.path.join(self.root_config_path,'config_intrinsic_%s.toml'%TOP_CAM)
+        data=toml.load(path)
+        return data
+      except:
+        return None
 
   def _get_type(self, calib_type):
     if calib_type == 'alignment':
@@ -412,6 +426,8 @@ class Calib:
       if len(self.allCorners)>0:
         stuff={'corners':self.allCorners,
               'ids':self.allIds,
+               'rvec':self.rvec,
+               'tvec':self.tvec,
               'camera_serial_number': camera_serial_number,
               'width':width,
               'height':height,
@@ -516,11 +532,20 @@ class Calib:
     if data_count % CALIB_UPDATE_EACH == 0:
       corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
           frame, self.board.dictionary, parameters=self.params)
-
+      cv2.aruco.refineDetectedMarkers(frame, self.board, corners, ids, rejectedImgPoints)
       if corners is not None and len(corners) == self.max_size+1:
         # update the latest markers
+        camera_mat=np.array(self.top_intrinsic['camera_mat']).astype('float32')
+        dist_coeff = np.array(self.top_intrinsic['dist_coeff']).astype('float32')
+        marker_length=self.board.chessboardCorners[0,0]
+
+        rvec, tvec,_=cv2.aruco.estimatePoseSingleMarkers(corners,marker_length
+                                                  ,camera_mat,dist_coeff)
+
         self.allCorners = corners
         self.allIds = ids
+        self.rvec=rvec
+        self.tvec=tvec
         allDetected = True
 
       return {'corners': corners, 'ids': ids, 'allDetected': allDetected}
@@ -549,8 +574,8 @@ def undistort_videos(rootpath):
   raw_items = os.listdir(rootpath)
   config_path = os.path.join(rootpath, 'config')
   items = os.listdir(config_path)
-  processed_path = os.path.join(rootpath, 'processed')
-  if not os.path.exists(os.path.join(rootpath,'processed')):
+  processed_path = os.path.join(rootpath, 'undistorted')
+  if not os.path.exists(os.path.join(rootpath,'undistorted')):
     os.mkdir(processed_path)
 
   intrinsics = None

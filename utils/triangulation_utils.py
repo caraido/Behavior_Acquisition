@@ -22,9 +22,18 @@ def project(p3d,in_mat,ex_mat):
     tvec = ex_mat[0:3,3]
     rvec_process =R.from_matrix(r_matrix)
     rvec = rvec_process.as_rotvec()
-    out,_ =cv2.projectPoints(points,rvec,tvec,
+    if len(dist)==4:
+        out,_ = cv2.fisheye.projectPoints(points,rvec,tvec,
                              matrix.astype('float64'),
                              dist.astype('float64'))
+        out[out<0]=np.nan
+        out=cv2.fisheye.undistortPoints(out,matrix.astype('float64'),dist.astype('float64'))
+    else:
+        out,_ =cv2.projectPoints(points,rvec,tvec,
+                             matrix.astype('float64'),
+                             dist.astype('float64'))
+        out[out<0]=np.nan
+        out = cv2.undistortPoints(out, matrix.astype('float64'),dist.astype('float64'))
     return out
 
 def reprojection_error(p3d, p2d, in_mat,ex_mat):
@@ -279,6 +288,7 @@ def read_single_2d_data(data: pd.DataFrame):
     index = arr(data.index)
 
     bp_interested = get_bp_interested(data)
+    #bp_interested=['snout', 'leftear', 'rightear', 'tailbase']
 
     coords = np.zeros((length, len(bp_interested), 2))
     scores = np.zeros((length, len(bp_interested)))
@@ -488,7 +498,7 @@ def _error_fun_triangulation(params, p2ds, in_mats,ex_mats,
                              constraints=None,
                              constraints_weak=None,
                              scores=None,
-                             scale_smooth=10000,
+                             scale_smooth=100,
                              scale_length=1,
                              scale_length_weak=0.2,
                              reproj_error_threshold=100,
@@ -641,13 +651,14 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
         dist=np.array(intrinsic_dict[key]['dist_coeff'])
         in_mat = {'camera_mat':cam_mat,
                   'dist_coeff':dist}
-        ex_mat = np.array(extrinsic_3d[str(i)])
+        ex_mat = np.array(extrinsic_3d[str(i)]).astype('float64')
 
         in_mat_list.append(in_mat)
         ex_mat_list.append(ex_mat)
 
     in_mat_list=np.array(in_mat_list)
-    ex_mat_list=np.array(ex_mat_list).astype(float)
+    ex_mat_list=np.array(ex_mat_list)
+    ex_mat_list[1][0:3,3]=np.array([-.9, -1.6, -.55351041])
 
     out = load_2d_data(pose_dict)
 
@@ -675,15 +686,6 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
     all_points[all_scores < THRESHOLD] = np.nan
     n_cams=all_points.shape[1] # TODO:need to check
 
-    '''
-    points_2d = all_points
-    points_shaped = points_2d.reshape(n_cams, length * len(bodypart), 2)
-    all_points_3d,_,_,_ = triangulate_ransac(points_shaped,
-                                        in_mats=in_mat_list,
-                                        ex_mats=ex_mat_list,
-                                        min_cams=2)
-    all_points_3d = all_points_3d.reshape((length, shape[1], 3))
-    '''
 
     # triangulate
     for i in trange(all_points.shape[0], ncols=70):
@@ -698,10 +700,10 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
                 scores_3d[i, j] = np.min(all_scores[i, :, j][good])
 
     # get constraints
-    #constaints_name=[['leftear','rightear']]
+    constaints_name=[['leftear','rightear']]
     weak_constraints_name = [['leftear','rightear'],['snout','leftear'],['snout','rightear']]
     bodypart =['snout','leftear','rightear','tailbase']
-    #constraints = load_constraints(constaints_name,bodypart)
+    constraints = load_constraints(constaints_name,bodypart)
     weak_constraints= load_constraints(weak_constraints_name,bodypart)
 
     # optimization
@@ -719,11 +721,120 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
             constraints=[],
             constraints_weak=weak_constraints,
             scores=all_scores,
-            scale_smooth=25,
-            scale_length=10,
+            scale_smooth=10,
+            scale_length=2,
             scale_length_weak=2,
             n_deriv_smooth=2,
-            reproj_error_threshold=3,
+            reproj_error_threshold=2,
+            verbose=True)
+
+    points_2d_flat = points_2d.reshape(n_cams, -1, 2)
+    points_3d_flat = points_3d.reshape(-1, 3)
+
+    errors = reproject_error(
+        points_3d_flat, points_2d_flat, in_mats=in_mat_list,ex_mats=ex_mat_list,mean=True)
+    good_points = ~np.isnan(all_points[:, :, :, 0])
+    num_cams = np.sum(good_points, axis=1).astype('float')
+
+    all_errors = errors.reshape(shape[0], shape[1])
+
+    all_scores[~good_points] = 2
+    scores_3d = np.min(all_scores, axis=1)
+
+    scores_3d[num_cams < 1] = np.nan
+    all_errors[num_cams < 1] = np.nan
+
+    # process the results to save
+    dout = pd.DataFrame()
+    bp_interested = get_bp_interested(pose_dict['0'])
+    for bp_num, bp in enumerate(bp_interested):
+        for ax_num, axis in enumerate(['x', 'y', 'z']):
+            dout[bp + '_' + axis] = points_3d[:, bp_num, ax_num]
+        dout[bp + '_error'] = all_errors[:, bp_num]
+        dout[bp + '_ncams'] = num_cams[:, bp_num]
+
+    dout['fnum'] = np.arange(length)
+
+    return dout
+
+def reconstruct_3d_kalman(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict:dict,all_points_3d):
+    '''
+    :param extrinsic_3d: list of camera matrix, aligned with camera ids
+    :param pose_dict: aligned with camera ids
+    :return:
+    '''
+
+
+    in_mat_list = []
+    ex_mat_list = []
+    for i, key in enumerate(intrinsic_dict.keys()):
+        #in_mat = np.array(intrinsic_dict[key]['camera_mat'])
+        cam_mat = np.array(intrinsic_dict[key]['camera_mat'])
+        dist=np.array(intrinsic_dict[key]['dist_coeff'])
+        in_mat = {'camera_mat':cam_mat,
+                  'dist_coeff':dist}
+        ex_mat = np.array(extrinsic_3d[str(i)]).astype('float64')
+
+        in_mat_list.append(in_mat)
+        ex_mat_list.append(ex_mat)
+
+    in_mat_list=np.array(in_mat_list)
+    ex_mat_list=np.array(ex_mat_list)
+    ex_mat_list[1][0:3,3]=np.array([-.9, -1.6, -.55351041])
+
+    out = load_2d_data(pose_dict)
+
+    # undistort
+    all_points = out['points']
+    all_scores = out['scores']
+    fisheyes = [True, False, True, True]
+    all_points = undistort_points(all_points, intrinsic_dict, fisheyes=fisheyes)
+
+    length = all_points.shape[0]
+    shape = all_points.shape
+
+    # preparing the containers
+    #all_points_3d = np.zeros((shape[0], shape[2], 3))
+    #all_points_3d.fill(np.nan)
+    errors = np.zeros((shape[0], shape[2]))
+    errors.fill(np.nan)
+
+    scores_3d = np.zeros((shape[0], shape[2]))
+    scores_3d.fill(np.nan)
+
+    num_cams = np.zeros((shape[0], shape[2]))
+    num_cams.fill(np.nan)
+
+    all_points[all_scores < THRESHOLD] = np.nan
+    n_cams = all_points.shape[1]  # TODO:need to check
+
+    # get constraints
+    constaints_name=[['leftear','rightear']]
+    weak_constraints_name = [['leftear','rightear'],['snout','leftear'],['snout','rightear']]
+    bodypart =['snout','leftear','rightear','tailbase']
+    constraints = load_constraints(constaints_name,bodypart)
+    weak_constraints= load_constraints(weak_constraints_name,bodypart)
+
+    # optimization
+
+    c = np.isfinite(all_points_3d[:, :, 0])
+    points_2d = all_points
+    if np.sum(c) < 20:
+        print("warning: not enough 3D points to run optimization")
+        points_3d = all_points_3d
+    else:
+        points_3d = optim_points(
+            points_2d, all_points_3d,
+            in_mats=in_mat_list,
+            ex_mats=ex_mat_list,
+            constraints=[],
+            constraints_weak=[],
+            scores=all_scores,
+            scale_smooth=100,
+            scale_length=2,
+            scale_length_weak=2,
+            n_deriv_smooth=2,
+            reproj_error_threshold=2,
             verbose=True)
 
     points_2d_flat = points_2d.reshape(n_cams, -1, 2)
@@ -760,13 +871,13 @@ if __name__ =='__main__':
     import pandas as pd
     import toml
 
-    rootpath = r'D:\Desktop\2021-03-17_h7-2052'
+    rootpath = r'D:\Desktop\2021-04-27_Tf3-2050'
     #processed_path=os.path.join(rootpath,'processed')
     processed_path=rootpath
     config_path = os.path.join(rootpath,'config')
 
     items=os.listdir(processed_path)
-    pose = [item for item in items if '.csv' in item]
+    pose = [item for item in items if '.csv' in item and 'camera' in item]
     pose=sorted(pose)
     pose_dict = dict([(str(i),pd.read_csv(os.path.join(processed_path,num),header=[1,2])) for i,num in enumerate(pose)])
     length_list= [item.shape[0] for item in pose_dict.values()]
@@ -777,6 +888,20 @@ if __name__ =='__main__':
             pose_dict[i] = pose_dict[i].drop(['leftarm', 'rightarm'], axis=1)
         except: pass
 
+    try:
+        output_3d = pd.read_csv(os.path.join(processed_path,'output_3d_data.csv'),index_col=0)
+        length =len(output_3d)
+        bodypart = ['snout_x','snout_y','snout_z',
+                    'leftear_x', 'leftear_y', 'leftear_z',
+                    'rightear_x', 'rightear_y', 'rightear_z',
+                    'tailbase_x', 'tailbase_y', 'tailbase_z',
+                    ]
+        output_3d_new=output_3d[bodypart]
+        output_3d_new=output_3d_new.to_numpy()
+        output_3d_new=output_3d_new.reshape(-1,4,3)
+    except:
+        output_3d_new=None
+        Exception("can't find output_3d_data.csv under the folder")
 
     items = os.listdir(config_path)
     intrinsic= [item for item in items if 'intrinsic' in item]
@@ -788,8 +913,9 @@ if __name__ =='__main__':
     extrinsic_dict = extrinsic_dict['extrinsic']
 
     reconstructed_pose = reconstruct_3d(intrinsic_dict,extrinsic_dict,pose_dict)
+    #reconstructed_pose= reconstruct_3d_kalman(intrinsic_dict,extrinsic_dict,pose_dict,output_3d_new)
 
-    save_path = os.path.join(processed_path,'output_3d_data.csv')
+    save_path = os.path.join(processed_path,'output_3d_data_new.csv')
     reconstructed_pose.to_csv(save_path)
 
 

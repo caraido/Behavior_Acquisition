@@ -6,9 +6,6 @@ def dlc_analysis(root_path, dlc_config_path):
 	if isinstance(dlc_config_path, list):
 		top_config = dlc_config_path[0]
 		side_config = dlc_config_path[1]
-		#processed_path = os.path.join(root_path, 'processed')
-		#config_path = os.path.join(root_path, 'config')
-		# things = os.listdir(processed_path)
 		things = os.listdir(root_path)
 
 		top = [a for a in things if '.MOV' in a and '17391304' in a]
@@ -44,4 +41,16 @@ def dlc_analysis(root_path, dlc_config_path):
 										trailpoints=1,
 										videotype='mov',
 										draw_skeleton='True')
+		#archive_dlc_results(root_path)
+
+def archive_dlc_results(root_path):
+	things=os.listdir(root_path)
+	if 'dlc_results' not in things:
+		os.mkdir(os.path.join(root_path,'dlc_results'))
+
+	if 'labeled_videos' not in things:
+		os.mkdir(os.path.join(root_path,'labeled_videos'))
+
+	# TODO: move the videos under different folders
+
 
