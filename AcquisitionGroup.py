@@ -6,7 +6,7 @@ from Camera import Camera
 from Nidaq import Nidaq
 from Mic import Mic
 
-import ProcessingGroup as pg
+# import ProcessingGroup as pg
 # import RigStatus
 CAM_LIST=[17391304, 17391290, 19287342, 19412282]
 
@@ -15,8 +15,6 @@ def rearrange_cameras(cameras:list):
   zipper=dict(zip(serial_number_list,cameras))
   new_cameras = [zipper[key] for key in CAM_LIST if key in zipper.keys()]
   return new_cameras
-
-
 class AcquisitionGroup:
   # def __init__(self, frame_rate=30, audio_settings=None):
   def __init__(self, status, hostname='localhost', ports=5002):
@@ -50,7 +48,7 @@ class AcquisitionGroup:
     self.processing = False
     self.running = False
 
-    self.pg = pg.ProcessingGroup()
+    # self.pg = pg.ProcessingGroup()
 
     #self.print('done setting up ag. is camera 3 running? ',
     #           self.cameras[3].running)

@@ -70,14 +70,15 @@ class ProcessingGroup:
 			dlcpath = dlc_path
 		self.dlcpath = dlcpath
 		self.rootpath = rootpath
-		self.processpath = os.path.join(self.rootpath, 'undistorted')  # make it a property
-		self.config_path = os.path.join(self.rootpath, 'config')  # make it a property
+		self.processpath = os.path.join(self.rootpath, 'undistorted')  # TODO: make it a property
+		self.config_path = os.path.join(self.rootpath, 'config')  # TODO: make it a property
 		if not os.path.exists(self.processpath):
 			os.mkdir(self.processpath)
 		if not os.path.exists(self.config_path):
 			os.mkdir(self.config_path)
 
 	def copy_configs(self):
+		#TODO: save a reference to the config for each acquisition, then copy the right one, rather than the most recent one
 		if self.rootpath:
 			copy_config(self.rootpath)
 
@@ -135,7 +136,7 @@ class ProcessingGroup:
 			self.copy_configs()
 
 		if undistort:
-			undistort_videos(self.rootpath)
+			undistort_videos(self.rootpath) #TODO: profiler
 
 		if dsqk:
 			self.dsqk_analysis()
@@ -320,7 +321,7 @@ class ProcessingGroup:
 
 if __name__ == '__main__':
 	import tqdm
-	GLOBAL_CONFIG_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig'
+	# GLOBAL_CONFIG_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig'
 	working_dir = r'D:\Desktop'
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()

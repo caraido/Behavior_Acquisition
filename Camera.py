@@ -156,9 +156,19 @@ class Camera(AcquisitionObject):
     #self.capture_count+=1
     #print("calling 'capture()' method for camera serial number %s for %d time(s)" %(str(self.device_serial_number),self.capture_count))
     while True:
+      #TODO: fix lag
+      # 1) run profiler
+      # 2) reorg capture:
+      #     2 while loops
+      #       inner while loop that captures all new frames
+      #       need to 
+      # 3) rerun profiler
+      # 4) at this point we need to talk about doing it in c / cython
+
       # get the image from spinview
       try:
         im = self._spincam.GetNextImage(FRAME_TIMEOUT)
+        #can we run GetNextImage repeatedly until we've gotten them all?
 
       except PySpin.SpinnakerException as e:
         self.print(f'Error in spinnaker: {e}. Assumed innocuous.')
