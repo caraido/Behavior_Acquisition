@@ -1,5 +1,6 @@
 import deeplabcut
 import os
+import threading
 
 
 def dlc_analysis(root_path, dlc_config_path):
@@ -22,12 +23,22 @@ def dlc_analysis(root_path, dlc_config_path):
 								  videotype='mov',
 								  shuffle=1,
 								  gputouse=0)
-		deeplabcut.create_labeled_video(top_config,
-										top_path,
-										save_frames=False,
-										trailpoints=1,
-										videotype='mov',
-										draw_skeleton='True')
+
+		arguments={'config':top_config,
+					'videos':top_path,
+					'save_frames':False,
+					'trailpoints':1,
+					'videotype':'mov',
+					"draw_skeleton":'True'}
+		create_labeled_video_top_thread=threading.Thread(target=deeplabcut.create_labeled_video,kwargs=arguments)
+		create_labeled_video_top_thread.start()
+
+		#deeplabcut.create_labeled_video(top_config,
+		#								top_path,
+		#								save_frames=False,
+		#								trailpoints=1,
+		#								videotype='mov',
+		#								draw_skeleton='True')
 		# side cameras
 		deeplabcut.analyze_videos(side_config,
 								  side_path,
@@ -35,22 +46,22 @@ def dlc_analysis(root_path, dlc_config_path):
 								  videotype='mov',
 								  shuffle=1,
 								  gputouse=0)
-		deeplabcut.create_labeled_video(side_config,
-										side_path,
-										save_frames=False,
-										trailpoints=1,
-										videotype='mov',
-										draw_skeleton='True')
-		#archive_dlc_results(root_path)
 
-def archive_dlc_results(root_path):
-	things=os.listdir(root_path)
-	if 'dlc_results' not in things:
-		os.mkdir(os.path.join(root_path,'dlc_results'))
+		arguments={'config':top_config,
+					'videos':top_path,
+					'save_frames':False,
+					'trailpoints':1,
+					'videotype':'mov',
+					"draw_skeleton":'True'}
+		create_labeled_video_side_thread = threading.Thread(target=deeplabcut.create_labeled_video, kwargs=arguments)
+		create_labeled_video_side_thread.start()
 
-	if 'labeled_videos' not in things:
-		os.mkdir(os.path.join(root_path,'labeled_videos'))
-
-	# TODO: move the videos under different folders
+		return create_labeled_video_top_thread,create_labeled_video_side_thread
+		#deeplabcut.create_labeled_video(side_config,
+		#								side_path,
+		#								save_frames=False,
+		#								trailpoints=1,
+		#								videotype='mov',
+		#								draw_skeleton='True')
 
 

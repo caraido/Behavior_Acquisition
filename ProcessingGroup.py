@@ -28,6 +28,7 @@
 
 # when all the threads are done
 # delete SSD folder
+import threading
 
 from utils.path_operation_utils import copy_config, global_config_path
 from utils.calibration_utils import undistort_videos,  Calib, TOP_CAM
@@ -70,12 +71,34 @@ class ProcessingGroup:
 			dlcpath = dlc_path
 		self.dlcpath = dlcpath
 		self.rootpath = rootpath
-		self.processpath = os.path.join(self.rootpath, 'undistorted')  # TODO: make it a property
-		self.config_path = os.path.join(self.rootpath, 'config')  # TODO: make it a property
+		self.processpath = 'undistorted'
+		self.config_path = 'config'
 		if not os.path.exists(self.processpath):
 			os.mkdir(self.processpath)
 		if not os.path.exists(self.config_path):
 			os.mkdir(self.config_path)
+
+	@property
+	def processpath(self):
+		return self._processpath
+
+	@processpath.setter
+	def processpath(self,folder_name):
+		path = os.path.join(self.rootpath, folder_name)
+		if not os.path.exists(path):
+			os.mkdir(path)
+		self._processpath=path
+
+	@property
+	def config_path(self):
+		return self._config_path
+
+	@config_path.setter
+	def config_path(self, folder_name):
+		path = os.path.join(self.rootpath, folder_name)
+		if not os.path.exists(path):
+			os.mkdir(path)
+		self._config_path = path
 
 	def copy_configs(self):
 		#TODO: save a reference to the config for each acquisition, then copy the right one, rather than the most recent one
@@ -120,6 +143,9 @@ class ProcessingGroup:
 					 HDD=True):
 
 		# self.copy_configs()
+		undistort_thread=None
+		dlc_threads=None
+		reproject_threads=None
 
 		if intrinsic:
 			# do the following under behavior_rig/config/
@@ -136,18 +162,36 @@ class ProcessingGroup:
 			self.copy_configs()
 
 		if undistort:
-			undistort_videos(self.rootpath) #TODO: profiler
+			undistort_thread=threading.Thread(target=undistort_videos,args=(self.rootpath,))
+			undistort_thread.start()
+			#undistort_videos(self.rootpath)
 
 		if dsqk:
 			self.dsqk_analysis()
 		if dlc:
-			self.dlc_analysis()
+			dlc_threads=self.dlc_analysis()
 		if gaze:
 			self.gaze_analysis()
 		if triangulate:
 			triangulate_kalman(self.rootpath)
 		if reproject:
-			reproject_3d_to_2d(self.rootpath)
+			reproject_threads=reproject_3d_to_2d(self.rootpath)
+
+		# join all the threads
+		try:
+			undistort_thread.join()
+		except: pass
+
+		try:
+			for thread in dlc_threads:
+				thread.join()
+		except: pass
+
+		try:
+			for thread in reproject_threads:
+				thread.join()
+		except: pass
+
 		if reorganize:
 			self.reorganize()
 		if server:
@@ -250,7 +294,8 @@ class ProcessingGroup:
 
 	def dlc_analysis(self):
 		# dlc anlysis on both top and side cameras
-		dlc_analysis(self.rootpath, self.dlcpath)
+		threads=dlc_analysis(self.rootpath, self.dlcpath)
+		return threads
 
 	def gaze_analysis(self):
 		# gaze analysis on top camera
@@ -325,22 +370,23 @@ if __name__ == '__main__':
 	working_dir = r'D:\Desktop'
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
-	'''
-	item=r'2021-04-30_Ta3-2053'
+
+	item=r'2021-03-12_H6-2044'
 	path = os.path.join(working_dir,item)
 	pg(path)
 	pg.post_process(intrinsic=False,
-						alignment=False,
-						extrinsic=False,
-						undistort=False,
-						copy=False,
-						dlc=False,
-						triangulate=False,
-						reproject=True,
-						gaze=False,
-						dsqk=False,
-						server=False,
-						HDD=False)
+					alignment=False,
+					extrinsic=False,
+					undistort=True,
+					copy=True,
+					dlc=True,
+					triangulate=True,
+					reproject=True,
+					reorganize=True,
+					gaze=True,
+					dsqk=False,
+					server=False,
+					HDD=False)
 	'''
 	for item in tqdm.tqdm(items):
 		if 'T' in item and 'T1-2045' not in item:
@@ -359,3 +405,4 @@ if __name__ == '__main__':
 							dsqk=False,
 							server=False,
 							HDD=False)
+'''

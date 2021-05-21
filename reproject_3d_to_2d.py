@@ -1,3 +1,5 @@
+import threading
+
 import numpy as np
 import cv2
 import toml
@@ -149,13 +151,22 @@ def reproject_3d_to_2d(root_path):
     cam = [cam0_xy, cam1_xy, cam2_xy, cam3_xy]
 
     # draw markers to the video
+    threads=[]
     items = os.listdir(root_path)
     vid_list = sorted([a for a in items if '.MOV' in a])
     for j, vid in enumerate(vid_list):
         vid_path = os.path.join(root_path, vid)
         saving_path = os.path.join(root_path, 'reprojected_' + vid)
-        draw_markers(vid_path, saving_path, cam[j])
+
+        # starting threads
+        thread=threading.Thread(target=draw_markers,args=(vid_path,saving_path,cam[j],))
+        thread.start()
+        threads.append(thread)
+
+        #draw_markers(vid_path, saving_path, cam[j])
         print("drew reprojected markers on the video %d"%j)
+
+    return threads
 
 if __name__ == '__main__':
     working_path = r'/Users/tianhaolei/Downloads/pose-3'

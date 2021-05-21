@@ -100,10 +100,6 @@ class Camera(AcquisitionObject):
       process['calibrator'] = Calib(options['mode'])
       process['calibrator'].load_in_config(self.device_serial_number)
       # TODO: is there a better to handle recording during calibration?
-      #if process['mode']=='extrinsic':
-      #  path = os.path.join(TEMP_PATH,'config_extrinsic_%s_temp.MOV'%self.device_serial_number)
-        # temporarily save recorded video to path
-      #  self.file = path
 
       return process
       # process['calibrator'].root_config_path= self.file # does this return the file path?
