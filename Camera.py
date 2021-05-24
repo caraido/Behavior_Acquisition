@@ -265,9 +265,6 @@ class Camera(AcquisitionObject):
                           cv2.FONT_HERSHEY_PLAIN, 2.0, (255, 0, 255), 2)
     return frame #gets drawn to screen
 
-#  def end_run(self):
-#    if self.file:
-#      copy_config(self.file)
 
   def close(self):
     self._spincam.DeInit()

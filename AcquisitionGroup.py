@@ -98,10 +98,12 @@ class AcquisitionGroup:
     for i, child in enumerate(self.children):
       if self._runners[i] is None or not self._runners[i].is_alive():
         self._runners[i] = threading.Thread(target=child.run)
+        #threading.setprofile(child.run) # for profiler
         self._runners[i].start()
       if self._displayers[i] is None or not self._displayers[i].is_alive():
         if i != 5:  # temporaray solution for not displaying nidaq spectrogram
           self._displayers[i] = threading.Thread(target=child.display)
+          #threading.setprofile(child.display)# for profiler
           self._displayers[i].start()
     self.running = True
     #
@@ -146,17 +148,6 @@ class AcquisitionGroup:
     self.processing = False
     self.running = False
     self.started = False
-    '''
-    if self.filepaths is not None and any(self.filepaths):
-      rootpath = os.path.split(self.filepaths[0])[0]
-      self.pg(rootpath)
-      self.post_analysis = threading.Thread(
-          target=self.pg.post_process)
-      try:
-        self.post_analysis.start()
-      except:
-        Warning("Post analysis failed. Have to do it manually.")
-        '''
 
     self.print('finished AcquisitionGroup.stop()')
 
