@@ -8,9 +8,11 @@ from dlclive import DLCLive, Processor
 from AcquisitionObject import AcquisitionObject
 from utils.image_draw_utils import draw_dots
 import os
+import time
 
 
 FRAME_TIMEOUT = 10  # time in milliseconds to wait for pyspin to retrieve the frame
+FRAME_BUFFER = 3 # frames buffer for display and save
 DLC_RESIZE = 0.6  # resize the frame by this factor for DLC
 DLC_UPDATE_EACH = 3  # frame interval for DLC update
 TOP_CAM='17391304'
@@ -44,8 +46,6 @@ class Camera(AcquisitionObject):
     self.save_count=0
     self.capture_count=0
     self.diplay_count = 0
-
-  # TODO: make sure this step should be in prepare_display or prepare_run
 
   def set_buffer(self,nbuffer_frame=10): #default is 10
     ## use this to handle buffer. Example in BufferHandling.py in PySpin api
@@ -143,46 +143,55 @@ class Camera(AcquisitionObject):
       result = process['calibrator'].ex_calibrate(data, data_count)
       return result, None
 
-  def display(self):
-    #self.diplay_count += 1
-    #print("calling 'display()' method for camera serial number %s for %d time(s)"%(str(self.device_serial_number),self.diplay_count))
-    AcquisitionObject.display(self)
+  def run(self):
+    self._has_runner = True
+    data = self.new_data
+    capture = self.capture(data)
+    data_time = time.time() - self.run_interval
+
+    while True:
+      self.sleep(data_time)
+
+      with self._running_lock:
+        # try to capture the next data segment
+        if self._running:
+          data_time = time.time()
+          data = next(capture)
+        else:
+          self._has_runner = False
+          return
+
+      # check if the data chunk is emtpy or not
+      if len(data)>0:
+        # save the current data to temp
+        with self._file_lock:
+          if self._file is not None:
+            self.save(data)
+
+        # buffer the current data
+        self.data = data[-1]
 
   def capture(self, data):
-    #self.capture_count+=1
-    #print("calling 'capture()' method for camera serial number %s for %d time(s)" %(str(self.device_serial_number),self.capture_count))
     while True:
-      #TODO: fix lag
-      # 1) run profiler
-      # 2) reorg capture:
-      #     2 while loops
-      #       inner while loop that captures all new frames
-      #       need to 
-      # 3) rerun profiler
-      # 4) at this point we need to talk about doing it in c / cython
+      get_all = False
+      data_list = []
+      while not get_all and len(data_list)<FRAME_BUFFER:
+        try:
+          im = self._spincam.GetNextImage()
+          if im.IsIncomplete():
+            status = im.GetImageStatus()
+            im.Release()
+            raise Exception(f"Image incomplete with image status {status} ...")
+          data = im.GetNDArray()
+          data_list.append(data)
+          im.Release()
 
-      # get the image from spinview
-      try:
-        im = self._spincam.GetNextImage(FRAME_TIMEOUT)
-        #can we run GetNextImage repeatedly until we've gotten them all?
+        except PySpin.SpinnakerException as e:
+          self.print(f'Error in spinnaker: {e}. Assumed innocuous.')
+          get_all = True
+          continue
 
-      except PySpin.SpinnakerException as e:
-        self.print(f'Error in spinnaker: {e}. Assumed innocuous.')
-        continue
-
-      # for single frame mode:
-      # self._spincam.EndAcquisition()
-      # self._spincam.BeginAcquisition()
-
-      if im.IsIncomplete():
-        status = im.GetImageStatus()
-        im.Release()
-        raise Exception(f"Image incomplete with image status {status} ...")
-
-      # get ndarry form of the image
-      data = im.GetNDArray()
-      im.Release()
-      yield data
+      yield data_list
 
   def open_file(self, filepath):
     # path = os.path.join(filepath, f'{self.device_serial_number}.mp4')
@@ -201,9 +210,8 @@ class Camera(AcquisitionObject):
     del fileObj
 
   def save(self, data):
-    self.save_count+=1
-    #print("calling 'save()' method for camera serial number %s for %d time(s)"%(str(self.device_serial_number),self.save_count))
-    self._file.stdin.write(data.tobytes())
+    for a in data:
+      self._file.stdin.write(a.tobytes())
 
   def get_camera_properties(self):
     nodemap_tldevice = self._spincam.GetTLDeviceNodeMap()

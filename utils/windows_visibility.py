@@ -51,7 +51,7 @@ def window_visibility(pose,windows, arena_center,r):
 
     return in_windowA,in_windowB,in_windowC
 
-def get_speed(pose,,arena_center,r,smoothing_window):
+def get_speed(pose,arena_center,r,smoothing_window):
     left_ear = np.stack((
         pose['leftear']['x'],
         pose['leftear']['y'],
