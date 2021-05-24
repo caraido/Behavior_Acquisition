@@ -93,7 +93,7 @@ class Mic(AcquisitionObject):
       return
     self._has_runner = True
     self.stream.start_stream()
-    data_time = time.time() - self.run_interval
+    data_time = time.time() + self.run_interval
     while True:
       self.sleep(data_time)
       with self._running_lock:
@@ -123,11 +123,10 @@ class Mic(AcquisitionObject):
     overlapping FFTs. For now just trying non-overlapping FFTs ~ the simplest approach.
     '''
 
-
     _, _, spectrogram = signal.spectrogram(
         self.data, self.sample_rate, nperseg=self._window, noverlap=self._overlap)
 
-    #self.print(self._xq.shape, self._yq.shape,
+    # self.print(self._xq.shape, self._yq.shape,
     #          spectrogram.shape, self._zq.shape)
     interpSpect = interpolate.RectBivariateSpline(
         self._yq, self._xq, spectrogram)(self._zq, self._xq)  # TODO: try linear instead of spline, univariate instead of bivariate
@@ -146,7 +145,7 @@ class Mic(AcquisitionObject):
 
     # interpSpect = mpl.cm.viridis(interpSpect) * 255  # colormap
     interpSpect = interpSpect * 255  # TODO: decide how to handle colormapping?
-    interpSpect=np.flipud(interpSpect)
+    interpSpect = np.flipud(interpSpect)
     return interpSpect.astype(np.uint8)
 
   def end_run(self):
