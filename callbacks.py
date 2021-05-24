@@ -2,7 +2,7 @@
 from utils import path_operation_utils as pop
 
 
-##serialNumbers=[19287342,19412282,17391304,17391290]
+# serialNumbers=[19287342,19412282,17391304,17391290]
 
 def initCallbacks(ag, status):
 
@@ -13,13 +13,13 @@ def initCallbacks(ag, status):
     else:
       ag.stop()
 
-  status['initialization'].callback(initialization)
+  status['initialization'].callback(initialization)  # TODO: decorators?
 
   def recording(state):
-    print(f'got to recording callback with state == {state}')
+    ag.print(f'got to recording callback with state == {state}')
     if state:
       rootfilename = status['rootfilename'].current
-      print(f'rootfilename was: {rootfilename}')
+      ag.print(f'rootfilename was: {rootfilename}')
       camera_list = []
       for i in range(ag.nCameras):
         camera_list.append(ag.cameras[i].device_serial_number)
@@ -33,7 +33,7 @@ def initCallbacks(ag, status):
       status['calibration'].immutable()
       # TODO: make rootfilename and notes immutable here? and mutable below? for safety
     else:
-      print('got stop message')
+      ag.print('got stop message')
       ag.stop()
       ag.start()  # restart without saving
       ag.run()
@@ -47,16 +47,16 @@ def initCallbacks(ag, status):
   def rootfilename(state):
     # just temporary, for debugging. want to make sure order is consistent.
     #
-    print(f'attempted to set rootfilename to "{state}"')
+    ag.print(f'attempted to set rootfilename to "{state}"')
 
   status['rootfilename'].callback(rootfilename)
 
   def notes(state):
     # TODO: should save notes under rootfile
     # status['rootfilename'].current
-    print(f'attempted to update notes')
-    print(state)
-    print(ag.filepaths)
+    ag.print(f'attempted to update notes')
+    ag.print(state)
+    ag.print(ag.filepaths)
     pop.save_notes(state, ag.filepaths)
 
   status['notes'].callback(notes)
@@ -64,30 +64,30 @@ def initCallbacks(ag, status):
   def calibration(state):
 
     if state['is calibrating']:
-      #TODO: start calibrating in background thread
+      # TODO: start calibrating in background thread
       # state['camera serial number'].current #gives the current camera SN
       # state['type'].current == 'Intrinsic' #intrinsice or extrinsic?
 
-      #ag.stop()
-      #ag.start(with_filepaths) #<-- key line
-      #ag.run()
+      # ag.stop()
+      # ag.start(with_filepaths) #<-- key line
+      # ag.run()
 
-      cam_id=state['camera serial number']
-      cam_num=ag.camera_order.index(cam_id)
+      cam_id = state['camera serial number']
+      cam_num = ag.camera_order.index(cam_id)
       type = state['calibration type']
-      process={'mode':type}
+      process = {'mode': type}
       # extrinsic calibration will trigger saving temp video to config path
-      if type=='extrinsic':
+      if type == 'extrinsic':
         camera_list = []
         for i in range(ag.nCameras):
           camera_list.append(ag.cameras[i].device_serial_number)
-        config_filepaths=pop.get_extrinsic_path(camera=camera_list)
+        config_filepaths = pop.get_extrinsic_path(camera=camera_list)
         ag.stop()
         ag.start(filepaths=config_filepaths)
         ag.process(cam_num, options=process)
-        #ag.run()
+        # ag.run()
       else:
-        ag.process(cam_num,options=process)
+        ag.process(cam_num, options=process)
 
       status['initialization'].immutable()
 
@@ -100,7 +100,7 @@ def initCallbacks(ag, status):
   status['calibration'].callback(calibration)
 
   def spectrogram(state):
-    print(f'applying new status from state: {state}')
+    ag.print(f'applying new status from state: {state}')
     ag.nidaq.parse_settings(status['spectrogram'].current)
     # TODO: trying to update _nx or _nfft will cause an error
     # that means we can only update log scaling and noise correction
@@ -108,6 +108,16 @@ def initCallbacks(ag, status):
     # TODO: update the port number... if _nx or _nfft change
 
   status['spectrogram'].callback(spectrogram)
+
+  # TODO: following should be refined to handle different analyses types, modes, etc.
+  def analyze(state):
+    ag.print(f'toggling analysis')
+    if state:
+      ag.process(0, {'mode': 'DLC'})
+    else:
+      ag.stop_processing(0)  # stops processing without stopping acquisition
+
+    status['analyzing'].callback(analyze)
 
   # def camera(state):
   #cameraId = state['camera index'].current
