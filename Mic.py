@@ -93,11 +93,12 @@ class Mic(AcquisitionObject):
       return
     self._has_runner = True
     self.stream.start_stream()
-    data_time = time.time() + self.run_interval
+    data_time = time.time() - self.run_interval
     while True:
       self.sleep(data_time)
       with self._running_lock:
         # try to capture the next data segment
+        data_time = time.time()
         if not self._running:
           self._has_runner = False
           return
