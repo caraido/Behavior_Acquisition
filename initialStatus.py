@@ -35,6 +35,11 @@ initialStatus = {  # just an example
         'current': False,
         'mutable': True,
     },
+    'analyzing': {
+        'category': 'Acquisition',
+        'current': False,
+        'mutable': True,
+    },
     'spectrogram': {
         'category': 'Audio',
         'mutable': True,
@@ -140,7 +145,7 @@ initialStatus = {  # just an example
                 'category': 'Video',
                 'mutable': True,
                 'current': 'intrinsic',
-                'allowedValues': ['intrinsic', 'alignment','extrinsic']
+                'allowedValues': ['intrinsic', 'alignment', 'extrinsic']
             }
         }
     }

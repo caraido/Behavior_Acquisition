@@ -8,13 +8,16 @@ from Mic import Mic
 
 # import ProcessingGroup as pg
 # import RigStatus
-CAM_LIST=[17391304, 17391290, 19287342, 19412282]
+CAM_LIST = [17391304, 17391290, 19287342, 19412282]
 
-def rearrange_cameras(cameras:list):
-  serial_number_list=[int(camera.device_serial_number) for camera in cameras]
-  zipper=dict(zip(serial_number_list,cameras))
+
+def rearrange_cameras(cameras: list):
+  serial_number_list = [int(camera.device_serial_number) for camera in cameras]
+  zipper = dict(zip(serial_number_list, cameras))
   new_cameras = [zipper[key] for key in CAM_LIST if key in zipper.keys()]
   return new_cameras
+
+
 class AcquisitionGroup:
   # def __init__(self, frame_rate=30, audio_settings=None):
   def __init__(self, status, hostname='localhost', ports=5002):
@@ -27,10 +30,10 @@ class AcquisitionGroup:
       ports = [ports + i for i in range(self.nChildren)]
 
     cameras = [Camera(self, self._camlist, i, status['frame rate'].current, (hostname, ports[i]))
-                    for i in range(self.nCameras)]
+               for i in range(self.nCameras)]
 
-    self.cameras= rearrange_cameras(cameras)
-    self.camera_order=CAM_LIST
+    self.cameras = rearrange_cameras(cameras)
+    self.camera_order = CAM_LIST
     self.mic = Mic(self, status['sample frequency'].current, status['spectrogram'].current, (
         hostname, ports[-2]))
     self.nidaq = Nidaq(self, status['frame rate'].current,
@@ -50,7 +53,7 @@ class AcquisitionGroup:
 
     # self.pg = pg.ProcessingGroup()
 
-    #self.print('done setting up ag. is camera 3 running? ',
+    # self.print('done setting up ag. is camera 3 running? ',
     #           self.cameras[3].running)
 
   def start(self, filepaths=None, isDisplayed=True):
@@ -121,17 +124,22 @@ class AcquisitionGroup:
 
         if options['mode'] == 'extrinsic':
           # turn on all cameras
-          for j,camera in enumerate(self.cameras):
-              camera.processing = options
-              self._processors[j]=threading.Thread(
+          for j, camera in enumerate(self.cameras):
+            camera.processing = options
+            self._processors[j] = threading.Thread(
                 target=camera.run_processing)
-              self._processors[j].start()
+            self._processors[j].start()
         else:
           self.children[i].processing = options
           self._processors[i] = threading.Thread(
               target=self.children[i].run_processing)
           self._processors[i].start()
     self.processing = True
+
+  # TODO: this should be refined depending on future changes to processing
+  def stop_processing(self, i):
+    self.children[i].processing = None
+    self._processors[i].join()
 
   def stop(self):
     # for cam in self.cameras:
@@ -161,7 +169,6 @@ class AcquisitionGroup:
 
   # def update(self, rootfilename, stepnumber):
   #   #send a message to the gui that a step ahs been completed
-
 
   def __del__(self):
     del self.children
