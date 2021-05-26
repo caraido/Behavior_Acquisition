@@ -78,11 +78,11 @@ class AcquisitionGroup:
       self.print('started camera ' + child.device_serial_number)
 
     # start mic
-    self.mic.start(filepath=self.filepaths[-2], display=False)
+    self.mic.start(filepath=self.filepaths[-2], display=isDisplayed[-1])
     self.print('started mic')
 
     # once the camera BeginAcquisition methods are called, we can start triggering
-    self.nidaq.start(filepath=self.filepaths[-1], display=isDisplayed[-1])
+    self.nidaq.start(filepath=self.filepaths[-1], display=False)
     self.print('started nidaq')
 
     self.started = True

@@ -89,19 +89,18 @@ class Mic(AcquisitionObject):
       self._has_filepath = True
 
   def run(self):
-      if self._has_runner:
-          return
+      #if self._has_runner:
+      #    return
       self._has_runner = True
       self.stream.start_stream()
-      data_time = time.time() - self.run_interval
-      while True:
-          self.sleep(data_time)
-          with self._running_lock:
+      #data_time = time.time() - self.run_interval
+      #while True:
+      #    self.sleep(data_time)
+      #    with self._running_lock:
               # try to capture the next data segment
-              if not self._running:
-                  self._has_runner = False
-                  return
-
+      #        if not self._running:
+      #            self._has_runner = False
+      #            return
 
   def capture_chunk(self, in_data, frame_count, time_info, status):
     self.data = np.fromstring(in_data, dtype=np.float32)
@@ -124,10 +123,11 @@ class Mic(AcquisitionObject):
     overlapping FFTs. For now just trying non-overlapping FFTs ~ the simplest approach.
     '''
 
+
     _, _, spectrogram = signal.spectrogram(
         self.data, self.sample_rate, nperseg=self._window, noverlap=self._overlap)
 
-    # self.print(self._xq.shape, self._yq.shape,
+    #self.print(self._xq.shape, self._yq.shape,
     #          spectrogram.shape, self._zq.shape)
     interpSpect = interpolate.RectBivariateSpline(
         self._yq, self._xq, spectrogram)(self._zq, self._xq)  # TODO: try linear instead of spline, univariate instead of bivariate
@@ -146,7 +146,7 @@ class Mic(AcquisitionObject):
 
     # interpSpect = mpl.cm.viridis(interpSpect) * 255  # colormap
     interpSpect = interpSpect * 255  # TODO: decide how to handle colormapping?
-    interpSpect = np.flipud(interpSpect)
+    interpSpect=np.flipud(interpSpect)
     return interpSpect.astype(np.uint8)
 
   def end_run(self):

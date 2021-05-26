@@ -1,5 +1,6 @@
 # from setup import ag, status
 from utils import path_operation_utils as pop
+from utils.dlc_utils import DLC_LIVE_MODEL_PATH
 
 
 # serialNumbers=[19287342,19412282,17391304,17391290]
@@ -113,11 +114,11 @@ def initCallbacks(ag, status):
   def analyze(state):
     ag.print(f'toggling analysis')
     if state:
-      ag.process(0, {'mode': 'DLC'})
+      ag.process(0, {'mode': 'DLC','modelpath':DLC_LIVE_MODEL_PATH})
     else:
       ag.stop_processing(0)  # stops processing without stopping acquisition
 
-    status['analyzing'].callback(analyze)
+  status['analyzing'].callback(analyze)
 
   # def camera(state):
   #cameraId = state['camera index'].current
