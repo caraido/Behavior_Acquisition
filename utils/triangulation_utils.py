@@ -27,17 +27,27 @@ def project(p3d,in_mat,ex_mat):
                              matrix.astype('float64'),
                              dist.astype('float64'))
         out[out<0]=np.nan
-        out=cv2.fisheye.undistortPoints(out,matrix.astype('float64'),dist.astype('float64'))
+        #out=cv2.fisheye.undistortPoints(out,matrix.astype('float64'),dist.astype('float64')) #TODO: temporarily disabled
     else:
         out,_ =cv2.projectPoints(points,rvec,tvec,
                              matrix.astype('float64'),
                              dist.astype('float64'))
         out[out<0]=np.nan
-        out = cv2.undistortPoints(out, matrix.astype('float64'),dist.astype('float64'))
+        #out = cv2.undistortPoints(out, matrix.astype('float64'),dist.astype('float64')) #TODO: temporarily disabled
     return out
-
+'''
 def reprojection_error(p3d, p2d, in_mat,ex_mat):
     proj = project(p3d,in_mat,ex_mat).reshape(p2d.shape)
+    return p2d-proj
+'''
+def reprojection_error(p3d, p2d, in_mat,ex_mat):
+    proj = project(p3d,in_mat,ex_mat).reshape(p2d.shape)
+    matrix = in_mat['camera_mat']
+    dist = in_mat['dist_coeff']
+    if len(dist)==4:
+        p2d=cv2.fisheye.distortPoints(p2d,matrix.astype('float64'),dist.astype('float64'))
+    else:
+        p2d = cv2.distortPoints(p2d, matrix.astype('float64'), dist.astype('float64'))
     return p2d-proj
 
 #@jit(nopython=True, parallel=True, forceobj=True)
@@ -493,7 +503,7 @@ def _jac_sparsity_triangulation(p2ds,
 
     return A_sparse
 
-@jit(nopython=True, forceobj=True, parallel=True)
+#@jit(nopython=True, forceobj=True, parallel=True)
 def _error_fun_triangulation(params, p2ds, in_mats,ex_mats,
                              constraints=None,
                              constraints_weak=None,
@@ -565,7 +575,7 @@ def optim_points(points, p3ds,in_mats,ex_mats,
                  constraints_weak=None,
                  scale_smooth=4,
                  scale_length=2, scale_length_weak=0.5,
-                 reproj_error_threshold=15, reproj_loss='soft_l1',
+                 reproj_error_threshold=15, reproj_loss='linear',
                  n_deriv_smooth=1, scores=None, verbose=False):
     """
     Take in an array of 2D points of shape CxNxJx2,
@@ -721,9 +731,9 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
             constraints=[],
             constraints_weak=weak_constraints,
             scores=all_scores,
-            scale_smooth=10,
+            scale_smooth=1,
             scale_length=2,
-            scale_length_weak=2,
+            scale_length_weak=1,
             n_deriv_smooth=2,
             reproj_error_threshold=2,
             verbose=True)
@@ -788,7 +798,7 @@ def reconstruct_3d_kalman(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict:dict
     all_points = out['points']
     all_scores = out['scores']
     fisheyes = [True, False, True, True]
-    all_points = undistort_points(all_points, intrinsic_dict, fisheyes=fisheyes)
+    #all_points = undistort_points(all_points, intrinsic_dict, fisheyes=fisheyes) # TODO: temporarily disabled
 
     length = all_points.shape[0]
     shape = all_points.shape
@@ -830,11 +840,11 @@ def reconstruct_3d_kalman(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict:dict
             constraints=[],
             constraints_weak=[],
             scores=all_scores,
-            scale_smooth=100,
+            scale_smooth=0,
             scale_length=2,
             scale_length_weak=2,
             n_deriv_smooth=2,
-            reproj_error_threshold=2,
+            reproj_error_threshold=5,
             verbose=True)
 
     points_2d_flat = points_2d.reshape(n_cams, -1, 2)
@@ -872,8 +882,8 @@ if __name__ =='__main__':
     import toml
 
     rootpath = r'D:\Desktop\2021-04-27_Tf3-2050'
-    #processed_path=os.path.join(rootpath,'processed')
-    processed_path=rootpath
+    processed_path=os.path.join(rootpath,'DLC')
+    #processed_path=rootpath
     config_path = os.path.join(rootpath,'config')
 
     items=os.listdir(processed_path)
@@ -889,7 +899,7 @@ if __name__ =='__main__':
         except: pass
 
     try:
-        output_3d = pd.read_csv(os.path.join(processed_path,'output_3d_data.csv'),index_col=0)
+        output_3d = pd.read_csv(os.path.join(rootpath,'output_3d_data_kalma.csv'),index_col=0)
         length =len(output_3d)
         bodypart = ['snout_x','snout_y','snout_z',
                     'leftear_x', 'leftear_y', 'leftear_z',
@@ -901,7 +911,7 @@ if __name__ =='__main__':
         output_3d_new=output_3d_new.reshape(-1,4,3)
     except:
         output_3d_new=None
-        Exception("can't find output_3d_data.csv under the folder")
+        Exception("can't find output_3d_data_kalman.csv under the folder")
 
     items = os.listdir(config_path)
     intrinsic= [item for item in items if 'intrinsic' in item]
@@ -912,8 +922,10 @@ if __name__ =='__main__':
     extrinsic_dict= toml.load(os.path.join(config_path,extrinsic[0]))
     extrinsic_dict = extrinsic_dict['extrinsic']
 
-    reconstructed_pose = reconstruct_3d(intrinsic_dict,extrinsic_dict,pose_dict)
-    #reconstructed_pose= reconstruct_3d_kalman(intrinsic_dict,extrinsic_dict,pose_dict,output_3d_new)
+    if output_3d_new is None:
+        reconstructed_pose = reconstruct_3d(intrinsic_dict,extrinsic_dict,pose_dict)
+    else:
+        reconstructed_pose= reconstruct_3d_kalman(intrinsic_dict,extrinsic_dict,pose_dict,output_3d_new)
 
     save_path = os.path.join(processed_path,'output_3d_data_new.csv')
     reconstructed_pose.to_csv(save_path)

@@ -101,7 +101,7 @@ def initCallbacks(ag, status):
 
   def spectrogram(state):
     ag.print(f'applying new status from state: {state}')
-    ag.nidaq.parse_settings(status['spectrogram'].current)
+    ag.mic.parse_settings(status['spectrogram'].current)
     # TODO: trying to update _nx or _nfft will cause an error
     # that means we can only update log scaling and noise correction
 
