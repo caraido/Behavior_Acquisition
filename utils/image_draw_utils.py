@@ -1,6 +1,7 @@
 import PIL
 import cv2
 import colorcet as cc
+from utils.dlc_utils import TOP_THRESHOLD
 
 class Display:
 
@@ -29,7 +30,7 @@ class Display:
 def draw_dots(frame, pose=None):
 	if pose is not None:
 		for i in range(pose.shape[0]):
-			if pose[i, 2] > 0.9:
+			if pose[i, 2] > TOP_THRESHOLD:
 				try:
 					x=pose[i,0]
 					y=pose[i,1]

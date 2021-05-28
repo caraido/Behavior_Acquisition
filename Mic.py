@@ -89,18 +89,18 @@ class Mic(AcquisitionObject):
       self._has_filepath = True
 
   def run(self):
-      #if self._has_runner:
-      #    return
+      if self._has_runner:
+          return
       self._has_runner = True
       self.stream.start_stream()
-      #data_time = time.time() - self.run_interval
-      #while True:
-      #    self.sleep(data_time)
-      #    with self._running_lock:
+      data_time = time.time() - self.run_interval
+      while True:
+          self.sleep(data_time)
+          with self._running_lock:
               # try to capture the next data segment
-      #        if not self._running:
-      #            self._has_runner = False
-      #            return
+              if not self._running:
+                  self._has_runner = False
+                  return
 
   def capture_chunk(self, in_data, frame_count, time_info, status):
     self.data = np.fromstring(in_data, dtype=np.float32)

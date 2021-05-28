@@ -90,8 +90,10 @@ class Camera(AcquisitionObject):
           model_path=options['modelpath'],
           processor=process['processor'],
           display=False,
-          resize=DLC_RESIZE)
+          resize=DLC_RESIZE,
+          dynamic=(True,0.7,40))
       process['frame0'] = True
+      process['frame_num']=0
       return process
     else:  # mode should be 'intrinsic' or 'extrinsic'
       process['mode'] = options['mode']
@@ -123,6 +125,7 @@ class Camera(AcquisitionObject):
 
   def do_process(self, data, data_count, process):
     if process['mode'] == 'DLC':
+      process['frame_num'] = process['frame_num'] + 1
       if process['frame0']:
         process['DLCLive'].init_inference(frame=data)
         process['frame0'] = False
@@ -237,6 +240,8 @@ class Camera(AcquisitionObject):
       if results is not None:
         if process['mode'] == 'DLC':
           draw_dots(frame, results)
+          cv2.putText(frame, f"frame number {process['frame_num']}", (50, 50),
+                      cv2.FONT_HERSHEY_PLAIN, 4.0, (255, 0, 125), 2)
         else:
           cv2.putText(frame, f"Performing {process['mode']} calibration", (50, 50),
                       cv2.FONT_HERSHEY_PLAIN, 4.0, (255, 0, 125), 2)

@@ -21,7 +21,7 @@ initialStatus = {  # just an example
     'sample frequency': {
         'allowedValues': {'min': int(1e4), 'max': int(1e6)},
         'category': 'Audio',
-        'current': int(3e5),
+        'current': int(2.5e5),
         'mutable': False,
     },
     'frame rate': {

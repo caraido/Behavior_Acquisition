@@ -3,6 +3,8 @@ import os
 import threading
 
 DLC_LIVE_MODEL_PATH=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\exported-models\DLC_Alec_second_try_resnet_50_iteration-0_shuffle-1'
+TOP_THRESHOLD=0.85
+SIDE_THRESHOLD=0.5
 
 def dlc_analysis(root_path, dlc_config_path):
 	if isinstance(dlc_config_path, list):
