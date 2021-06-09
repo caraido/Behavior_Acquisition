@@ -51,28 +51,7 @@ def window_visibility(pose,windows, arena_center,r):
 
     return in_windowA,in_windowB,in_windowC
 
-def get_speed(pose,arena_center,r):
-    left_ear = np.stack((
-        pose['leftear']['x'],
-        pose['leftear']['y'],
-    )).transpose()  # should be t-by-2
-    right_ear = np.stack((
-        pose['rightear']['x'],
-        pose['rightear']['y'],
-    )).transpose()  # should be t-by-2
 
-    head_center = (left_ear + right_ear) / 2
-    in_donut=(head_center-arena_center)*2-r*2
-    in_experiment=in_donut.copy()
-    in_experiment[in_donut<0]=0
-    in_experiment[in_donut>0]=1
-
-    speed = np.linalg.norm(np.diff(head_center))
-    return speed
-
-def get_average_speed_before_groom(speed:np.ndarray,groom_start_frame:int):
-    speed_before_groom=speed[0:groom_start_frame]
-    return np.average(speed_before_groom)
 
 
 

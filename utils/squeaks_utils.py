@@ -6,6 +6,17 @@ import scipy.io as sio
 import matplotlib.pyplot as plt
 import re
 import pandas as pd
+import matlab.engine as engine
+
+
+def get_matlab():
+	eng=engine.start_matlab()
+	print('matlab enginer started.')
+	return eng
+
+def squeak_detect(audio_fpath,network_fpath,save_fpath,settings,current_files,total_files,network_name,number_of_repeats):
+	pass
+
 
 def is_in_window(position, window_constraint):
 	a= position[0]>np.min(window_constraint[0])
@@ -51,6 +62,7 @@ def get_squeaks_indices(log_path):
 
 	return indices
 
+
 def get_thumbnail(video_path):
 	cap=cv2.VideoCapture(video_path)
 
@@ -58,74 +70,6 @@ def get_thumbnail(video_path):
 		ret, frame = cap.read()
 		if ret:
 			return frame
-
-
-
-if __name__ =='__main_':
-	path =  r'D:\Desktop'
-	roots=os.listdir(path)
-	for root in roots:
-		if "T" in root:
-			root_path = os.path.join(path,root)
-			gaze_path = os.path.join(root_path,'gaze')
-			items=os.listdir(gaze_path)
-			gaze_files=[os.path.join(gaze_path,item) for item in items if '.mat' in item]
-			config_path = os.path.join(root_path,'config')
-			gaze_model =Gaze_angle(config_path)
-
-
-			plt.figure(figsize=(10, 15))
-			plt.title(root)
-
-			for i,gaze in enumerate(gaze_files):
-				gaze0=sio.loadmat(gaze)
-				# get gaze
-				winA=gaze_model.windows[0]
-				winB=gaze_model.windows[1]
-				winC = gaze_model.windows[2]
-
-				body_parts=['body_position','outer_left','outer_right']
-				for j,body_part in enumerate(body_parts):
-
-					body_part_in_A = is_in_window(gaze0[body_part],winA)
-					body_part_in_B = is_in_window(gaze0[body_part], winB)
-					body_part_in_C = is_in_window(gaze0[body_part], winC)
-
-					# get squeaks
-					log_path=os.path.join(root_path,'log.txt')
-					length = len(body_part_in_C)
-
-
-					# body position
-					if body_part=='body_position' and 'gaze_angle_0' in gaze:
-						continue
-					if body_part=='outer_left' and 'gaze_angle_0' in gaze:
-						continue
-
-					plt.subplot(5,1,i*3+j-1)
-					if i*3+j-1==1:
-						plt.title(root)
-					plt.eventplot(np.where(body_part_in_A),colors='red')
-					plt.eventplot(np.where(body_part_in_B),colors='green')
-					plt.eventplot(np.where(body_part_in_C),colors='blue')
-					plt.legend(['A','B','C'])
-					plt.xlim([0,length])
-					plt.xticks([])
-					name = os.path.split(gaze)[1][:-4]
-					if body_part=='outer_right' and 'gaze_angle_0' in gaze:
-						body_part='outer_head_direction'
-					plt.ylabel(name+'_'+body_part)
-
-			plt.subplot(5,1,5)
-			squeaks = get_squeaks(log_path=log_path, length=length)
-			plt.eventplot(np.where(squeaks),colors='gray')
-			plt.xlim([0,length])
-			plt.xlabel('frame')
-			plt.ylabel('squeaks')
-
-			plt.tight_layout()
-
-			plt.savefig(os.path.join(gaze_path,'gaze_and_squeaks.png'))
 
 if __name__=='__main_':
 	import tqdm

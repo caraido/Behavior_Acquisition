@@ -161,7 +161,7 @@ class Nidaq(AcquisitionObject):
     if self.filepath:
       audio, _ = read_audio(self.filepath)
       wavfile.write(self.filepath[:-4]+'wav', self.sample_rate, audio)
-      self.print('save USB mic')
+      self.print('save nidaq mic')
 
   def end_display(self):
     self._log_mode[1] = True

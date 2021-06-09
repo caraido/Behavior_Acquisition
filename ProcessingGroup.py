@@ -313,7 +313,9 @@ class ProcessingGroup:
 		mono = gaze_model(self.rootpath, cutoff=0.6, save=True)
 		gaze_model.plot(mono,savepath=self.rootpath)
 
+
 	def dsqk_analysis(self):
+
 		pass
 
 	def reorganize(self):
@@ -371,7 +373,7 @@ if __name__ == '__main__':
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
 
-	item=r'2021-03-12_H6-2044'
+	item=r'2021-06-04_p6_pups_and_mama'
 	path = os.path.join(working_dir,item)
 	pg(path)
 	pg.post_process(intrinsic=False,
@@ -380,10 +382,10 @@ if __name__ == '__main__':
 					undistort=False,
 					copy=False,
 					dlc=False,
-					triangulate=True,
-					reproject=True,
+					triangulate=False,
+					reproject=False,
 					reorganize=False,
-					gaze=False,
+					gaze=True,
 					dsqk=False,
 					server=False,
 					HDD=False)

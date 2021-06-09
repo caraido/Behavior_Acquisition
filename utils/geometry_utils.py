@@ -298,6 +298,18 @@ class Config:
                 break
 
 
+def accumulative_window_preference(long):
+    length=long.shape[1]
+    accum=[]
+
+    for i in range(length-1):
+        seg=long[:,0:i+1]
+        accum.append(np.sum(seg,axis=1))
+
+    accum=np.array(accum)
+    return accum
+
+
 class Gaze_angle:
     def __init__(self, config_folder_path, gazePoint=0.5725, main_config_path=None):
         if main_config_path:
@@ -306,6 +318,8 @@ class Gaze_angle:
         else:
             main_config = Config(config_folder_path)
             local_config = main_config.config_top_cam
+
+        self.config_folder_path= config_folder_path
         self.corners = main_config.config_top_cam['undistorted_corners']
         self.inner_r = main_config.config_rig['inner_r']
         self.outer_r = main_config.config_rig['outer_r_']
@@ -377,9 +391,19 @@ class Gaze_angle:
             B_right = np.sum(is_in_window(outer_right, self.windowB, self.circle_center))
             C_right = np.sum(is_in_window(outer_right, self.windowC, self.circle_center))
 
+            A_right_long=is_in_window(outer_right,self.windowA,self.circle_center)
+            B_right_long = is_in_window(outer_right, self.windowB, self.circle_center)
+            C_right_long = is_in_window(outer_right, self.windowC, self.circle_center)
+            right_long=np.stack([A_right_long, B_right_long, C_right_long])
+
             A_left = np.sum(is_in_window(outer_left, self.windowA, self.circle_center))
             B_left = np.sum(is_in_window(outer_left, self.windowB, self.circle_center))
             C_left = np.sum(is_in_window(outer_left, self.windowC, self.circle_center))
+
+            A_left_long = is_in_window(outer_left, self.windowA, self.circle_center)
+            B_left_long = is_in_window(outer_left, self.windowB, self.circle_center)
+            C_left_long = is_in_window(outer_left, self.windowC, self.circle_center)
+            left_long=np.stack([A_left_long, B_left_long, C_left_long])
 
             A_body = np.sum(is_in_window(arc_body, self.windowA, self.circle_center))
             B_body = np.sum(is_in_window(arc_body, self.windowB, self.circle_center))
@@ -422,10 +446,15 @@ class Gaze_angle:
             stats=pd.DataFrame(table,columns=column,index=index)
             stats=stats.to_dict()
 
+            left_accum=accumulative_window_preference(left_long)
+            right_accum=accumulative_window_preference(right_long)
+
             result = {'inner_left': np.transpose(inner_left)[0],
                       'inner_right': np.transpose(inner_right)[0],
                       'outer_left': np.transpose(outer_left)[0],
                       'outer_right': np.transpose(outer_right)[0],
+                      'left_accum':left_accum,
+                      'right_accum': right_accum,
                       'head_triangle_area':np.transpose(head_triangle_area),
                       'body_triangle_area':np.transpose(body_triangle_area),
                       'body_position':np.transpose(arc_body)[0],
@@ -486,6 +515,7 @@ class Gaze_angle:
             row=4
             col=2
 
+            # plot the gaze
             plt.figure(figsize=(14, 16))
             for i in range(len(keys)):
                 plt.subplot(row, col, i+1)
@@ -517,11 +547,42 @@ class Gaze_angle:
             table.set_fontsize(20)
             table.scale(1,3)
 
+            # plot the accumulative gaze
+            right_accum=None
+            left_accum=None
+            try:
+                right_accum=things['right_accum']
+                left_accum = things['left_accum']
+            except:
+                raise Warning('cannot find accumulative gaze data')
+
             if savepath:
                 plt.savefig(os.path.join(savepath,'gaze','gaze_angle_%d.jpg'%float(self.gazePoint*180/np.pi)))
 
             if show:
                 plt.show()
+
+            plt.clf()
+            if right_accum is not None and left_accum is not None:
+                self.plot_accum(right_accum,'right')
+                self.plot_accum(left_accum,'left')
+
+    def plot_accum(self,accum,side):
+        plt.figure()
+        length=accum.shape[0]
+        path=os.path.split(self.config_folder_path)[0]
+        things=os.listdir(path)
+        items=[i for i in things if '.MOV' in i]
+
+        cap=cv2.VideoCapture(os.path.join(path,items[0]))
+        fps=cap.get(cv2.CAP_PROP_FPS)
+        x=np.linspace(0,length/fps/60,length) # get the x ticks in minutes\
+        plt.plot(x,accum)
+        plt.xlabel('time/min')
+        plt.ylabel('gaze on windwo count')
+        plt.legend(['window A','window B','window C'])
+        plt.title('Accumulative gaze preference for %s eye of gaze angle %d'%(side,float(self.gazePoint*180/np.pi)))
+        plt.savefig(os.path.join(path,'gaze','accumulative_gaze_pref_%s_angle_%d'%(side,float(self.gazePoint*180/np.pi))))
 
 
 if __name__ == '__main__':

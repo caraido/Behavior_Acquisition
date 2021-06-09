@@ -1,3 +1,5 @@
+import time
+
 import PySpin
 import os
 
@@ -102,12 +104,14 @@ class AcquisitionGroup:
       if self._runners[i] is None or not self._runners[i].is_alive():
         self._runners[i] = threading.Thread(target=child.run)
         #threading.setprofile(child.run) # for profiler
+        print('start running child %d'%i)
         self._runners[i].start()
       if self._displayers[i] is None or not self._displayers[i].is_alive():
-        if i != 5:  # temporaray solution for not displaying nidaq spectrogram
+        #if i != 4:  # temporaray solution for not displaying nidaq spectrogram
           self._displayers[i] = threading.Thread(target=child.display)
           #threading.setprofile(child.display)# for profiler
           self._displayers[i].start()
+          print('start displaying child %d' % i)
     self.running = True
     #
     #       # if not self._runners[-1].is_alive():
