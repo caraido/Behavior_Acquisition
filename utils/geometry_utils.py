@@ -5,7 +5,8 @@ import os
 import pandas as pd
 from sympy import Circle,Point,sympify
 from utils.head_angle_analysis import project_from_head_to_walls,is_in_window
-from utils.calibration_utils import TOP_CAM
+from utils.windows_visibility import window_visibility
+from utils.speed_calculation import get_speed,get_smoothed_speed
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -368,6 +369,13 @@ class Gaze_angle:
                                                                                           self.outer_r_pixel,
                                                                                           self.circle_center[np.newaxis, :],
                                                                                           gazePoint=self.gazePoint)
+
+            # get window visibility
+            winA_vis,winB_vis,winC_vis=window_visibility(pose,self.windows,self.circle_center,self.inner_r_pixel)
+            # get smoothed speed over time
+            speed=get_speed(pose)
+            smoothed_speed=get_smoothed_speed(speed,param=31,smoothing_method='median_filter')
+
             # triangle area
             head_triangle_area,body_triangle_area = triangle_area(pose)
 
@@ -458,6 +466,8 @@ class Gaze_angle:
                       'head_triangle_area':np.transpose(head_triangle_area),
                       'body_triangle_area':np.transpose(body_triangle_area),
                       'body_position':np.transpose(arc_body)[0],
+                      'win_visibility':np.stack([winA_vis,winB_vis,winC_vis]),
+                      'speed':smoothed_speed,
                       'stats':stats
                       }
 
@@ -511,41 +521,8 @@ class Gaze_angle:
 
     def plot(self,things,savepath=None,show=False):
         if things is not None:
-            keys = ['inner_left','inner_right','outer_left','outer_right','body_position']
-            row=4
-            col=2
-
-            # plot the gaze
-            plt.figure(figsize=(14, 16))
-            for i in range(len(keys)):
-                plt.subplot(row, col, i+1)
-
-                plt.axvspan(xmin=self.windows[0][0][0], xmax=self.windows[0][0][1], facecolor='orange', alpha=0.3)
-                plt.axvspan(xmin=self.windows[1][0][0], xmax=self.windows[1][0][1], facecolor='red', alpha=0.3)
-                plt.axvspan(xmin=self.windows[2][0][0], xmax=self.windows[2][0][1], facecolor='magenta', alpha=0.3)
-                plt.axvspan(xmin=self.windows[0][1][0], xmax=self.windows[0][1][1], facecolor='orange', alpha=0.3)
-                plt.axvspan(xmin=self.windows[1][1][0], xmax=self.windows[1][1][1], facecolor='red', alpha=0.3)
-                plt.axvspan(xmin=self.windows[2][1][0], xmax=self.windows[2][1][1], facecolor='magenta', alpha=0.3)
-                handles = [Rectangle((0, 0), 1, 1, color=c, ec="k", alpha=0.3) for c in ['orange', 'red', 'magenta']]
-                labels = ["window A", "window B", "window C"]
-                plt.legend(handles, labels)
-                plt.title("Gaze point density of %s " % list(keys)[i])
-                plt.hist(x=self.double(np.array(things[list(keys)[i]])), bins=60, density=False)
-            plt.suptitle(self.title_name +' gaze angle %d'%float(self.gazePoint*180/np.pi),fontsize=30)
-
-            plt.subplot(4,1,4)
-            plt.axis('off')
-            stats = things['stats']
-            stats = pd.DataFrame(stats)
-
-            cell_text = []
-            for row in range(len(stats)):
-                cell_text.append(['%1.2f' % x for x in stats.iloc[row]])
-
-            table = plt.table(cellText=cell_text,colLabels=stats.columns,rowLabels=stats.index,loc='center',cellLoc='center')
-            table.auto_set_font_size(False)
-            table.set_fontsize(20)
-            table.scale(1,3)
+            self.plot_gaze(things,savepath)
+            plt.clf()
 
             # plot the accumulative gaze
             right_accum=None
@@ -555,34 +532,97 @@ class Gaze_angle:
                 left_accum = things['left_accum']
             except:
                 raise Warning('cannot find accumulative gaze data')
-
-            if savepath:
-                plt.savefig(os.path.join(savepath,'gaze','gaze_angle_%d.jpg'%float(self.gazePoint*180/np.pi)))
-
-            if show:
-                plt.show()
-
-            plt.clf()
             if right_accum is not None and left_accum is not None:
-                self.plot_accum(right_accum,'right')
-                self.plot_accum(left_accum,'left')
+                self.plot_accum(right_accum,'right',savepath)
+                self.plot_accum(left_accum,'left',savepath)
+            plt.clf()
 
-    def plot_accum(self,accum,side):
+            speed=None
+            try:
+                speed=things['speed']
+            except:
+                raise Warning('cannot find speed data')
+            if speed is not None:
+                self.plot_speed_over_time(speed, savepath)
+            plt.clf()
+
+    def plot_gaze(self,things,savepath):
+        keys = ['inner_left', 'inner_right', 'outer_left', 'outer_right', 'body_position']
+        row = 4
+        col = 2
+        # plot the gaze
+        plt.figure(figsize=(14, 16))
+        for i in range(len(keys)):
+            plt.subplot(row, col, i + 1)
+
+            plt.axvspan(xmin=self.windows[0][0][0], xmax=self.windows[0][0][1], facecolor='orange', alpha=0.3)
+            plt.axvspan(xmin=self.windows[1][0][0], xmax=self.windows[1][0][1], facecolor='red', alpha=0.3)
+            plt.axvspan(xmin=self.windows[2][0][0], xmax=self.windows[2][0][1], facecolor='magenta', alpha=0.3)
+            plt.axvspan(xmin=self.windows[0][1][0], xmax=self.windows[0][1][1], facecolor='orange', alpha=0.3)
+            plt.axvspan(xmin=self.windows[1][1][0], xmax=self.windows[1][1][1], facecolor='red', alpha=0.3)
+            plt.axvspan(xmin=self.windows[2][1][0], xmax=self.windows[2][1][1], facecolor='magenta', alpha=0.3)
+            handles = [Rectangle((0, 0), 1, 1, color=c, ec="k", alpha=0.3) for c in ['orange', 'red', 'magenta']]
+            labels = ["window A", "window B", "window C"]
+            plt.legend(handles, labels)
+            plt.title("Gaze point density of %s " % list(keys)[i])
+            plt.hist(x=self.double(np.array(things[list(keys)[i]])), bins=60, density=False)
+        plt.suptitle(self.title_name + ' gaze angle %d' % float(self.gazePoint * 180 / np.pi), fontsize=30)
+
+        plt.subplot(4, 1, 4)
+        plt.axis('off')
+        stats = things['stats']
+        stats = pd.DataFrame(stats)
+
+        cell_text = []
+        for row in range(len(stats)):
+            cell_text.append(['%1.2f' % x for x in stats.iloc[row]])
+
+        table = plt.table(cellText=cell_text, colLabels=stats.columns, rowLabels=stats.index, loc='center',
+                          cellLoc='center')
+        table.auto_set_font_size(False)
+        table.set_fontsize(20)
+        table.scale(1, 3)
+        if savepath:
+            plt.savefig(os.path.join(savepath, 'gaze', 'gaze_angle_%d.jpg' % float(self.gazePoint * 180 / np.pi)))
+
+    def plot_accum(self,accum,side,savepath):
         plt.figure()
         length=accum.shape[0]
-        path=os.path.split(self.config_folder_path)[0]
-        things=os.listdir(path)
+        things=os.listdir(savepath)
         items=[i for i in things if '.MOV' in i]
 
-        cap=cv2.VideoCapture(os.path.join(path,items[0]))
+        cap=cv2.VideoCapture(os.path.join(savepath,items[0]))
         fps=cap.get(cv2.CAP_PROP_FPS)
         x=np.linspace(0,length/fps/60,length) # get the x ticks in minutes\
         plt.plot(x,accum)
-        plt.xlabel('time/min')
+        plt.xlabel('time(min)')
         plt.ylabel('gaze on windwo count')
         plt.legend(['window A','window B','window C'])
         plt.title('Accumulative gaze preference for %s eye of gaze angle %d'%(side,float(self.gazePoint*180/np.pi)))
-        plt.savefig(os.path.join(path,'gaze','accumulative_gaze_pref_%s_angle_%d'%(side,float(self.gazePoint*180/np.pi))))
+        plt.savefig(os.path.join(savepath,'gaze','accumulative_gaze_pref_%s_angle_%d'%(side,float(self.gazePoint*180/np.pi))))
+
+    def plot_windows_visibility(self):
+
+        pass
+
+    def plot_speed_over_time(self,speed,savepath):
+        plt.figure()
+        length=speed.shape[0]
+        things = os.listdir(savepath)
+        items = [i for i in things if '.MOV' in i]
+
+        cap = cv2.VideoCapture(os.path.join(savepath, items[0]))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        x = np.linspace(0, length / fps / 60, length)  # get the x ticks in minutes\
+        average_speed=np.nanmean(speed)
+        plt.plot(x,speed)
+        plt.xlabel('time(min)')
+        plt.ylabel('speed (pixel/frame)')
+        plt.ylim([0,40])
+        plt.axhline(y=average_speed,color='red')
+        plt.legend(['speed','average speed'])
+        plt.title('Speed')
+        plt.savefig(os.path.join(savepath, 'gaze','speed.jpg'))
 
 
 if __name__ == '__main__':
