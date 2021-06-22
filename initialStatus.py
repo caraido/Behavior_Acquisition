@@ -40,6 +40,11 @@ initialStatus = {  # just an example
         'current': False,
         'mutable': True,
     },
+    'LED':{
+        'category':'LED',
+        'current':False,
+        'mutable':True,
+    },
     'spectrogram': {
         'category': 'Audio',
         'mutable': True,

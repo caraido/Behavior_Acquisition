@@ -1,9 +1,9 @@
 import os
+import re
 import time
 import shutil
 import toml
 
-#saving_path_prefix = 'C:/Users/SchwartzLab'
 saving_path_prefix = 'D:\\'
 default_saving_path= 'Desktop'
 default_folder_name = 'Testing'
@@ -48,6 +48,68 @@ def get_extrinsic_path(camera:list,config_path=global_config_path):
 	path.append(None)
 	return path
 
+def seperate_name(name):
+	if name[0]=='&':
+		name_list=re.split(r'[&]+',name[1:])
+		if len(name_list[0])==0: # empty animal name
+			name_list[0]='unnamedAnimal'
+		if len(name_list[1]) ==0: # empty session type
+			name_list[1]='unnamedSession'
+		if len(name_list[2]) ==0: # emtpy trial type
+			name_list[2]='unnamedTrial'
+		return name_list
+	else:
+		raise NameError('Wrong naming system!')
+
+def reformat_filepath(path,name,camera:list):
+
+	date= time.strftime("%Y-%m-%d_",time.localtime())
+	if path == '':
+		real_path = os.path.join(saving_path_prefix,default_saving_path)
+		print("No file path specified. Will use default path")
+	else:
+		real_path = os.path.join(saving_path_prefix,path)
+
+	if not os.path.exists(real_path):
+		os.makedirs(real_path)
+		print("file path %s doesn't exist, creating one..." % real_path)
+
+	namelist=seperate_name(name)
+	subfolder=os.path.join(real_path,namelist[0])# namelist[0] is animal ID
+
+	#add
+
+	if not os.path.exists(subfolder):
+		os.mkdir(subfolder)
+		print("file path %s doesn't exist, creating one..." % real_path)
+	full_path=os.path.join(subfolder,date+namelist[1]+'_'+namelist[2])
+
+	if not os.path.exists(full_path):
+		os.mkdir(full_path)
+	else:
+		i=2
+		while True:
+			if os.path.exists(full_path+'(%s)'%i):
+				i+=1
+			else:
+				full_path=full_path+'(%s)'%i
+				os.mkdir(full_path)
+				break
+
+	filepaths = []
+	for serial_number in camera:
+		camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
+		filepaths.append(camera_filepath)
+
+	mic_filepath=os.path.join(full_path,'Dodo_audio.tdms')
+	filepaths.append(mic_filepath)
+
+	audio_filepath = os.path.join(full_path,'B&K_audio.tdms')
+	filepaths.append(audio_filepath)
+
+	return filepaths
+
+'''
 def reformat_filepath(path,name,camera:list):
 	date= time.strftime("%Y-%m-%d_",time.localtime())
 	if path == '':
@@ -91,6 +153,7 @@ def reformat_filepath(path,name,camera:list):
 	filepaths.append(audio_filepath)
 
 	return filepaths
+'''
 
 def copy_config(filepath):
 	local_config_path = os.path.join(filepath, 'config')
