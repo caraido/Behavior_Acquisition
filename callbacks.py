@@ -120,6 +120,14 @@ def initCallbacks(ag, status):
 
   status['analyzing'].callback(analyze)
 
+  '''
+  def LED(state):
+    ag.print(f'toggling LED')
+    if state:
+  '''
+
+
+
   # def camera(state):
   #cameraId = state['camera index'].current
   # if state['serial number'].current != status[f'camera {cameraId}'].current['serial number'].current:

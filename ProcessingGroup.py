@@ -348,6 +348,7 @@ class ProcessingGroup:
 
 
 	def SSD2server(self):
+
 		# copy and paste
 		pass
 
@@ -381,11 +382,11 @@ if __name__ == '__main__':
 					extrinsic=False,
 					undistort=False,
 					copy=False,
-					dlc=False,
+					dlc=True,
 					triangulate=False,
 					reproject=False,
 					reorganize=False,
-					gaze=True,
+					gaze=False,
 					dsqk=False,
 					server=False,
 					HDD=False)

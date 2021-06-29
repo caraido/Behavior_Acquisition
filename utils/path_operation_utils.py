@@ -3,12 +3,14 @@ import re
 import time
 import shutil
 import toml
+import json
 
 saving_path_prefix = 'D:\\'
 default_saving_path= 'Desktop'
 default_folder_name = 'Testing'
 global_config_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
 global_log_path=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\log'
+namespace_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\assets\namespace\namespace.json'
 
 @property
 def get_saving_path_prefix():
@@ -50,16 +52,41 @@ def get_extrinsic_path(camera:list,config_path=global_config_path):
 
 def seperate_name(name):
 	if name[0]=='&':
-		name_list=re.split(r'[&]+',name[1:])
+		name_list=re.split(r'[&]',name[1:])
 		if len(name_list[0])==0: # empty animal name
 			name_list[0]='unnamedAnimal'
-		if len(name_list[1]) ==0: # empty session type
-			name_list[1]='unnamedSession'
-		if len(name_list[2]) ==0: # emtpy trial type
-			name_list[2]='unnamedTrial'
+		if len(name_list[1]) ==0: # empty animaltype
+			name_list[1]='unknownAnimalType'
+		if len(name_list[2]) ==0: # emtpy window A
+			name_list[2]='None'
+		if len(name_list[3]) == 0:  # emtpy window B
+			name_list[3] = 'None'
+		if len(name_list[4]) ==0: # emtpy window C
+			name_list[4]='None'
 		return name_list
 	else:
 		raise NameError('Wrong naming system!')
+
+def add_to_namespace(namelist):
+	animalID = namelist[0]
+	animalType = namelist[1]
+	windows = namelist[2:]  # list
+	with open(namespace_path,'r') as f:
+		namespace=json.load(f)
+		if animalID not in namespace['animalID']:
+			namespace['animalID'].append(animalID)
+			namespace['animalID']=list(sorted(namespace['animalID']))
+		if animalType not in namespace['animalType']:
+			namespace['animalType'].append(animalType)
+			namespace['animalType'] = list(sorted(namespace['animalType']))
+		namespace['windows']=namespace['windows']+windows
+		namespace['windows']=list(sorted(list(set(namespace['windows']))))
+	with open(namespace_path,'w') as f:
+		f.seek(0)  # <--- should reset file position to the beginning.
+		json.dump(namespace, f, indent=4)
+		f.truncate()
+		print('updated namespace.json')
+
 
 def reformat_filepath(path,name,camera:list):
 
@@ -75,14 +102,18 @@ def reformat_filepath(path,name,camera:list):
 		print("file path %s doesn't exist, creating one..." % real_path)
 
 	namelist=seperate_name(name)
-	subfolder=os.path.join(real_path,namelist[0])# namelist[0] is animal ID
+	subfolder=os.path.join(real_path,namelist[0]) # namelist[0] is animal ID
 
-	#add
+	add_to_namespace(namelist)
 
 	if not os.path.exists(subfolder):
 		os.mkdir(subfolder)
 		print("file path %s doesn't exist, creating one..." % real_path)
-	full_path=os.path.join(subfolder,date+namelist[1]+'_'+namelist[2])
+
+	if namelist[2]=='None' and namelist[3]=='None' and namelist[4]=='None':
+		full_path = os.path.join(subfolder,date+namelist[1]+'_habituation')
+	else:
+		full_path=os.path.join(subfolder,date+namelist[1]+r"_(A)"+namelist[2]+r"_(B)"+namelist[3]+r"_(C)"+namelist[4])
 
 	if not os.path.exists(full_path):
 		os.mkdir(full_path)
