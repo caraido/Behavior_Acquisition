@@ -1,15 +1,18 @@
 from flask import Flask
 from flask_socketio import SocketIO, emit
+from datetime import datetime
 
 
 def initServer(ag, status):
   app = Flask(__name__)
   socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')
 
+#TODO: decorator
   def printToGUI(*args):
     socketio.emit('message', ' '.join([str(arg)
                                        for arg in args]), broadcast=True)
-    print(*args)
+    ts = datetime.utcnow().strftime("%H:%M:%S.%f")
+    print(ts, args)
 
   @socketio.on('connect')
   def handle_new_connection():

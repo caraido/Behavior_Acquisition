@@ -225,7 +225,6 @@ class ProcessingGroup:
 		video_list = []
 		board = self.ex_calib.board
 
-
 		for item in items:
 			if 'intrinsic' in item and 'temp' not in item:
 				intrinsic_path = os.path.join(self.global_config_path, item)
@@ -299,7 +298,6 @@ class ProcessingGroup:
 
 	def gaze_analysis(self):
 		# gaze analysis on top camera
-
 		warnings.filterwarnings('ignore') # ignore warning
 		gaze_model = Gaze_angle(self.config_path)
 
@@ -319,6 +317,7 @@ class ProcessingGroup:
 		pass
 
 	def reorganize(self):
+		# TODO: add everything to .mat file
 		items = os.listdir(self.rootpath)
 		if 'reproject' in str(items):
 			os.mkdir(os.path.join(self.rootpath,'reproject'))

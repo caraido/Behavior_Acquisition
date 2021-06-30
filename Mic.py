@@ -150,14 +150,23 @@ class Mic(AcquisitionObject):
     return interpSpect.astype(np.uint8)
 
   def end_run(self):
+    self.print('starting end run for mic')
     self.stream.stop_stream()
     self.stream.close()
     # self.audio.terminate()
     self.stream = None
+    '''
     if self.filepath:
+      self.print('reading audio')
       audio, _ = read_audio(self.filepath)
+      self.print('rewriting audio')
+      #issue is here?
       wavfile.write(self.filepath[:-4]+'wav', self.sample_rate, audio)
       self.print('save USB mic')
+    '''
+    self.print('done end run for mic')
 
   def close(self):
     self.audio.terminate()
+
+#TODO: close_file(self) ???

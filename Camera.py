@@ -79,6 +79,9 @@ class Camera(AcquisitionObject):
   def end_run(self):
     self._spincam.EndAcquisition()
 
+  def end_display(self):
+    self.print('Ending display for camera')
+
   def prepare_processing(self, options):
     process = {}
 
@@ -209,8 +212,10 @@ class Camera(AcquisitionObject):
 
   def close_file(self, fileObj):
     fileObj.stdin.close()
+    # fileObj.kill()
     fileObj.wait()
-    del fileObj
+    self.print('done waiting for ffmpeg')
+    # TODO: figure out how to gracefully close this
 
   def save(self, data):
     for a in data:

@@ -126,7 +126,7 @@ class AcquisitionObject:
           self.prepare_run()
           self._running = True
     else:
-      with self._running_lock:
+      #with self._running_lock:
         if self._running:
           self.end_run()
           self._running = False
@@ -148,7 +148,7 @@ class AcquisitionObject:
       with self._file_lock:
         if self._file is not None:
           self.close_file(self._file)
-          del self._file
+          # del self._file # TODO: is this needed?
           self._file = None
 
   @property
@@ -287,12 +287,16 @@ class AcquisitionObject:
     self.data = False
 
   def wait_for(self):
+    self.print(f"runner {self._has_runner}")
+    self.print(f"processor {self._has_processor}")
+    self.print(f"_data {self._data is None}")
+    self.print(f"displayer {self._has_displayer}")
     while self._has_runner or self._has_processor or self._has_displayer:
       check_time = time.time()
-      self.sleep(check_time)
+      self.sleep(check_time, factor=.2)
 
-  def sleep(self, last):
-    pause_time = last + self.run_interval - time.time()-0.005
+  def sleep(self, last, factor=1.):
+    pause_time = factor*(last + self.run_interval - time.time()-0.005)
     if pause_time > 0:
       time.sleep(pause_time)
 

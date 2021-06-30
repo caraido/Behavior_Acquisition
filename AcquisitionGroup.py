@@ -1,5 +1,4 @@
 import time
-
 import PySpin
 import os
 
@@ -46,8 +45,10 @@ class AcquisitionGroup:
 
     self._processors = [None] * self.nChildren
     self._runners = [None] * self.nChildren
+    self._starters=[None]*self.nChildren
     self._displayers = [None] * self.nChildren
     self.filepaths = None
+    #self._starters
 
     self.started = False
     self.processing = False
@@ -75,8 +76,10 @@ class AcquisitionGroup:
 
     self.print('detected %d cameras' % self.nCameras)
 
-    for child, fp, disp in zip(self.cameras, self.filepaths[: -2], isDisplayed[: -2]):
-      child.start(filepath=fp, display=disp)
+    for i,child, fp, disp in zip(list(range(len(self.cameras))),self.cameras, self.filepaths[: -2], isDisplayed[: -2]):
+      self._starters[i]=threading.Thread(target=child.start,kwargs={'filepath':fp,'display':disp})
+      self._starters[i].start()
+      #child.start(filepath=fp, display=disp)
       self.print('started camera ' + child.device_serial_number)
 
     # start mic
@@ -84,6 +87,7 @@ class AcquisitionGroup:
     self.print('started mic')
 
     # once the camera BeginAcquisition methods are called, we can start triggering
+    # ^ this is false, triggering happens in ag.run() ??
     self.nidaq.start(filepath=self.filepaths[-1], display=False)
     self.print('started nidaq')
 
@@ -149,8 +153,13 @@ class AcquisitionGroup:
     # for cam in self.cameras:
     #   cam.stop()
     # self.nidaq.stop()  # make sure cameras are stopped before stopping triggers
-    for child in self.children:
-      child.stop()
+    # TODO: stop triggers before cameras?
+    self.mic.stop()
+    self.nidaq.stop()
+    for i,cam in enumerate(self.cameras):
+
+      self._starters[i].join()
+      cam.stop()
     for child in self.children:
       self.print('waiting for next child')
       child.wait_for()
