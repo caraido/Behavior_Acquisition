@@ -1,5 +1,5 @@
 audio_settings = {
-    'fs': 3e5,  # sample rate TODO: find a better frequency for the fft e.g. 2^18 ~ 262k
+    'fs': 2.5e5,  # sample rate TODO: find a better frequency for the fft e.g. 2^18 ~ 262k
     'fMin': 200,
     'fMax': 40000,
     'nFreq': 1e2,  # number of frequencies to plot

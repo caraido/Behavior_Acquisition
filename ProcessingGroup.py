@@ -30,21 +30,22 @@
 # delete SSD folder
 import threading
 
-from utils.path_operation_utils import copy_config, global_config_path
+from utils.path_operation_utils import copy_config, global_config_path,global_config_archive_path
 from utils.calibration_utils import undistort_videos,  Calib, TOP_CAM
 from utils.dlc_utils import dlc_analysis
 from utils.geometry_utils import find_board_center_and_windows,Gaze_angle
 from kalman_filter import triangulate_kalman
+from utils.audio_processing import read_audio,sample_rate
 from reproject_3d_to_2d import reproject_3d_to_2d
 import os
 import numpy as np
 import warnings
-import cv2
-
+import scipy.io.wavfile as wavfile
 import shutil
 import toml
 import time
 from utils.calibration_3d_utils import get_extrinsics
+from utils.reorganize_utils import reorganize_mat_file
 
 
 # top camera dlc config
@@ -167,6 +168,7 @@ class ProcessingGroup:
 			#undistort_videos(self.rootpath)
 
 		if dsqk:
+			self.audio_processing()
 			self.dsqk_analysis()
 		if dlc:
 			dlc_threads=self.dlc_analysis()
@@ -254,14 +256,18 @@ class ProcessingGroup:
 											  cam_align,
 											  board)
 			time_stamp = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
+			date_stamp= time.strftime("%Y-%m-%d_", time.localtime())
 			extrinsic_new = dict(zip(map(str, extrinsic.keys()), extrinsic.values()))
 			results = {'extrinsic': extrinsic_new,
 					   'error': error,
 					   'date': time_stamp}
 			extrinsic_path = 'config_extrinsic.toml'
 			saving_path = os.path.join(self.global_config_path,extrinsic_path)
+			archive_path = os.path.join(global_config_archive_path,date_stamp+extrinsic_path)
 			with open(saving_path, 'w') as f:
 				toml.dump(results, f)
+			with open(archive_path,'w') as f:
+				toml.dump(results,f)
 
 			# remove everything after calibration
 			for item in items:
@@ -311,13 +317,23 @@ class ProcessingGroup:
 		mono = gaze_model(self.rootpath, cutoff=0.6, save=True)
 		gaze_model.plot(mono,savepath=self.rootpath)
 
+	def audio_processing(self):
+		BK_filepath=os.path.join(self.rootpath,'B&K_audio.tdms')
+		dodo_filepath=os.path.join(self.rootpath, 'dodo_audio.tdms')
+		BK_audio=read_audio(BK_filepath)
+		dodo_audio=read_audio(os.path.join(dodo_filepath))
+
+		wavfile.write(BK_filepath[:-4] + 'wav', int(sample_rate), BK_audio[0])
+		wavfile.write(dodo_filepath[:-4] + 'wav', int(sample_rate), dodo_audio[0])
+		print("saved audio file")
 
 	def dsqk_analysis(self):
-
 		pass
 
 	def reorganize(self):
 		# TODO: add everything to .mat file
+		reorganize_mat_file(self.rootpath)
+
 		items = os.listdir(self.rootpath)
 		if 'reproject' in str(items):
 			os.mkdir(os.path.join(self.rootpath,'reproject'))
@@ -347,11 +363,12 @@ class ProcessingGroup:
 
 
 	def SSD2server(self):
-
+		# first run double check
 		# copy and paste
 		pass
 
 	def SSD2HDD(self):
+		# first run double check
 		# copy and paste
 		name = os.path.split(self.rootpath)[-1]
 		backup_path = os.path.join(HDD_path, name)
@@ -373,20 +390,21 @@ if __name__ == '__main__':
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
 
-	item=r'2021-06-04_p6_pups_and_mama'
-	path = os.path.join(working_dir,item)
+	mouse='2160'
+	item='2021-06-17_habituation_unnamedTrial'
+	path = os.path.join(working_dir,mouse,item)
 	pg(path)
 	pg.post_process(intrinsic=False,
 					alignment=False,
 					extrinsic=False,
 					undistort=False,
 					copy=False,
-					dlc=True,
+					dlc=False,
 					triangulate=False,
 					reproject=False,
-					reorganize=False,
-					gaze=False,
+					gaze=True,
 					dsqk=False,
+					reorganize=False,
 					server=False,
 					HDD=False)
 	'''

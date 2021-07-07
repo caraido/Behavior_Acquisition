@@ -50,8 +50,8 @@ def dlc_analysis(root_path, dlc_config_path):
 								  shuffle=1,
 								  gputouse=0)
 
-		arguments={'config':top_config,
-					'videos':top_path,
+		arguments={'config':side_config,
+					'videos':side_path,
 					'save_frames':False,
 					'trailpoints':1,
 					'videotype':'mov',

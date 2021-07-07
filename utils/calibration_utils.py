@@ -406,6 +406,24 @@ class Calib:
     else:
       self._root_config_path = None
 
+  @property
+  def archive_config_path(self):
+    return self._archive_config_path
+
+  @archive_config_path.setter
+  def archive_config_path(self, path):
+    if path is not None:
+      if os.path.exists(path):
+        try:
+          os.makedirs(os.path.join(path, 'config_archive'))  # is it needed?
+        except:
+          pass
+        self._archive_config_path = os.path.join(path, 'config_archive')
+      else:
+        raise FileExistsError("root file folder doens't exist!")
+    else:
+      self._archive_config_path = None
+
   # check before extrinsic calibration
   def load_in_config(self, camera_serial_number):
       path = os.path.join(self.root_config_path, 'config_%s_%s.toml' % ('intrinsic', camera_serial_number))
@@ -453,8 +471,11 @@ class Calib:
     if os.path.exists(temp_path):
       with open(temp_path,'r') as f:
         stuff = toml.load(f)
+      date = time.strftime("%Y-%m-%d_", time.localtime())
       save_path = os.path.join(self.root_config_path,
                                'config_%s_%s.toml' % (self.type, stuff['camera_serial_number']))
+      archive_path = os.path.join(self.archive_config_path,
+                               date+'config_%s_%s.toml' % (self.type, stuff['camera_serial_number']))
 
       if self.type=="intrinsic":
         if str(stuff['camera_serial_number'])==TOP_CAM:
@@ -475,6 +496,8 @@ class Calib:
         param['date'] = stuff['date']
         with open(save_path, 'w') as f:
           toml.dump(param, f)
+        with open(archive_path,'w') as f:
+          toml.dump(param,f)
 
       elif self.type == 'alignment':
         # get intrinsic file
@@ -493,6 +516,8 @@ class Calib:
                  'date': stuff['date']}
         with open(save_path, 'w') as f:
           toml.dump(param, f, encoder=toml.TomlNumpyEncoder())
+        with open(archive_path,'w') as f:
+          toml.dump(param,f,encoder=toml.TomlNumpyEncoder())
 
       elif self.type == 'extrinsic':
         pass

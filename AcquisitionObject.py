@@ -126,7 +126,7 @@ class AcquisitionObject:
           self.prepare_run()
           self._running = True
     else:
-      #with self._running_lock:
+      with self._running_lock:
         if self._running:
           self.end_run()
           self._running = False

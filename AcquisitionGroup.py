@@ -150,16 +150,12 @@ class AcquisitionGroup:
     self._processors[i].join()
 
   def stop(self):
-    # for cam in self.cameras:
-    #   cam.stop()
-    # self.nidaq.stop()  # make sure cameras are stopped before stopping triggers
-    # TODO: stop triggers before cameras?
-    self.mic.stop()
-    self.nidaq.stop()
-    for i,cam in enumerate(self.cameras):
 
+    for i,cam in enumerate(self.cameras):
       self._starters[i].join()
       cam.stop()
+    self.mic.stop()
+    self.nidaq.stop()
     for child in self.children:
       self.print('waiting for next child')
       child.wait_for()

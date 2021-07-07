@@ -150,6 +150,9 @@ class Camera(AcquisitionObject):
       return result, None
 
   def run(self):
+    if self._has_runner:
+      return  # only 1 runner at a time
+
     self._has_runner = True
     data = self.new_data
     capture = self.capture(data)
@@ -183,7 +186,7 @@ class Camera(AcquisitionObject):
       data_list = []
       while not get_all and len(data_list)<FRAME_BUFFER:
         try:
-          im = self._spincam.GetNextImage()
+          im = self._spincam.GetNextImage() #TODO: add a timeout
           if im.IsIncomplete():
             status = im.GetImageStatus()
             im.Release()

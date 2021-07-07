@@ -457,6 +457,32 @@ class Gaze_angle:
             left_accum=accumulative_window_preference(left_long)
             right_accum=accumulative_window_preference(right_long)
 
+            nose_circle_center_arc=np.arctan2(pose['snout']['y']-self.circle_center[1],pose['snout']['x']-self.circle_center[0])
+            nose_distance = self.outer_r - np.sqrt((pose['snout']['x'] - self.circle_center[0]) ** 2 + (
+                    pose['snout']['y'] - self.circle_center[1]) ** 2) * self.outer_r / self.outer_r_pixel
+            nose_distance=np.array(nose_distance)
+
+            # for windows A
+            nose_distance_A=nose_distance.copy()
+            for i in range(len(nose_circle_center_arc)):
+                if not self.windows[0][0][0] < nose_circle_center_arc[i] < self.windows[0][0][1]:
+                    nose_distance_A[i]=np.nan
+
+            # for windows B
+            nose_distance_B = nose_distance.copy()
+            for i in range(len(nose_circle_center_arc)):
+                if not self.windows[1][0][0] < nose_circle_center_arc[i] < self.windows[1][0][1]:
+                    nose_distance_B[i] = np.nan
+
+            nose_distance_C = nose_distance.copy()
+            for i in range(len(nose_circle_center_arc)):
+                if not self.windows[2][0][0] < nose_circle_center_arc[i] < self.windows[2][0][1]:
+                    nose_distance_C[i] = np.nan
+            nose_distance={'window_A':nose_distance_A,
+                           'window_B':nose_distance_B,
+                           'window_C':nose_distance_C}
+
+
             result = {'inner_left': np.transpose(inner_left)[0],
                       'inner_right': np.transpose(inner_right)[0],
                       'outer_left': np.transpose(outer_left)[0],
@@ -468,7 +494,9 @@ class Gaze_angle:
                       'body_position':np.transpose(arc_body)[0],
                       'win_visibility':np.stack([winA_vis,winB_vis,winC_vis]),
                       'speed':smoothed_speed,
-                      'stats':stats
+                      'stats':stats,
+                      'window_arc':self.windows,
+                      'nose_window_distance':nose_distance
                       }
 
             # save file

@@ -9,6 +9,7 @@ saving_path_prefix = 'D:\\'
 default_saving_path= 'Desktop'
 default_folder_name = 'Testing'
 global_config_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
+global_config_archive_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config_archive'
 global_log_path=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\log'
 namespace_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\assets\namespace\namespace.json'
 

@@ -5,7 +5,7 @@ from nptdms import TdmsFile
 import os
 import scipy.io as sio
 
-sample_rate = 3e5
+sample_rate = 2.5e5
 
 # turn tdms to np array
 def read_audio(path, raw_data_flag=False):
