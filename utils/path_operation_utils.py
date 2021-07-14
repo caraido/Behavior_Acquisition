@@ -187,13 +187,18 @@ def reformat_filepath(path,name,camera:list):
 	return filepaths
 '''
 
-def copy_config(filepath):
+def copy_config(filepath,version=None):
+	# TODO：version control not implemented
 	local_config_path = os.path.join(filepath, 'config')
+	archive_items=os.listdir(global_config_archive_path)
+	versions=[(int(re.findall(r"_v(\d+)_", i)[0]),i) for i in archive_items]
+	versions=sorted(versions)
+	latest_version=versions[-1][1]
+	config_path = os.path.join(global_config_archive_path,latest_version)
 	if not os.path.exists(local_config_path):
-		os.mkdir(local_config_path)
-	global_configs = os.listdir(global_config_path)
-	for item in global_configs:
-		shutil.copy(os.path.join(global_config_path, item), local_config_path)
+		shutil.copytree(config_path, local_config_path)
+
+	return versions[-1][0]
 
 
 def load_config(filepath):

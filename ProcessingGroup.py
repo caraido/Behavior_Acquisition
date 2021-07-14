@@ -28,13 +28,15 @@
 
 # when all the threads are done
 # delete SSD folder
+import datetime
+import re
 import threading
 
 from utils.path_operation_utils import copy_config, global_config_path,global_config_archive_path
 from utils.calibration_utils import undistort_videos,  Calib, TOP_CAM
-from utils.dlc_utils import dlc_analysis
-from utils.geometry_utils import find_board_center_and_windows,Gaze_angle
-from kalman_filter import triangulate_kalman
+from utils.dlc_utils import dlc_analysis,SIDE_THRESHOLD,TOP_THRESHOLD
+from utils.geometry_utils import find_board_center_and_windows,Gaze_angle,FRAME_RATE
+from kalman_filter import triangulate_kalman,DISTRUSTNESS,CUTOFF,dt
 from utils.audio_processing import read_audio,sample_rate
 from reproject_3d_to_2d import reproject_3d_to_2d
 import os
@@ -45,7 +47,8 @@ import shutil
 import toml
 import time
 from utils.calibration_3d_utils import get_extrinsics
-from utils.reorganize_utils import reorganize_mat_file
+from utils.reorganize_utils import reorganize_mat_file,reorganize_mat_file2,add_new_gaze_to_full_mat
+from utils.triangulation_utils import THRESHOLD as TRIANGULATE_THRESHOLD
 
 
 # top camera dlc config
@@ -55,6 +58,7 @@ top_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second
 side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras_distorted-Devon-2021-03-17\config.yaml'
 dlc_path = [top_config,side_config]
 HDD_path = r'E:\behavior_data_archive'
+server_path=r'R:\SchwartzLab\Behavior'
 
 
 class ProcessingGroup:
@@ -66,7 +70,10 @@ class ProcessingGroup:
 		self.in_calib = Calib('intrinsic')
 		self.al_calib = Calib('alignment')
 		self.ex_calib = Calib('extrinsic')
+		self.server_thread=None
 
+	# rootpath refers to the working directory
+	# dlc path is a default path for the trained dlc model
 	def __call__(self, rootpath, dlcpath=None):
 		if dlcpath is None:
 			dlcpath = dlc_path
@@ -74,10 +81,6 @@ class ProcessingGroup:
 		self.rootpath = rootpath
 		self.processpath = 'undistorted'
 		self.config_path = 'config'
-		if not os.path.exists(self.processpath):
-			os.mkdir(self.processpath)
-		if not os.path.exists(self.config_path):
-			os.mkdir(self.config_path)
 
 	@property
 	def processpath(self):
@@ -97,14 +100,19 @@ class ProcessingGroup:
 	@config_path.setter
 	def config_path(self, folder_name):
 		path = os.path.join(self.rootpath, folder_name)
-		if not os.path.exists(path):
-			os.mkdir(path)
+		#if not os.path.exists(path):
+		#	os.mkdir(path)
 		self._config_path = path
 
 	def copy_configs(self):
 		#TODO: save a reference to the config for each acquisition, then copy the right one, rather than the most recent one
 		if self.rootpath:
-			copy_config(self.rootpath)
+			# if version == None it will copy the latest version
+			version = copy_config(self.rootpath,version=None)
+			return version
+		else:
+			raise Exception('root path incorrect/unimplemented')
+
 
 	def check_process(self):
 		# check under rootpath first
@@ -133,7 +141,7 @@ class ProcessingGroup:
 					 alignment=True,
 					 extrinsic=True,
 					 undistort=True,
-					 copy=True,
+					 copy_config=True,
 					 dlc=True,
 					 triangulate=True,
 					 reproject=True,
@@ -147,20 +155,40 @@ class ProcessingGroup:
 		undistort_thread=None
 		dlc_threads=None
 		reproject_threads=None
+		intrinsic_count=0
+		alignment_count=0
+		extrinsic_count=0
 
 		if intrinsic:
 			# do the following under behavior_rig/config/
-			self.get_intrinsic_config()
+			intrinsic_count = self.get_intrinsic_config()
 
 		if alignment:
-			self.get_alignment_config()
+			alignment_count = self.get_alignment_config()
 			self.find_windows()
 
 		if extrinsic:
-			self.get_extrinsic_config()
+			extrinsic_count = self.get_extrinsic_config()
 
-		if copy:
-			self.copy_configs()
+		# if any of the calibration happened: creat another version and save it to config_archive
+		if intrinsic_count+alignment_count+extrinsic_count:
+			archive_items=os.listdir(global_config_archive_path)
+			if len(archive_items):
+				versions=[int(re.findall(r"_v(\d+)_",i)[0]) for i in archive_items]
+				latest=max(versions)
+			else:
+				latest=0
+			date_time=time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+			new_config_name=f"{date_time}_v{latest+1}_config"
+			new_config_archive_path = os.path.join(global_config_archive_path,new_config_name)
+
+			# archive to config_archive
+			shutil.copytree(global_config_path,new_config_archive_path)
+
+		if copy_config:
+
+			version=self.copy_configs()
+			self.add_local_config(version)
 
 		if undistort:
 			undistort_thread=threading.Thread(target=undistort_videos,args=(self.rootpath,))
@@ -198,17 +226,52 @@ class ProcessingGroup:
 			self.reorganize()
 		if server:
 			self.SSD2server()
+			'''
+			if self.server_thread is None:
+				self.server_thread=threading.Thread(target=self.SSD2server)
+				self.server_thread.start()
+			else:
+				self.server_thread.join()
+				self.server_thread = threading.Thread(target=self.SSD2server)
+				self.server_thread.start()
+			'''
 		if HDD:
 			self.SSD2HDD()
 
+	def add_local_config(self, version):
+		local_config={'date':time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),
+					  'frame_rate':FRAME_RATE,
+					  'sample_rate':sample_rate,
+					  'dlc':
+						   {'top_camera_threshold':TOP_THRESHOLD,
+					  		'side_camera_threshold':SIDE_THRESHOLD},
+					 'kalman_filter':{'dt':dt,
+									  'distrustness':DISTRUSTNESS,
+									  'cutoff':CUTOFF},
+					  'triangulation':{'threshold':TRIANGULATE_THRESHOLD},
+					  'config_version':version,
+
+					  }
+		filepath=os.path.join(self.config_path,'config_local.toml')
+		with open(filepath,'w') as f:
+			toml.dump(local_config,f)
+
 	def get_intrinsic_config(self):
 		# get item list
+		# if count == 0 it means no calibration done
+		count=0
 		items = os.listdir(self.global_config_path)
 		for item in items:
 			if 'intrinsic' in item and 'temp' in item:
 				temp_config_path = os.path.join(self.global_config_path, item)
 				self.in_calib.save_processed_config(temp_config_path)
-				os.remove(temp_config_path)
+				try:
+					os.remove(temp_config_path)
+					count += 1
+				except:
+					Warning("can't remove the temp config file")
+		return count
+
 
 	def get_alignment_config(self):
 		alignment = 'config_alignment_%s_temp.toml' % TOP_CAM
@@ -216,16 +279,20 @@ class ProcessingGroup:
 		self.al_calib.save_processed_config(path)
 		try:
 			os.remove(path)
+			count=1
 		except:
-			pass
+			Warning("can't remove the temp config file")
+			count =0
+
+		return count
 
 	def get_extrinsic_config(self):
 		# get item list
 		items = os.listdir(self.global_config_path)
 		intrinsic_list = []
-		alignment_list=[]
 		video_list = []
 		board = self.ex_calib.board
+		count=0
 
 		for item in items:
 			if 'intrinsic' in item and 'temp' not in item:
@@ -234,12 +301,8 @@ class ProcessingGroup:
 			if 'MOV' in item:
 				video_path = os.path.join(self.global_config_path, item)
 				video_list.append(video_path)
-			if 'alignment' in item and 'temp' not in item:
-				alignment_list.append(os.path.join(self.global_config_path, item))
 
 		if len(video_list)==4:
-			alignment=toml.load(alignment_list[0])
-			recorded_center=np.array(alignment['recorded_center']).astype('int')
 
 			# get intrinsic matrices and video list
 			intrinsic_list.sort()
@@ -256,23 +319,22 @@ class ProcessingGroup:
 											  cam_align,
 											  board)
 			time_stamp = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
-			date_stamp= time.strftime("%Y-%m-%d_", time.localtime())
 			extrinsic_new = dict(zip(map(str, extrinsic.keys()), extrinsic.values()))
 			results = {'extrinsic': extrinsic_new,
 					   'error': error,
 					   'date': time_stamp}
 			extrinsic_path = 'config_extrinsic.toml'
 			saving_path = os.path.join(self.global_config_path,extrinsic_path)
-			archive_path = os.path.join(global_config_archive_path,date_stamp+extrinsic_path)
 			with open(saving_path, 'w') as f:
 				toml.dump(results, f)
-			with open(archive_path,'w') as f:
-				toml.dump(results,f)
+
+			count+=1
 
 			# remove everything after calibration
 			for item in items:
 				if 'extrinsic' in item and 'temp' in item:
 					os.remove(os.path.join(self.global_config_path,item))
+		return count
 
 	def find_windows(self):
 		alignment = 'config_alignment_%s.toml'%TOP_CAM
@@ -300,7 +362,10 @@ class ProcessingGroup:
 	def dlc_analysis(self):
 		# dlc anlysis on both top and side cameras
 		threads=dlc_analysis(self.rootpath, self.dlcpath)
-		return threads
+		if threads is not None:
+			return threads
+		else:
+			return None
 
 	def gaze_analysis(self):
 		# gaze analysis on top camera
@@ -308,13 +373,13 @@ class ProcessingGroup:
 		gaze_model = Gaze_angle(self.config_path)
 
 		# binocular gaze
-		gaze_model.gazePoint = 0.5725
-		bino = gaze_model(self.rootpath, cutoff=0.6, save=True)
+		gaze_model.gazePoint = 0
+		bino = gaze_model(self.rootpath, save=True)
 		gaze_model.plot(bino, savepath=self.rootpath)
 
 		# monocular gaze
-		gaze_model.gazePoint = 0
-		mono = gaze_model(self.rootpath, cutoff=0.6, save=True)
+		gaze_model.gazePoint = 0.5725
+		mono = gaze_model(self.rootpath, save=True)
 		gaze_model.plot(mono,savepath=self.rootpath)
 
 	def audio_processing(self):
@@ -363,9 +428,32 @@ class ProcessingGroup:
 
 
 	def SSD2server(self):
-		# first run double check
-		# copy and paste
-		pass
+		#config_path_server = os.path.join(server_path, 'config')
+
+		#items_ssd=os.listdir(global_config_archive_path)
+		#items_server = os.listdir(config_path_server)
+		#if len(items_server)!=len(items_ssd):
+		#	shutil.rmtree(config_path_server)
+		#	shutil.copytree(global_config_archive_path,config_path_server)
+
+
+		filename = os.path.split(self.rootpath)[-1]
+		animal_ID =os.path.split(os.path.split(self.rootpath)[0])[-1]
+		full_server_path = os.path.join(server_path, animal_ID,filename)
+
+		if not os.path.exists(os.path.join(server_path,animal_ID)):
+			os.mkdir(os.path.join(server_path,animal_ID))
+		try:
+			print("trying to upload to the server")
+			shutil.copytree(self.rootpath, full_server_path)
+			print('finished uploading to the server.')
+		except shutil.Error as e:
+			for src, dst, msg in e.args[0]:
+				# src is source name
+				# dst is destination name
+				# msg is error message from exception
+				print(dst, src, msg)
+
 
 	def SSD2HDD(self):
 		# first run double check
@@ -382,6 +470,61 @@ class ProcessingGroup:
 				print(dst, src, msg)
 		pass
 
+	def full_revert(self,root_path):
+		# move everything out+delete gaze analysis+delete undistort + delete DLC and config +delete audio+full_data.mat
+		items=os.listdir(root_path)
+		if 'raw' in items:
+			subpath=os.path.join(root_path,'raw')
+			subitems = os.listdir(subpath)
+			for subitem in subitems:
+				subitem_path=os.path.join(subpath,subitem)
+				move2path=os.path.join(root_path,subitem)
+				shutil.move(subitem_path, move2path)
+			shutil.rmtree(subpath)
+		if 'DLC' in items:
+			subpath = os.path.join(root_path, 'DLC')
+			shutil.rmtree(subpath)
+		if 'gaze' in items:
+			subpath = os.path.join(root_path, 'gaze')
+			shutil.rmtree(subpath)
+		if 'undistorted' in items:
+			subpath = os.path.join(root_path, 'undistorted')
+			shutil.rmtree(subpath)
+		if 'config' in items:
+			subpath= os.path.join(root_path, 'config')
+			shutil.rmtree(subpath)
+		if 'full_data.mat' in items:
+			subpath = os.path.join(root_path, 'full_data.mat')
+			os.remove(subpath)
+			print('removed full data')
+
+
+	def half_revert(self,root_path):
+		# move everything out+delete gaze analysis+delete undistort+keep DLC and config
+		items=os.listdir(root_path)
+		if 'raw' in items:
+			subpath=os.path.join(root_path,'raw')
+			subitems = os.listdir(subpath)
+			for subitem in subitems:
+				subitem_path=os.path.join(subpath,subitem)
+				move2path=os.path.join(root_path,subitem)
+				shutil.move(subitem_path, move2path)
+			shutil.rmtree(subpath)
+		if 'DLC' in items:
+			subpath = os.path.join(root_path, 'DLC')
+			subitems = os.listdir(subpath)
+			for subitem in subitems:
+				subitem_path = os.path.join(subpath, subitem)
+				move2path = os.path.join(root_path, subitem)
+				shutil.move(subitem_path, move2path)
+			shutil.rmtree(subpath)
+		if 'gaze' in items:
+			subpath = os.path.join(root_path, 'gaze')
+			shutil.rmtree(subpath)
+		if 'undistorted' in items:
+			subpath = os.path.join(root_path, 'undistorted')
+			shutil.rmtree(subpath)
+
 
 if __name__ == '__main__':
 	import tqdm
@@ -390,39 +533,86 @@ if __name__ == '__main__':
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
 
+	'''
 	mouse='2160'
 	item='2021-06-17_habituation_unnamedTrial'
 	path = os.path.join(working_dir,mouse,item)
 	pg(path)
 	pg.post_process(intrinsic=False,
-					alignment=False,
+					alignment=True,
 					extrinsic=False,
 					undistort=False,
-					copy=False,
+					copy=True,
 					dlc=False,
 					triangulate=False,
 					reproject=False,
 					gaze=True,
 					dsqk=False,
-					reorganize=False,
+					reorganize=True,
 					server=False,
 					HDD=False)
 	'''
-	for item in tqdm.tqdm(items):
-		if 'T' in item and 'T1-2045' not in item:
-			path = os.path.join(working_dir,item)
-			pg(path)
-			pg.post_process(intrinsic=False,
-							alignment=False,
-							extrinsic=False,
-							undistort=True,
-							copy=True,
-							dlc=True,
-							triangulate=True,
-							reproject=True,
-							reorganize=True,
-							gaze=True,
-							dsqk=False,
-							server=False,
-							HDD=False)
-'''
+	server_items=os.listdir(server_path)
+
+	useful=list(map(lambda x:x.isdigit(),items))
+	new_items=list(np.array(items)[useful])
+	for item in tqdm.tqdm(new_items):
+			print(item)
+			path = os.path.join(working_dir, item)
+			server_animal_path = os.path.join(server_path, item)
+			server_subitem=None
+
+			subitems= os.listdir(path)
+			subitems=list(sorted(subitems))
+			for i, subitem in enumerate(subitems):
+				try:
+					server_subitem = os.listdir(server_animal_path)
+				except:
+					pass
+				#if server_subitem is None or subitem not in server_subitem:
+
+				#if i:
+				full_path=os.path.join(path,subitem)
+				if full_path!='D:\\Desktop\\1131\\2021-06-17_habituation_dominant' and full_path!='D:\\Desktop\\1136\\2021-06-17_habituation_submissive':
+						#pg.full_revert(full_path)
+						print(subitem)
+						local_config_path=os.path.join(full_path,'config')
+						local_gaze_path = os.path.join(full_path, 'gaze')
+						local_reorg_dlc_path=os.path.join(full_path,'DLC')
+						local_full_data_path = os.path.join(full_path,'full_data.mat')
+						remote_full_data_path = os.path.join(server_animal_path,subitem,'full_data.mat')
+
+						gaze=Gaze_angle(local_config_path)
+						gaze.gazePoint=0
+						bino=gaze(local_reorg_dlc_path,save=False)
+						#bino_path=os.path.join(full_path,'gaze_angle_0.mat')
+						gaze.save(full_path,bino)
+						print('saved gaze')
+
+						gaze.gazePoint = 0.5725
+						mono = gaze(local_reorg_dlc_path, save=False)
+						#mono_path = os.path.join(full_path, 'gaze_angle_32.mat')
+						gaze.save(full_path, mono)
+						print('saved gaze')
+
+						reorganize_mat_file2(full_path)
+						#add_new_gaze_to_full_mat(local_gaze_path,local_full_data_path)
+						shutil.copy(local_full_data_path,remote_full_data_path)
+						'''
+						pg(full_path)
+						pg.post_process(intrinsic=False,
+										alignment=False,
+										extrinsic=False,
+										undistort=False,
+										copy_config=True,
+										dlc=True,
+										triangulate=False,
+										reproject=False,
+										reorganize=True,
+										gaze=True,
+										dsqk=True,
+										server=True,
+										HDD=False)
+						'''
+
+

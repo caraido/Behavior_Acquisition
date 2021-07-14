@@ -35,8 +35,3 @@ def get_smoothed_speed(speed, param,smoothing_method='median_filter'):
 		raise ValueError('wrong/unimplemented smoothing method!')
 
 
-def draw_speed(speed):
-	fig=plt.figure()
-	# TODO: implement this when testing
-	pass
-

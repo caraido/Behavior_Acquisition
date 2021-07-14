@@ -6,8 +6,18 @@ DLC_LIVE_MODEL_PATH=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec
 TOP_THRESHOLD=0.85
 SIDE_THRESHOLD=0.5
 
+
+def is_fully_analyzed(path):
+	items=os.listdir(path)
+	h5=[i for i in items if '.h5' in i]
+	if len(h5)==4:
+		return True
+	else:
+		return False
+
+
 def dlc_analysis(root_path, dlc_config_path):
-	if isinstance(dlc_config_path, list):
+	if isinstance(dlc_config_path, list) and not is_fully_analyzed(root_path):
 		top_config = dlc_config_path[0]
 		side_config = dlc_config_path[1]
 		things = os.listdir(root_path)
@@ -60,11 +70,7 @@ def dlc_analysis(root_path, dlc_config_path):
 		create_labeled_video_side_thread.start()
 
 		return create_labeled_video_top_thread,create_labeled_video_side_thread
-		#deeplabcut.create_labeled_video(side_config,
-		#								side_path,
-		#								save_frames=False,
-		#								trailpoints=1,
-		#								videotype='mov',
-		#								draw_skeleton='True')
+	else:
+		return None
 
 

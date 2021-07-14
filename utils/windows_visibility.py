@@ -38,8 +38,8 @@ def window_visibility(pose,windows, arena_center,r):
     in_windowB = np.logical_or(intersect_ray_circle(head_center, arena_center, windows[1][0], r),
                                 intersect_ray_circle(head_center, arena_center, windows[1][1], r))
 
-    in_windowC = np.logical_or(intersect_ray_circle(head_center, arena_center, windows[1][0], r),
-                                intersect_ray_circle(head_center, arena_center, windows[1][1], r))
+    in_windowC = np.logical_or(intersect_ray_circle(head_center, arena_center, windows[2][0], r),
+                                intersect_ray_circle(head_center, arena_center, windows[2][1], r))
     in_donut=np.linalg.norm(head_center-arena_center,axis=1)-r
     in_experiment=in_donut.copy()
     in_experiment[in_donut<0]=0

@@ -10,9 +10,11 @@ import ffmpeg
 import re
 import utils.calibration_3d_utils as ex_3d
 from utils.calibration_3d_utils import get_expected_corners
+from utils.path_operation_utils import global_config_path as GLOBAL_CONFIG_PATH
+from utils.path_operation_utils import global_config_archive_path as GLOBAL_CONFIG_ARCHIVE_PATH
+
 
 CALIB_UPDATE_EACH = 1  # frame interval for calibration update
-GLOBAL_CONFIG_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig'
 TOP_CAM='17391304'
 
 
@@ -327,6 +329,7 @@ class Calib:
     self._get_type(calib_type)
     # TODO: how to set the local config path without assigning it?? Or should we
     self.root_config_path = GLOBAL_CONFIG_PATH
+    self.archive_config_path= GLOBAL_CONFIG_ARCHIVE_PATH
     self.top_intrinsic=self.get_top_intrinsic(calib_type)
 
     self.allCorners = []
@@ -388,42 +391,6 @@ class Calib:
     params.adaptiveThreshConstant = 5
     return params
 
-  @property
-  def root_config_path(self):
-    return self._root_config_path
-
-  @root_config_path.setter
-  def root_config_path(self, path):
-    if path is not None:
-      if os.path.exists(path):
-        try:
-          os.makedirs(os.path.join(path, 'config'))  # is it needed?
-        except:
-          pass
-        self._root_config_path = os.path.join(path, 'config')
-      else:
-        raise FileExistsError("root file folder doens't exist!")
-    else:
-      self._root_config_path = None
-
-  @property
-  def archive_config_path(self):
-    return self._archive_config_path
-
-  @archive_config_path.setter
-  def archive_config_path(self, path):
-    if path is not None:
-      if os.path.exists(path):
-        try:
-          os.makedirs(os.path.join(path, 'config_archive'))  # is it needed?
-        except:
-          pass
-        self._archive_config_path = os.path.join(path, 'config_archive')
-      else:
-        raise FileExistsError("root file folder doens't exist!")
-    else:
-      self._archive_config_path = None
-
   # check before extrinsic calibration
   def load_in_config(self, camera_serial_number):
       path = os.path.join(self.root_config_path, 'config_%s_%s.toml' % ('intrinsic', camera_serial_number))
@@ -474,8 +441,8 @@ class Calib:
       date = time.strftime("%Y-%m-%d_", time.localtime())
       save_path = os.path.join(self.root_config_path,
                                'config_%s_%s.toml' % (self.type, stuff['camera_serial_number']))
-      archive_path = os.path.join(self.archive_config_path,
-                               date+'config_%s_%s.toml' % (self.type, stuff['camera_serial_number']))
+      #archive_path = os.path.join(self.archive_config_path,
+      #                         date+'config_%s_%s.toml' % (self.type, stuff['camera_serial_number']))
 
       if self.type=="intrinsic":
         if str(stuff['camera_serial_number'])==TOP_CAM:
@@ -496,8 +463,8 @@ class Calib:
         param['date'] = stuff['date']
         with open(save_path, 'w') as f:
           toml.dump(param, f)
-        with open(archive_path,'w') as f:
-          toml.dump(param,f)
+        #with open(archive_path,'w') as f:
+        #  toml.dump(param,f)
 
       elif self.type == 'alignment':
         # get intrinsic file
@@ -510,16 +477,17 @@ class Calib:
         dist = np.array(intrinsic['dist_coeff'])
 
         markers = undistort_markers(stuff['corners'], camera_mat,dist)
-        param = {'undistorted_corners': markers,
+        param = {'undistorted_corners': stuff['corners'], # TODO: changed to distorted
                  'ids': np.array(stuff['ids']),
                  'camera_serial_number': stuff['camera_serial_number'],
                  'date': stuff['date']}
         with open(save_path, 'w') as f:
           toml.dump(param, f, encoder=toml.TomlNumpyEncoder())
-        with open(archive_path,'w') as f:
-          toml.dump(param,f,encoder=toml.TomlNumpyEncoder())
+        #with open(archive_path,'w') as f:
+        #  toml.dump(param,f,encoder=toml.TomlNumpyEncoder())
 
       elif self.type == 'extrinsic':
+        # sepearte process in Processing Group
         pass
 
   def in_calibrate(self, frame, data_count,serial_number):

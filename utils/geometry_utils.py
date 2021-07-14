@@ -13,7 +13,9 @@ from matplotlib.patches import Rectangle
 
 from scipy import io as sio
 from itertools import combinations
+from initialStatus import initialStatus
 
+FRAME_RATE=initialStatus['frame rate']['current']
 
 def get_board_side_length_pixel(corners):
     corners=np.array(corners)
@@ -51,8 +53,11 @@ def find_intersect_circle_circle(circle_center1,r_1,circle_center2,r_2):
     circle1 = Circle(point1,sympify(str(r_1),rational=True))
     circle2 = Circle(point2,sympify(str(r_2),rational=True))
     intersect = circle2.intersect(circle1)
-    intersect = np.array([intersect.args[0],intersect.args[1]],dtype=float)
-    return intersect
+    if len(intersect) == 0:
+        return np.nan*np.eye(2)
+    else:
+        intersect = np.array([intersect.args[0],intersect.args[1]],dtype=float)
+        return intersect
 
 
 def rank_distance(points:np.ndarray):
@@ -122,24 +127,24 @@ def find_board_center_and_windows(corners:np.ndarray,rig:dict):
 
     winA1 = np.array([find_intersect_circle_circle(boardA_center,A2A[0],boardB_center,B2A[0]), \
                       find_intersect_circle_circle(boardA_center, A2A[0], boardC_center, C2A[0]), \
-                      find_intersect_circle_circle(boardC_center, C2A[0], boardB_center, B2A[0])]).reshape([6,2])
+                      find_intersect_circle_circle(boardC_center, C2A[0], boardB_center, B2A[0])]).reshape([-1,2])
     winA2 = np.array([find_intersect_circle_circle(boardA_center,A2A[1],boardB_center,B2A[1]), \
                       find_intersect_circle_circle(boardA_center, A2A[1], boardC_center, C2A[1]), \
-                      find_intersect_circle_circle(boardC_center, C2A[1], boardB_center, B2A[1])]).reshape([6,2])
+                      find_intersect_circle_circle(boardC_center, C2A[1], boardB_center, B2A[1])]).reshape([-1,2])
 
     winB1 = np.array([find_intersect_circle_circle(boardA_center, A2B[0], boardB_center, B2B[0]), \
                       find_intersect_circle_circle(boardA_center, A2B[0], boardC_center, C2B[0]), \
-                      find_intersect_circle_circle(boardC_center, C2B[0], boardB_center, B2B[0])]).reshape([6,2])
+                      find_intersect_circle_circle(boardC_center, C2B[0], boardB_center, B2B[0])]).reshape([-1,2])
     winB2 = np.array([find_intersect_circle_circle(boardA_center, A2B[1], boardB_center, B2B[1]), \
                       find_intersect_circle_circle(boardA_center, A2B[1], boardC_center, C2B[1]), \
-                      find_intersect_circle_circle(boardC_center, C2B[1], boardB_center, B2B[1])]).reshape([6,2])
+                      find_intersect_circle_circle(boardC_center, C2B[1], boardB_center, B2B[1])]).reshape([-1,2])
 
     winC1 = np.array([find_intersect_circle_circle(boardA_center, A2C[0], boardB_center, B2C[0]), \
                       find_intersect_circle_circle(boardA_center, A2C[0], boardC_center, C2C[0]), \
-                      find_intersect_circle_circle(boardC_center, C2C[0], boardB_center, B2C[0])]).reshape([6,2])
+                      find_intersect_circle_circle(boardC_center, C2C[0], boardB_center, B2C[0])]).reshape([-1,2])
     winC2 = np.array([find_intersect_circle_circle(boardA_center, A2C[1], boardB_center, B2C[1]), \
                       find_intersect_circle_circle(boardA_center, A2C[1], boardC_center, C2C[1]), \
-                      find_intersect_circle_circle(boardC_center, C2C[1], boardB_center, B2C[1])]).reshape([6,2])
+                      find_intersect_circle_circle(boardC_center, C2C[1], boardB_center, B2C[1])]).reshape([-1,2])
 
     A1 = np.mean(rank_distance(winA1),axis=0)
     A2 = np.mean(rank_distance(winA2),axis=0)
@@ -330,8 +335,9 @@ class Gaze_angle:
         self.windowB = np.array([local_config['B1'], local_config['B2']])
         self.windowC = np.array([local_config['C1'], local_config['C2']])
         self.circle_center = np.array(local_config['recorded_center'])
-
         self.windows = self._get_window_angle()
+        self.pixel2inch=float(local_config['pixel2inch']) # for bottom circle
+        self.inch2pixel=1/self.pixel2inch
 
         # recalculate the pixel length of circle radius
         corners_pixel = get_board_side_length_pixel(self.corners)
@@ -343,11 +349,11 @@ class Gaze_angle:
         self.title_name=None
         self.gazePoint=gazePoint
 
-    def __call__(self,root_path, cutoff=0.9, save=True):
+    def __call__(self,root_path, cutoff=0.95, save=True):
         # get the pose estimation path
         # coord_path = 'C:\\Users\\SchwartzLab\\Downloads\\Acclimation_videos_1\\'
         self.title_name = os.path.split(root_path)[-1]
-        print(self.title_name)
+
         all_file = os.listdir(root_path)
         name = [a for a in all_file if 'second' in a and 'csv' in a]
         coord = os.path.join(root_path,name[0])
@@ -371,15 +377,19 @@ class Gaze_angle:
                                                                                           gazePoint=self.gazePoint)
 
             # get window visibility
-            winA_vis,winB_vis,winC_vis=window_visibility(pose,self.windows,self.circle_center,self.inner_r_pixel)
-            # get smoothed speed over time
+            window_pixels=np.array([self.windowA,self.windowB,self.windowC])
+            winA_vis,winB_vis,winC_vis=window_visibility(pose,window_pixels,self.circle_center,self.inner_r_pixel)
+
+            # get smoothed speed over time. unit: inch/second
             speed=get_speed(pose)
-            smoothed_speed=get_smoothed_speed(speed,param=31,smoothing_method='median_filter')
+            smoothed_speed=get_smoothed_speed(speed,param=31,smoothing_method='median_filter')*self.pixel2inch*FRAME_RATE
 
             # triangle area
-            head_triangle_area,body_triangle_area = triangle_area(pose)
+            head_triangle_area,body_triangle_area = triangle_area(pose) # in squared pixel
+            head_triangle_area=head_triangle_area*self.pixel2inch**2 # in squared inches
+            body_triangle_area = body_triangle_area * self.pixel2inch ** 2 # in squared inches
 
-            # body center
+            # body center radian
             body = body_center(pose)
             recenter_body = body-self.circle_center[:,np.newaxis]
             arc_body = np.arctan2(recenter_body[1],recenter_body[0])[:,np.newaxis]
@@ -416,6 +426,11 @@ class Gaze_angle:
             A_body = np.sum(is_in_window(arc_body, self.windowA, self.circle_center))
             B_body = np.sum(is_in_window(arc_body, self.windowB, self.circle_center))
             C_body = np.sum(is_in_window(arc_body, self.windowC, self.circle_center))
+
+            A_body_long = is_in_window(arc_body, self.windowA, self.circle_center)
+            B_body_long = is_in_window(arc_body, self.windowB, self.circle_center)
+            C_body_long = is_in_window(arc_body, self.windowC, self.circle_center)
+            body_long = np.stack([A_body_long, B_body_long, C_body_long])
 
             A_weight_right = A_right /  (A_right + B_right + C_right)
             B_weight_right = B_right / (A_right + B_right + C_right)
@@ -456,31 +471,42 @@ class Gaze_angle:
 
             left_accum=accumulative_window_preference(left_long)
             right_accum=accumulative_window_preference(right_long)
+            body_accum=accumulative_window_preference(body_long)
 
+            # radian of nose circle center
             nose_circle_center_arc=np.arctan2(pose['snout']['y']-self.circle_center[1],pose['snout']['x']-self.circle_center[0])
             nose_distance = self.outer_r - np.sqrt((pose['snout']['x'] - self.circle_center[0]) ** 2 + (
-                    pose['snout']['y'] - self.circle_center[1]) ** 2) * self.outer_r / self.outer_r_pixel
-            nose_distance=np.array(nose_distance)
+                    pose['snout']['y'] - self.circle_center[1]) ** 2) * self.outer_r/self.outer_r_pixel
+            #minimum_distance=min(nose_distance[nose_distance>0])
+            #nose_distance=np.array(nose_distance)-minimum_distance # assume that nose always poke the outer wall
 
             # for windows A
             nose_distance_A=nose_distance.copy()
             for i in range(len(nose_circle_center_arc)):
-                if not self.windows[0][0][0] < nose_circle_center_arc[i] < self.windows[0][0][1]:
+                if not np.min(self.windows[0][0]) < nose_circle_center_arc[i] < np.max(self.windows[0][0]):
                     nose_distance_A[i]=np.nan
 
             # for windows B
             nose_distance_B = nose_distance.copy()
             for i in range(len(nose_circle_center_arc)):
-                if not self.windows[1][0][0] < nose_circle_center_arc[i] < self.windows[1][0][1]:
+                if not np.min(self.windows[1][0]) < nose_circle_center_arc[i] < np.max(self.windows[1][0]):
                     nose_distance_B[i] = np.nan
 
+            # for windows C
             nose_distance_C = nose_distance.copy()
             for i in range(len(nose_circle_center_arc)):
-                if not self.windows[2][0][0] < nose_circle_center_arc[i] < self.windows[2][0][1]:
+                if not np.min(self.windows[2][0]) < nose_circle_center_arc[i] < np.max(self.windows[2][0]):
                     nose_distance_C[i] = np.nan
-            nose_distance={'window_A':nose_distance_A,
-                           'window_B':nose_distance_B,
-                           'window_C':nose_distance_C}
+
+            # find minimum
+            nose_distance_A_min=min(nose_distance_A[nose_distance_A>0])
+            nose_distance_B_min = min(nose_distance_B[nose_distance_B > 0])
+            nose_distance_C_min = min(nose_distance_C[nose_distance_C > 0])
+            nose_distance_min=min([nose_distance_A_min,nose_distance_B_min,nose_distance_C_min])
+
+            nose_distance={'window_A':np.array(nose_distance_A-nose_distance_min),
+                           'window_B':np.array(nose_distance_B-nose_distance_min),
+                           'window_C':np.array(nose_distance_C-nose_distance_min)}
 
 
             result = {'inner_left': np.transpose(inner_left)[0],
@@ -489,8 +515,9 @@ class Gaze_angle:
                       'outer_right': np.transpose(outer_right)[0],
                       'left_accum':left_accum,
                       'right_accum': right_accum,
-                      'head_triangle_area':np.transpose(head_triangle_area),
-                      'body_triangle_area':np.transpose(body_triangle_area),
+                      'body_accum':body_accum,
+                      'head_triangle_area':head_triangle_area,
+                      'body_triangle_area':body_triangle_area,
                       'body_position':np.transpose(arc_body)[0],
                       'win_visibility':np.stack([winA_vis,winB_vis,winC_vis]),
                       'speed':smoothed_speed,
@@ -657,27 +684,19 @@ if __name__ == '__main__':
     #import matlab.engine
 
     #config_folder_path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\config'
-    img_path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\test.png'
-  
-    path = r'D:\Desktop\2021-02-22_h2-2045\processed'
-    ob = Config(path, save_center=True)
-    video_path = path + '\\undistorted_camera_19412282.MOV'
+    #img_path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\test.png'
+    '''
+    path = r'D:\Desktop\2144\2021-06-17_habituation_dominant'
+    ob = Config(path, save_center=False)
+    video_path = path + r'\camera_17391304.MOV'
     ob.set_img(video_path)
     ob.get_loc_pixel()
 
 
     '''
+    dlc_path = r'D:\Desktop\1085\2021-07-06_mother_(A)novel_object_(B)pup_(C)pups\DLC'
+    root_path = r'D:\Desktop\1085\2021-07-06_mother_(A)novel_object_(B)pup_(C)pups\config'
+    gaze=Gaze_angle(root_path)
+    result=gaze(dlc_path)
 
-    videopaths =  'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\multimedia\\videos'
-    config_folder_path = 'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\config'
 
-    videos = os.listdir(videopaths)
-
-    for video in videos:
-        if not video.startswith('.'):
-            config_folder_path2 = os.path.join(videopaths, video ,'config_behavior_rig.toml')
-            gaze_model = Gaze_angle(main_config_path=config_folder_path,config_folder_path=config_folder_path2,gazePoint=0)
-            result = gaze_model(os.path.join(videopaths,video),save=True)
-            gaze_model.plot(result,savepath=os.path.join(videopaths,video),show=False)
-            #Gaze_model.plot(result,flag='mono', savepath=videopaths + '\\' + video)           
-    '''
