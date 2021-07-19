@@ -28,7 +28,6 @@
 
 # when all the threads are done
 # delete SSD folder
-import datetime
 import re
 import threading
 
@@ -47,8 +46,10 @@ import shutil
 import toml
 import time
 from utils.calibration_3d_utils import get_extrinsics
-from utils.reorganize_utils import reorganize_mat_file,reorganize_mat_file2,add_new_gaze_to_full_mat
+from utils.reorganize_utils import reorganize_mat_file
 from utils.triangulation_utils import THRESHOLD as TRIANGULATE_THRESHOLD
+from utils.squeaks_utils import Squeaks
+import filecmp
 
 
 # top camera dlc config
@@ -71,6 +72,7 @@ class ProcessingGroup:
 		self.al_calib = Calib('alignment')
 		self.ex_calib = Calib('extrinsic')
 		self.server_thread=None
+		self.squeak_ob=Squeaks()
 
 	# rootpath refers to the working directory
 	# dlc path is a default path for the trained dlc model
@@ -81,6 +83,7 @@ class ProcessingGroup:
 		self.rootpath = rootpath
 		self.processpath = 'undistorted'
 		self.config_path = 'config'
+		self.squeak_ob.set_root_path(rootpath)
 
 	@property
 	def processpath(self):
@@ -112,7 +115,6 @@ class ProcessingGroup:
 			return version
 		else:
 			raise Exception('root path incorrect/unimplemented')
-
 
 	def check_process(self):
 		# check under rootpath first
@@ -194,12 +196,9 @@ class ProcessingGroup:
 			undistort_thread=threading.Thread(target=undistort_videos,args=(self.rootpath,))
 			undistort_thread.start()
 			#undistort_videos(self.rootpath)
-
-		if dsqk:
-			self.audio_processing()
-			self.dsqk_analysis()
 		if dlc:
 			dlc_threads=self.dlc_analysis()
+
 		if gaze:
 			self.gaze_analysis()
 		if triangulate:
@@ -222,10 +221,14 @@ class ProcessingGroup:
 				thread.join()
 		except: pass
 
+		if dsqk:
+			self.audio_processing()
+			self.dsqk_analysis()
+
 		if reorganize:
 			self.reorganize()
 		if server:
-			self.SSD2server()
+			self.SSD2server_update()
 			'''
 			if self.server_thread is None:
 				self.server_thread=threading.Thread(target=self.SSD2server)
@@ -271,7 +274,6 @@ class ProcessingGroup:
 				except:
 					Warning("can't remove the temp config file")
 		return count
-
 
 	def get_alignment_config(self):
 		alignment = 'config_alignment_%s_temp.toml' % TOP_CAM
@@ -393,11 +395,20 @@ class ProcessingGroup:
 		print("saved audio file")
 
 	def dsqk_analysis(self):
-		pass
+		fname1 = 'Dodo_audio.wav'
+		fname2 = 'B&K_audio.wav'
+		if os.path.exists(os.path.join(self.rootpath,fname1)):
+			call_time1 = self.squeak_ob(fname1)
+			self.squeak_ob.draw_Dodo_squeaks(self.rootpath, call_time1)
+		if os.path.exists(os.path.join(self.rootpath,fname1)):
+			call_time2=self.squeak_ob(fname2)
+			self.squeak_ob.draw_BK_squeaks(self.rootpath, call_time2)
+
 
 	def reorganize(self):
 		# TODO: add everything to .mat file
-		reorganize_mat_file(self.rootpath)
+
+		reorganize_mat_file(self.rootpath,self.squeak_ob.load_squeak_time_matlab)
 
 		items = os.listdir(self.rootpath)
 		if 'reproject' in str(items):
@@ -407,7 +418,7 @@ class ProcessingGroup:
 					file=os.path.join(self.rootpath,item)
 					file2=os.path.join(self.rootpath,'reproject',item)
 					shutil.move(file,file2)
-		items = os.listdir(self.rootpath)
+
 		if 'DLC' in str(items):
 			os.mkdir(os.path.join(self.rootpath, 'DLC'))
 			for item in items:
@@ -415,7 +426,7 @@ class ProcessingGroup:
 					file = os.path.join(self.rootpath, item)
 					file2 = os.path.join(self.rootpath, 'DLC', item)
 					shutil.move(file, file2)
-		items = os.listdir(self.rootpath)
+
 		if '.MOV' in str(items):
 			os.mkdir(os.path.join(self.rootpath, 'raw'))
 			for item in items:
@@ -424,7 +435,54 @@ class ProcessingGroup:
 					file2 = os.path.join(self.rootpath, 'raw', item)
 					shutil.move(file, file2)
 
+		if 'audio' in str(items):
+			os.mkdir(os.path.join(self.rootpath, 'audio'))
+			for item in items:
+				if 'audio' in item or 'squeaks' in item:
+					file = os.path.join(self.rootpath, item)
+					file2 = os.path.join(self.rootpath, 'audio', item)
+					shutil.move(file, file2)
+
 		print('finish reorganizing folder %s'%self.rootpath)
+
+	def SSD2server_update(self):
+		filename = os.path.split(self.rootpath)[-1]
+		animal_ID =os.path.split(os.path.split(self.rootpath)[0])[-1]
+		full_server_path = os.path.join(server_path, animal_ID,filename)
+
+		if not os.path.exists(os.path.join(server_path,animal_ID)):
+			self.SSD2server()
+		elif not os.path.exists(full_server_path):
+			try:
+				print(f"trying to upload {self.rootpath} to the server")
+				shutil.copytree(self.rootpath, full_server_path)
+				print(f'finished uploading {self.rootpath} to the server.')
+			except shutil.Error as e:
+				for src, dst, msg in e.args[0]:
+					print(dst, src, msg)
+		else:
+			items=os.listdir(self.rootpath)
+			for i in items:
+				full_server_i=os.path.join(full_server_path,i)
+				full_local_i=os.path.join(self.rootpath,i)
+				if os.path.isdir(full_local_i): # if it is a folder
+					if not os.path.exists(full_server_i):
+						print(f"this folder {i} doesn't exist on server! uploading now....")
+						shutil.copytree(full_local_i,full_server_i)
+					else:
+						subitems = os.listdir(full_local_i)
+						for sub_i in subitems:
+							full_local_sub_i=os.path.join(full_local_i,sub_i)
+							full_server_sub_i=os.path.join(full_server_i,sub_i)
+							if not os.path.isfile(full_server_sub_i) or not filecmp.cmp(full_server_sub_i, full_local_sub_i):
+								print(f"this file {sub_i} doesnt's exist or is different in the subfolder {animal_ID}_{filename}_{i}. Overwriting... ")
+								shutil.copyfile(full_local_sub_i, full_server_sub_i)
+				else:# if it is a file
+					if not os.path.isfile(full_server_i) or not filecmp.cmp(full_server_i,full_local_i):
+						print(f"this file {i} doesnt's exist or is different in the folder {animal_ID}_{filename}. Overwriting... ")
+
+						shutil.copyfile(full_local_i,full_server_i)
+
 
 
 	def SSD2server(self):
@@ -498,32 +556,44 @@ class ProcessingGroup:
 			os.remove(subpath)
 			print('removed full data')
 
-
 	def half_revert(self,root_path):
 		# move everything out+delete gaze analysis+delete undistort+keep DLC and config
 		items=os.listdir(root_path)
 		if 'raw' in items:
 			subpath=os.path.join(root_path,'raw')
-			subitems = os.listdir(subpath)
-			for subitem in subitems:
-				subitem_path=os.path.join(subpath,subitem)
-				move2path=os.path.join(root_path,subitem)
-				shutil.move(subitem_path, move2path)
-			shutil.rmtree(subpath)
+			if os.path.exists(subpath):
+				subitems = os.listdir(subpath)
+				for subitem in subitems:
+					subitem_path=os.path.join(subpath,subitem)
+					move2path=os.path.join(root_path,subitem)
+					shutil.move(subitem_path, move2path)
+				shutil.rmtree(subpath)
 		if 'DLC' in items:
 			subpath = os.path.join(root_path, 'DLC')
-			subitems = os.listdir(subpath)
-			for subitem in subitems:
-				subitem_path = os.path.join(subpath, subitem)
-				move2path = os.path.join(root_path, subitem)
-				shutil.move(subitem_path, move2path)
-			shutil.rmtree(subpath)
+			if os.path.exists(subpath):
+				subitems = os.listdir(subpath)
+				for subitem in subitems:
+					subitem_path = os.path.join(subpath, subitem)
+					move2path = os.path.join(root_path, subitem)
+					shutil.move(subitem_path, move2path)
+				shutil.rmtree(subpath)
 		if 'gaze' in items:
 			subpath = os.path.join(root_path, 'gaze')
-			shutil.rmtree(subpath)
+			if os.path.exists(subpath):
+				shutil.rmtree(subpath)
 		if 'undistorted' in items:
 			subpath = os.path.join(root_path, 'undistorted')
-			shutil.rmtree(subpath)
+			if os.path.exists(subpath):
+				shutil.rmtree(subpath)
+		if 'audio' in items:
+			subpath = os.path.join(root_path, 'audio')
+			if os.path.exists(subpath):
+				subitems = os.listdir(subpath)
+				for subitem in subitems:
+					subitem_path = os.path.join(subpath, subitem)
+					move2path = os.path.join(root_path, subitem)
+					shutil.move(subitem_path, move2path)
+				shutil.rmtree(subpath)
 
 
 if __name__ == '__main__':
@@ -557,6 +627,7 @@ if __name__ == '__main__':
 	useful=list(map(lambda x:x.isdigit(),items))
 	new_items=list(np.array(items)[useful])
 	for item in tqdm.tqdm(new_items):
+		if int(item)>=0:
 			print(item)
 			path = os.path.join(working_dir, item)
 			server_animal_path = os.path.join(server_path, item)
@@ -571,48 +642,49 @@ if __name__ == '__main__':
 					pass
 				#if server_subitem is None or subitem not in server_subitem:
 
-				#if i:
-				full_path=os.path.join(path,subitem)
-				if full_path!='D:\\Desktop\\1131\\2021-06-17_habituation_dominant' and full_path!='D:\\Desktop\\1136\\2021-06-17_habituation_submissive':
-						#pg.full_revert(full_path)
-						print(subitem)
-						local_config_path=os.path.join(full_path,'config')
-						local_gaze_path = os.path.join(full_path, 'gaze')
-						local_reorg_dlc_path=os.path.join(full_path,'DLC')
-						local_full_data_path = os.path.join(full_path,'full_data.mat')
-						remote_full_data_path = os.path.join(server_animal_path,subitem,'full_data.mat')
+				if i > -1:
+					full_path=os.path.join(path,subitem)
+					if full_path!='D:\\Desktop\\1131\\2021-06-17_habituation_dominant' and full_path!='D:\\Desktop\\1136\\2021-06-17_habituation_submissive':
+							pg.half_revert(full_path)
+							'''
+							print(subitem)
+							local_config_path=os.path.join(full_path,'config')
+							local_gaze_path = os.path.join(full_path, 'gaze')
+							local_reorg_dlc_path=os.path.join(full_path,'DLC')
+							local_full_data_path = os.path.join(full_path,'full_data.mat')
+							remote_full_data_path = os.path.join(server_animal_path,subitem,'full_data.mat')
+	
+							gaze=Gaze_angle(local_config_path)
+							gaze.gazePoint=0
+							bino=gaze(local_reorg_dlc_path,save=False)
+							#bino_path=os.path.join(full_path,'gaze_angle_0.mat')
+							gaze.save(full_path,bino)
+							print('saved gaze')
+	
+							gaze.gazePoint = 0.5725
+							mono = gaze(local_reorg_dlc_path, save=False)
+							#mono_path = os.path.join(full_path, 'gaze_angle_32.mat')
+							gaze.save(full_path, mono)
+							print('saved gaze')
+	
+							reorganize_mat_file2(full_path)
+							#add_new_gaze_to_full_mat(local_gaze_path,local_full_data_path)
+							shutil.copy(local_full_data_path,remote_full_data_path)
+							'''
+							pg(full_path)
+							pg.post_process(intrinsic=False,
+											alignment=False,
+											extrinsic=False,
+											undistort=False,
+											copy_config=False,
+											dlc=False,
+											triangulate=False,
+											reproject=False,
+											reorganize=False,
+											gaze=False,
+											dsqk=False,
+											server=True,
+											HDD=False)
 
-						gaze=Gaze_angle(local_config_path)
-						gaze.gazePoint=0
-						bino=gaze(local_reorg_dlc_path,save=False)
-						#bino_path=os.path.join(full_path,'gaze_angle_0.mat')
-						gaze.save(full_path,bino)
-						print('saved gaze')
-
-						gaze.gazePoint = 0.5725
-						mono = gaze(local_reorg_dlc_path, save=False)
-						#mono_path = os.path.join(full_path, 'gaze_angle_32.mat')
-						gaze.save(full_path, mono)
-						print('saved gaze')
-
-						reorganize_mat_file2(full_path)
-						#add_new_gaze_to_full_mat(local_gaze_path,local_full_data_path)
-						shutil.copy(local_full_data_path,remote_full_data_path)
-						'''
-						pg(full_path)
-						pg.post_process(intrinsic=False,
-										alignment=False,
-										extrinsic=False,
-										undistort=False,
-										copy_config=True,
-										dlc=True,
-										triangulate=False,
-										reproject=False,
-										reorganize=True,
-										gaze=True,
-										dsqk=True,
-										server=True,
-										HDD=False)
-						'''
 
 

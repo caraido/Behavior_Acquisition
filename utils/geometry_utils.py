@@ -600,12 +600,14 @@ class Gaze_angle:
             if speed is not None:
                 self.plot_speed_over_time(speed, savepath)
             plt.clf()
+            plt.close()
 
     def plot_gaze(self,things,savepath):
         keys = ['inner_left', 'inner_right', 'outer_left', 'outer_right', 'body_position']
         row = 4
         col = 2
         # plot the gaze
+        #plt.ioff()
         plt.figure(figsize=(14, 16))
         for i in range(len(keys)):
             plt.subplot(row, col, i + 1)
@@ -639,8 +641,10 @@ class Gaze_angle:
         table.scale(1, 3)
         if savepath:
             plt.savefig(os.path.join(savepath, 'gaze', 'gaze_angle_%d.jpg' % float(self.gazePoint * 180 / np.pi)))
+        plt.close()
 
     def plot_accum(self,accum,side,savepath):
+        #plt.ioff()
         plt.figure()
         length=accum.shape[0]
         things=os.listdir(savepath)
@@ -655,12 +659,10 @@ class Gaze_angle:
         plt.legend(['window A','window B','window C'])
         plt.title('Accumulative gaze preference for %s eye of gaze angle %d'%(side,float(self.gazePoint*180/np.pi)))
         plt.savefig(os.path.join(savepath,'gaze','accumulative_gaze_pref_%s_angle_%d'%(side,float(self.gazePoint*180/np.pi))))
-
-    def plot_windows_visibility(self):
-
-        pass
+        plt.close()
 
     def plot_speed_over_time(self,speed,savepath):
+        #plt.ioff()
         plt.figure()
         length=speed.shape[0]
         things = os.listdir(savepath)
@@ -678,6 +680,7 @@ class Gaze_angle:
         plt.legend(['speed','average speed'])
         plt.title('Speed')
         plt.savefig(os.path.join(savepath, 'gaze','speed.jpg'))
+        plt.close()
 
 
 if __name__ == '__main__':

@@ -17,8 +17,10 @@ class Squeaks:
 
 	def __init__(self):
 		self.engine=matlab.engine.start_matlab()
+		s = self.engine.genpath(UTILS_PATH)
+		self.engine.addpath(s, nargout=0)
 		self.network_path=default_network
-		print('matlab engine start')
+		print('matlab engine is started')
 		self.root_path=None
 		self.settings=matlab.double(SETTINGS)
 
@@ -34,7 +36,7 @@ class Squeaks:
 	def __call__(self,fname):
 		# save squeaks and return squeak time in second
 		# fname being the wav file of the audio
-		if root_path is not None:
+		if self.root_path is not None:
 			print(f'currently analyzing squeaks under: {self.root_path}')
 
 			calls=self.engine.GetSqueaks(DEEPSQUEAK_PATH,
@@ -48,7 +50,7 @@ class Squeaks:
 				box = np.array(self.engine.getfield(calls, 'Box')).astype('float')
 				squeak_time=box[:,0]
 			else:
-				squeak_time=None
+				squeak_time=False
 			print('saved calls')
 			self.engine.clear
 			return squeak_time
@@ -59,7 +61,7 @@ class Squeaks:
 			box=np.array(self.engine.getfield(calls, 'Box')).astype('float')
 			squeak_time=box[:,0]
 		except:
-			squeak_time=None
+			squeak_time=False
 			print('no squeaks in the file')
 		return squeak_time
 
@@ -69,6 +71,7 @@ class Squeaks:
 
 	def restart_matlab(self):
 		self.engine.start_matlab()
+		print('background matlab restarted')
 
 	def __del__(self):
 		self.stop_matlab()
@@ -84,10 +87,10 @@ class Squeaks:
 			pose_path = os.path.join(dlcpath,pose_file[0])
 		else:
 			pose_path = os.path.join(root_path, pose_file[0])
-		try:
-			video_path = os.path.join(root_path, 'camera_17391304.MOV')
-		except:
-			video_path=os.path.join(root_path,'raw','camera_17391304.MOV')
+
+		video_path = os.path.join(root_path, 'camera_17391304.MOV')
+		if not os.path.exists(video_path):
+			video_path = os.path.join(root_path, 'raw', 'camera_17391304.MOV')
 
 		pose = pd.read_csv(pose_path, header=[1, 2])
 		image,fps = get_thumbnail_and_fps(video_path)
@@ -98,10 +101,10 @@ class Squeaks:
 			except:
 				raise Exception('squeak time file not found! Please analyze the squeaks first')
 
-		if squeak_time is not None:
+		if not isinstance(squeak_time,int):
 			all_indices=squeak_time*fps
 
-			indices = [i for i in all_indices if i < len(pose)]# let's see how python handle empty squeak file
+			indices = [int(i) for i in all_indices if i < len(pose)]# let's see how python handle empty squeak file
 
 			pose_snapshot = pose.loc[indices]
 			length = pose_snapshot.shape[0]
@@ -126,7 +129,8 @@ class Squeaks:
 		else:
 			image = cv2.putText(image,'No squeak detected!',org=(500,80), fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=2,
 								color=(255, 255, 255))
-		cv2.imwrite(os.path.join(root_path, 'gaze', 'where_are_squeaks_B&K.png'), image)
+
+		cv2.imwrite(os.path.join(root_path, 'where_are_squeaks_BK.png'), image)
 
 	def draw_Dodo_squeaks(self, root_path, squeak_time=None):
 		root_name = os.path.split(root_path)[1]
@@ -153,12 +157,10 @@ class Squeaks:
 			except:
 				raise Exception('squeak time file not found! Please analyze the squeaks first')
 
-		if squeak_time is not None:
+		if not isinstance(squeak_time,int):
 			all_indices = squeak_time * fps
-			all_indices=all_indices.astype('int')
 
-
-			indices = [i for i in all_indices if i < len(pose)]  # let's see how python handle empty squeak file
+			indices = [int(i) for i in all_indices if i < len(pose)]  # let's see how python handle empty squeak file
 
 			pose_snapshot = pose.loc[indices]
 			length = pose_snapshot.shape[0]
@@ -184,54 +186,8 @@ class Squeaks:
 			image = cv2.putText(image, 'No squeak detected!', org=(500, 80), fontFace=cv2.FONT_HERSHEY_DUPLEX,
 								fontScale=2,
 								color=(255, 255, 255))
-		if os.path.exists(os.path.join(root_path, 'gaze')):
-			cv2.imwrite(os.path.join(root_path, 'gaze', 'where_are_squeaks_Dodo.png'), image)
-		else:
-			cv2.imwrite(os.path.join(root_path, 'where_are_squeaks_Dodo.png'), image)
+		cv2.imwrite(os.path.join(root_path, 'where_are_squeaks_Dodo.png'), image)
 
-def is_in_window(position, window_constraint):
-	a= position[0]>np.min(window_constraint[0])
-	b=position[0]<np.max(window_constraint[0])
-	length = len(a)
-	together=np.array([True if a[i] and b[i] else False for i in range(length)])
-	return together
-
-def get_squeaks(log_path, length):
-	squeaks=np.zeros([length])
-	log=open(log_path,'r',encoding='UTF-8')
-	stuff=log.readline()
-	while stuff:
-		if 'min' in stuff:
-			num=re.search("\d+(\.\d+)?",stuff)
-			num = float(num.group())
-			sec=num*60
-			index=int(sec*15/2)
-			squeaks[index:index+5]=1
-
-		stuff=log.readline()
-
-	log.close()
-
-	return squeaks
-
-def get_squeaks_indices(log_path):
-	indices=[]
-	log=open(log_path,'r',encoding='UTF-8')
-	stuff=log.readline()
-	while stuff:
-		if 'min' in stuff:
-			num=re.search("\d+(\.\d+)?",stuff)
-			num = float(num.group())
-			sec=num*60
-			index=int(sec*15/2)
-			for i in range(5):
-				indices.append(index+i)
-
-		stuff=log.readline()
-
-	log.close()
-
-	return indices
 
 def get_thumbnail_and_fps(video_path):
 	cap=cv2.VideoCapture(video_path)
@@ -239,7 +195,10 @@ def get_thumbnail_and_fps(video_path):
 	while True:
 		ret, frame = cap.read()
 		if ret:
+			cap.release()
+			del cap
 			return frame,fps
+
 
 
 if __name__=='__main__':

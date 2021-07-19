@@ -4,7 +4,8 @@ import os
 import pandas as pd
 from scipy.io import wavfile
 
-def reorganize_mat_file(rootpath):
+def reorganize_mat_file(rootpath,load_squeak_time=None):
+	# Note that load_squeak_time is a function
 	gazepath=os.path.join(rootpath, 'gaze')
 	mono_view_path = os.path.join(gazepath, 'gaze_angle_32.mat')
 	bino_view_path=os.path.join(gazepath, 'gaze_angle_0.mat')
@@ -13,7 +14,8 @@ def reorganize_mat_file(rootpath):
 	dlc_file=[]
 	reconstruct_file=[]
 	reproject_file=[]
-	audio_file=[]
+	squeak_file=[]
+
 
 	for item in items:
 		if 'DLC' in item and 'csv' in item:
@@ -22,11 +24,22 @@ def reorganize_mat_file(rootpath):
 			reconstruct_file.append(os.path.join(rootpath,item))
 		if 'reproject' in item and '.csv' in item:
 			reproject_file.append(os.path.join(rootpath,item))
+		if 'squeaks.mat' in item:
+			squeak_file.append(os.path.join(rootpath,item))
 
-	dlc_file=list(sorted(dlc_file))
 	reproject_file = list(sorted(reproject_file))
 
-	dlc_dict={}
+	# if dlc data are reorganized
+	if len(dlc_file)==0 and os.path.exists(os.path.join(rootpath, 'DLC')):
+		dlc_path = os.path.join(rootpath, 'DLC')
+		dlc_items = os.listdir(dlc_path)
+		for dlc_item in dlc_items:
+			if '.csv' in dlc_item:
+				dlc_file.append(os.path.join(dlc_path, dlc_item))
+	dlc_file = list(sorted(dlc_file))
+
+	# load dlc data
+	dlc_dict = {}
 	for i,item in enumerate(dlc_file):
 		data=pd.read_csv(item,header=[1,2])
 		data = data.to_dict()
@@ -36,6 +49,16 @@ def reorganize_mat_file(rootpath):
 			new_data[new_key]=np.array(list(value.values())).astype(np.float32)
 		dlc_dict[f"camera_{i}"]=new_data
 
+	# if reproject data are reorganized
+	if len(reproject_file)==0 and os.path.exists(os.path.join(rootpath, 'reproject')):
+		reproject_path = os.path.join(rootpath,'reproject')
+		reproject_items=os.listdir(reproject_path)
+		for reproject_item in reproject_items:
+			if '.csv' in reproject_item:
+				reproject_file.append(os.path.join(reproject_path,reproject_item))
+	reproject_file=list(sorted(reproject_file))
+
+	# load reproejction data
 	reproject_dict={}
 	for i,item in enumerate(reproject_file):
 		data=pd.read_csv(item)
@@ -54,6 +77,21 @@ def reorganize_mat_file(rootpath):
 	except:
 		reconstruct_data={}
 
+	# if squeak data are organized
+	if len(squeak_file)==0 and os.path.exists(os.path.join(rootpath, 'audio')):
+		squeak_path = os.path.join(rootpath, 'audio')
+		squeak_items = os.listdir(squeak_path)
+		for squeak_item in squeak_items:
+			if 'squeaks.mat' in squeak_item:
+				squeak_file.append(os.path.join(squeak_path, squeak_item))
+
+	squeaks_dict={}
+	for item in squeak_file:
+		squeaks=load_squeak_time(item)
+		name=os.path.split(item)
+		name=name[1][:-4]
+		squeaks_dict[name]=squeaks
+
 	mono_view_data = sio.loadmat(mono_view_path)
 	bino_view_data=sio.loadmat(bino_view_path)
 
@@ -66,12 +104,14 @@ def reorganize_mat_file(rootpath):
 		'DLC_tracking':dlc_dict,
 		'reprojection':reproject_dict,
 		'reconstruction':reconstruct_data,
+		'squeaks_time':squeaks_dict
 	}
 
 	savepath=os.path.join(rootpath,'full_data.mat')
 	sio.savemat(savepath,full_data)
 	print('saved full data')
 
+'''
 def reorganize_mat_file2(rootpath):
 	gazepath=os.path.join(rootpath, 'gaze')
 	mono_view_path = os.path.join(gazepath, 'gaze_angle_32.mat')
@@ -146,7 +186,7 @@ def reorganize_mat_file2(rootpath):
 	savepath=os.path.join(rootpath,'full_data.mat')
 	sio.savemat(savepath,full_data)
 	print('saved full data')
-
+'''
 
 def get_gaze_data(matfile:dict):
 	triangle = {'body':matfile['body_triangle_area'][0],
