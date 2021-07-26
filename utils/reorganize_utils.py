@@ -210,7 +210,8 @@ def get_gaze_data(matfile:dict):
 			  'body_position_arc':matfile['body_position'][0],
 			  'stats':matfile['stats'],
 			  'window_visibility':matfile['win_visibility'].transpose(),
-			  'nose_window_distance':matfile['nose_window_distance']
+			  'nose_window_distance':matfile['nose_window_distance'],
+			  'window_crossings':matfile['window_crossings']
 	}
 	return new_data
 

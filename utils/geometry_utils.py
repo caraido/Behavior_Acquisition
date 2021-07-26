@@ -217,6 +217,55 @@ def body_center(pose):
     center = np.array([(leftear_x+rightear_x)/2,(leftear_y+rightear_y)/2])
     return center
 
+def window_crossings(arc_body, body_long,smoothed_speed):
+    arc_body=arc_body[:,0]
+    # body_long is a boolean array
+    info={'window':[],
+          'type':[],
+          'in_frame':[],
+          'out_frame':[],
+          'frame_spent':[],
+          'average_speed':[]
+    }
+    window_names=['A','B','C']
+    for windex,in_window in enumerate(body_long):
+
+        enter_side=None
+        in_frame=0
+        exit_side=None
+        out_frame=0
+
+        for i in range(len(in_window)-1):
+            if not np.isnan(arc_body[i]):
+                # frame i=0 and frame i+1=1: entering window
+                if in_window[i]==0 and in_window[i+1]==1:
+                    enter_side = arc_body[i+1]-arc_body[i]
+                    in_frame=i+1
+                # frame i=1 and frame i+1=0: exiting window
+                if in_window[i]==1 and in_window[i+1]==0:
+                    exit_side = arc_body[i+1]-arc_body[i]
+                    out_frame=i+1
+
+                # if the mouse exits
+                if enter_side is not None and exit_side is not None and out_frame>in_frame:
+                    in_window_speed=np.mean(smoothed_speed[in_frame:out_frame])
+                    info['average_speed'].append(in_window_speed)
+                    info['window'].append(window_names[windex])
+                    info['in_frame'].append(in_frame)
+                    info['out_frame'].append(out_frame)
+                    info['frame_spent'].append(out_frame-in_frame)
+                    if enter_side*exit_side>0: # this means straight through
+                        info['type'].append('through')
+                    else:
+                        info['type'].append('back')
+
+                    enter_side = None
+                    in_frame = 0
+                    exit_side = None
+                    out_frame = 0
+    return info
+
+
 class Config:
     def __init__(self,path:str,save_center=False):
         self.config_folder_path=path
@@ -423,10 +472,12 @@ class Gaze_angle:
             C_left_long = is_in_window(outer_left, self.windowC, self.circle_center)
             left_long=np.stack([A_left_long, B_left_long, C_left_long])
 
+            # check the amount of frame when the body is in window
             A_body = np.sum(is_in_window(arc_body, self.windowA, self.circle_center))
             B_body = np.sum(is_in_window(arc_body, self.windowB, self.circle_center))
             C_body = np.sum(is_in_window(arc_body, self.windowC, self.circle_center))
 
+            # check if body is in window.
             A_body_long = is_in_window(arc_body, self.windowA, self.circle_center)
             B_body_long = is_in_window(arc_body, self.windowB, self.circle_center)
             C_body_long = is_in_window(arc_body, self.windowC, self.circle_center)
@@ -468,6 +519,8 @@ class Gaze_angle:
             index = ['right','left','body']
             stats=pd.DataFrame(table,columns=column,index=index)
             stats=stats.to_dict()
+
+            window_crossings_data=window_crossings(arc_body,body_long,smoothed_speed)
 
             left_accum=accumulative_window_preference(left_long)
             right_accum=accumulative_window_preference(right_long)
@@ -523,7 +576,8 @@ class Gaze_angle:
                       'speed':smoothed_speed,
                       'stats':stats,
                       'window_arc':self.windows,
-                      'nose_window_distance':nose_distance
+                      'nose_window_distance':nose_distance,
+                      'window_crossings':window_crossings_data
                       }
 
             # save file

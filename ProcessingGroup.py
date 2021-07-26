@@ -223,7 +223,7 @@ class ProcessingGroup:
 
 		if dsqk:
 			self.audio_processing()
-			self.dsqk_analysis()
+			self.dsqk_analysis(save_spectrogram=True)
 
 		if reorganize:
 			self.reorganize()
@@ -394,15 +394,23 @@ class ProcessingGroup:
 		wavfile.write(dodo_filepath[:-4] + 'wav', int(sample_rate), dodo_audio[0])
 		print("saved audio file")
 
-	def dsqk_analysis(self):
+	def dsqk_analysis(self,save_spectrogram=False):
 		fname1 = 'Dodo_audio.wav'
 		fname2 = 'B&K_audio.wav'
-		if os.path.exists(os.path.join(self.rootpath,fname1)):
+		filepath1=os.path.join(self.rootpath,fname1)
+		filepath2=os.path.join(self.rootpath,fname2)
+		saving_filepath1=os.path.join(self.rootpath,'Dodo_audio_squeaks.mat')
+		saving_filepath2 = os.path.join(self.rootpath, 'B&K_audio_squeaks.mat')
+
+		if not os.path.exists(saving_filepath1):
 			call_time1 = self.squeak_ob(fname1)
 			self.squeak_ob.draw_Dodo_squeaks(self.rootpath, call_time1)
-		if os.path.exists(os.path.join(self.rootpath,fname1)):
+		if not os.path.exists(saving_filepath2):
 			call_time2=self.squeak_ob(fname2)
 			self.squeak_ob.draw_BK_squeaks(self.rootpath, call_time2)
+		if save_spectrogram:
+			working_path=os.path.join(self.rootpath,filepath2[:-4]+'_squeaks.mat')
+			self.squeak_ob.draw_spectrogram(working_path,self.rootpath)
 
 
 	def reorganize(self):
@@ -412,36 +420,44 @@ class ProcessingGroup:
 
 		items = os.listdir(self.rootpath)
 		if 'reproject' in str(items):
-			os.mkdir(os.path.join(self.rootpath,'reproject'))
+			if not os.path.exists(os.path.join(self.rootpath, 'reproject')):
+				os.mkdir(os.path.join(self.rootpath,'reproject'))
 			for item in items:
-				if 'reproject' in item:
-					file=os.path.join(self.rootpath,item)
-					file2=os.path.join(self.rootpath,'reproject',item)
-					shutil.move(file,file2)
+				if os.path.isfile(os.path.join(self.rootpath, item)):
+					if 'reproject' in item:
+						file=os.path.join(self.rootpath,item)
+						file2=os.path.join(self.rootpath,'reproject',item)
+						shutil.move(file,file2)
 
 		if 'DLC' in str(items):
-			os.mkdir(os.path.join(self.rootpath, 'DLC'))
+			if not os.path.exists(os.path.join(self.rootpath, 'DLC')):
+				os.mkdir(os.path.join(self.rootpath, 'DLC'))
 			for item in items:
-				if 'DLC' in item:
-					file = os.path.join(self.rootpath, item)
-					file2 = os.path.join(self.rootpath, 'DLC', item)
-					shutil.move(file, file2)
+				if os.path.isfile(os.path.join(self.rootpath, item)):
+					if 'DLC' in item:
+						file = os.path.join(self.rootpath, item)
+						file2 = os.path.join(self.rootpath, 'DLC', item)
+						shutil.move(file, file2)
 
 		if '.MOV' in str(items):
-			os.mkdir(os.path.join(self.rootpath, 'raw'))
+			if not os.path.exists(os.path.join(self.rootpath, 'raw')):
+				os.mkdir(os.path.join(self.rootpath, 'raw'))
 			for item in items:
-				if '.MOV' in item:
-					file = os.path.join(self.rootpath, item)
-					file2 = os.path.join(self.rootpath, 'raw', item)
-					shutil.move(file, file2)
+				if os.path.isfile(os.path.join(self.rootpath, item)):
+					if '.MOV' in item:
+						file = os.path.join(self.rootpath, item)
+						file2 = os.path.join(self.rootpath, 'raw', item)
+						shutil.move(file, file2)
 
 		if 'audio' in str(items):
-			os.mkdir(os.path.join(self.rootpath, 'audio'))
+			if not os.path.exists(os.path.join(self.rootpath, 'audio')):
+				os.mkdir(os.path.join(self.rootpath, 'audio'))
 			for item in items:
-				if 'audio' in item or 'squeaks' in item:
-					file = os.path.join(self.rootpath, item)
-					file2 = os.path.join(self.rootpath, 'audio', item)
-					shutil.move(file, file2)
+				if os.path.isfile(os.path.join(self.rootpath, item)):
+					if 'audio' in item or 'squeaks' in item or 'spectrogram' in item:
+						file = os.path.join(self.rootpath, item)
+						file2 = os.path.join(self.rootpath, 'audio', item)
+						shutil.move(file, file2)
 
 		print('finish reorganizing folder %s'%self.rootpath)
 
@@ -482,8 +498,6 @@ class ProcessingGroup:
 						print(f"this file {i} doesnt's exist or is different in the folder {animal_ID}_{filename}. Overwriting... ")
 
 						shutil.copyfile(full_local_i,full_server_i)
-
-
 
 	def SSD2server(self):
 		#config_path_server = os.path.join(server_path, 'config')
@@ -627,7 +641,7 @@ if __name__ == '__main__':
 	useful=list(map(lambda x:x.isdigit(),items))
 	new_items=list(np.array(items)[useful])
 	for item in tqdm.tqdm(new_items):
-		if int(item)>=0:
+		if int(item)>=1131:
 			print(item)
 			path = os.path.join(working_dir, item)
 			server_animal_path = os.path.join(server_path, item)
@@ -642,10 +656,10 @@ if __name__ == '__main__':
 					pass
 				#if server_subitem is None or subitem not in server_subitem:
 
-				if i > -1:
+				if '07-23' in subitem or '07-22' in subitem:
 					full_path=os.path.join(path,subitem)
-					if full_path!='D:\\Desktop\\1131\\2021-06-17_habituation_dominant' and full_path!='D:\\Desktop\\1136\\2021-06-17_habituation_submissive':
-							pg.half_revert(full_path)
+					if full_path!='D:\\Desktop\\1131\\2021-06-17_habituation' and full_path!='D:\\Desktop\\1136\\2021-06-17_habituation':
+							#pg.half_revert(full_path)
 							'''
 							print(subitem)
 							local_config_path=os.path.join(full_path,'config')
@@ -681,9 +695,9 @@ if __name__ == '__main__':
 											triangulate=False,
 											reproject=False,
 											reorganize=False,
-											gaze=False,
-											dsqk=False,
-											server=True,
+											gaze=True,
+											dsqk=True,
+											server=False,
 											HDD=False)
 
 

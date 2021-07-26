@@ -188,6 +188,10 @@ class Squeaks:
 								color=(255, 255, 255))
 		cv2.imwrite(os.path.join(root_path, 'where_are_squeaks_Dodo.png'), image)
 
+	def draw_spectrogram(self,working_path,saving_path):
+		status=self.engine.GetSpectrogram(working_path,saving_path)
+		if not status:
+			print("not squeaks detected so no spectrogram.")
 
 def get_thumbnail_and_fps(video_path):
 	cap=cv2.VideoCapture(video_path)
@@ -198,7 +202,6 @@ def get_thumbnail_and_fps(video_path):
 			cap.release()
 			del cap
 			return frame,fps
-
 
 
 if __name__=='__main__':
