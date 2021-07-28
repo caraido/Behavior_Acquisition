@@ -1,35 +1,33 @@
 import deeplabcut
 import os
 import threading
-
-DLC_LIVE_MODEL_PATH=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\exported-models\DLC_Alec_second_try_resnet_50_iteration-0_shuffle-1'
-TOP_THRESHOLD=0.85
-SIDE_THRESHOLD=0.5
+from global_settings import number_of_camera,TOP_CAM
 
 
 def is_fully_analyzed(path):
 	items=os.listdir(path)
 	h5=[i for i in items if '.h5' in i]
-	if len(h5)==4:
+	if len(h5)==number_of_camera:
 		return True
 	else:
 		return False
 
 
-def dlc_analysis(root_path, dlc_config_path):
-	if isinstance(dlc_config_path, list) and not is_fully_analyzed(root_path):
-		top_config = dlc_config_path[0]
-		side_config = dlc_config_path[1]
-		things = os.listdir(root_path)
+def dlc_analysis(root_path, dlc_config_path,dlc_top,dlc_side):
 
-		top = [a for a in things if '.MOV' in a and '17391304' in a]
-		# top_path = [os.path.join(processed_path, top[i]) for i in range(len(top))]
-		top_path = [os.path.join(root_path, top[i]) for i in range(len(top))]
-		side = [a for a in things if '.MOV' in a and '17391304' not in a]
-		# side_path = [os.path.join(processed_path, side[i]) for i in range(len(side))]
-		side_path = [os.path.join(root_path, side[i]) for i in range(len(side))]
+	top_config = dlc_config_path[0]
+	side_config = dlc_config_path[1]
+	things = os.listdir(root_path)
 
-		# top camera
+	top = [a for a in things if '.MOV' in a and TOP_CAM in a]
+	# top_path = [os.path.join(processed_path, top[i]) for i in range(len(top))]
+	top_path = [os.path.join(root_path, top[i]) for i in range(len(top))]
+	side = [a for a in things if '.MOV' in a and TOP_CAM not in a]
+	# side_path = [os.path.join(processed_path, side[i]) for i in range(len(side))]
+	side_path = [os.path.join(root_path, side[i]) for i in range(len(side))]
+
+	# top camera
+	if dlc_top:
 		deeplabcut.analyze_videos(top_config,
 								  top_path,
 								  save_as_csv=True,
@@ -45,14 +43,12 @@ def dlc_analysis(root_path, dlc_config_path):
 					"draw_skeleton":'True'}
 		create_labeled_video_top_thread=threading.Thread(target=deeplabcut.create_labeled_video,kwargs=arguments)
 		create_labeled_video_top_thread.start()
+	else:
+		create_labeled_video_top_thread=None
 
-		#deeplabcut.create_labeled_video(top_config,
-		#								top_path,
-		#								save_frames=False,
-		#								trailpoints=1,
-		#								videotype='mov',
-		#								draw_skeleton='True')
-		# side cameras
+
+	# side cameras
+	if dlc_side:
 		deeplabcut.analyze_videos(side_config,
 								  side_path,
 								  save_as_csv=True,
@@ -68,9 +64,11 @@ def dlc_analysis(root_path, dlc_config_path):
 					"draw_skeleton":'True'}
 		create_labeled_video_side_thread = threading.Thread(target=deeplabcut.create_labeled_video, kwargs=arguments)
 		create_labeled_video_side_thread.start()
-
-		return create_labeled_video_top_thread,create_labeled_video_side_thread
 	else:
-		return None
+		create_labeled_video_side_thread=None
+
+
+	return create_labeled_video_top_thread,create_labeled_video_side_thread
+
 
 

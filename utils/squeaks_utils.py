@@ -1,17 +1,9 @@
 import cv2
-import os
-from utils.geometry_utils import Gaze_angle
 import numpy as np
-import scipy.io as sio
-import matplotlib.pyplot as plt
-import re
 import pandas as pd
 import matlab.engine
+from global_settings import UTILS_PATH, DEEPSQUEAK_PATH,default_network,SETTINGS
 
-UTILS_PATH=r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\utils'
-DEEPSQUEAK_PATH=r"C:\\Users\\SchwartzLab\\MatlabProjects"
-default_network='All Short Calls_Network_V1.mat'
-SETTINGS=[0,8,0.002,80,35,0,1]
 
 class Squeaks:
 

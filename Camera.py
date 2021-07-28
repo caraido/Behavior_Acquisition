@@ -9,15 +9,8 @@ from AcquisitionObject import AcquisitionObject
 from utils.image_draw_utils import draw_dots
 import os
 import time
+from global_settings import FRAME_TIMEOUT,FRAME_BUFFER,DLC_RESIZE,DLC_UPDATE_EACH,TOP_CAM,TEMP_PATH,N_BUFFER
 
-
-FRAME_TIMEOUT = 10  # time in milliseconds to wait for pyspin to retrieve the frame
-FRAME_BUFFER = 3 # frames buffer for display and save
-DLC_RESIZE = 0.6  # resize the frame by this factor for DLC
-DLC_UPDATE_EACH = 3  # frame interval for DLC update
-TOP_CAM='17391304'
-TEMP_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
-N_BUFFER=2000
 
 class Camera(AcquisitionObject):
 
@@ -235,8 +228,6 @@ class Camera(AcquisitionObject):
 
   def predisplay(self, frame):
     # TODO: still get frame as input? but should return some kind of dictionary? or array?
-    # TODO: where does this get called from?
-    # TODO: make sure text is not overlapping
     process = self.processing
     #######
     # data_count = self.data_count

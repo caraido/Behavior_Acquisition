@@ -486,11 +486,7 @@ def bundle_adjust(all_points, vid_indices, cam_mats, loss='linear'):
 
 def get_extrinsics(vid_indices, videos, intrinsics_dict, cam_align, board, skip=30):
 	matrix_list, point_list = get_matrices(vid_indices, videos, intrinsics_dict, board, skip=skip)
-	# additional saving (deletable)
-	#path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config\matrix_list.npy'
-	#np.save(path, np.array(matrix_list))
 
-	# pairs = get_all_matrix_pairs(matrix_list, sorted(vid_indices))
 	graph = get_calibration_graph(matrix_list, vid_indices)
 	pairs = find_calibration_pairs(graph, source=cam_align)
 	extrinsics = compute_camera_matrices(matrix_list, pairs, source=cam_align)

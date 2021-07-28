@@ -13,9 +13,7 @@ from matplotlib.patches import Rectangle
 
 from scipy import io as sio
 from itertools import combinations
-from initialStatus import initialStatus
-
-FRAME_RATE=initialStatus['frame rate']['current']
+from global_settings import FRAME_RATE
 
 def get_board_side_length_pixel(corners):
     corners=np.array(corners)

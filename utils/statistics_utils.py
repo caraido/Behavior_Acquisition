@@ -6,6 +6,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# this file seems to be not used
+
 def load_stats(root_path):
 	gaze_path = os.path.join(root_path,'gaze')
 	if not os.path.exists(gaze_path):

@@ -1,7 +1,7 @@
 import PIL
 import cv2
 import colorcet as cc
-from utils.dlc_utils import TOP_THRESHOLD
+from global_settings import TOP_THRESHOLD
 
 class Display:
 

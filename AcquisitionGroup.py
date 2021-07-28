@@ -117,10 +117,7 @@ class AcquisitionGroup:
           self._displayers[i].start()
           print('start displaying child %d' % i)
     self.running = True
-    #
-    #       # if not self._runners[-1].is_alive():
-    #       #   self._runners[-1] = threading.Thread(target=self.nidaq.run)
-    #   self._runners[-1].start()
+
     self.print('finished AcquisitionGroup.run')
 
   def process(self, i, options):
@@ -184,53 +181,3 @@ class AcquisitionGroup:
     self._camlist.Clear()
     self._system.ReleaseInstance()
     # del self.nidaq
-
-
-if __name__ == '__main__':
-  from utils.audio_settings import audio_settings
-  import utils.path_operation_utils as pop
-  default_model_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\exported-models\DLC_Alec_second_try_resnet_50_iteration-0_shuffle-1'
-  filepaths = r'D:'
-  ag = AcquisitionGroup(audio_settings=audio_settings)
-  # preview
-  ag.start()
-  ag.run()
-
-  ag.stop()
-
-  # dlc
-  # ag.start()
-  # ag.run()
-  # ag.process(0, {'mode': 'DLC', 'modelpath': default_model_path}) #'DLC'/'extrinsic'/'intrinsic'
-  # ag.cameras[0].display()
-  # ag.stop() # saving calibration stuff
-
-  # calibration
-  ag.start()
-  ag.run()
-  ag.process(1, {'mode': 'extrinsic'})
-  ag.cameras[1].display()
-  ag.stop()
-
-  ag.start()
-  ag.run()
-  ag.process(0, {'mode': 'intrinsic'})
-  ag.process(0, {'mode': 'extrinsic'})  # this shouldn't work
-  ag.stop()
-
-  camera_list = []
-  for i in range(ag.nCameras):
-    camera_list.append(ag.cameras[i].device_serial_number)
-  path = 'behavior_data_temp'
-  name = 'alec_testing'
-
-  paths = pop.reformat_filepath(path, name, camera_list)
-
-  # record
-  ag.start(filepaths=paths)
-  ag.run()
-  # ag.process(0,{'mode': 'intrinsic'})
-  # this should work when there's file path
-  ag.process(0, {'mode': 'DLC', 'modelpath': default_model_path})
-
-  ag.stop()  # with post processing

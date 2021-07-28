@@ -4,14 +4,8 @@ import time
 import shutil
 import toml
 import json
-
-saving_path_prefix = 'D:\\'
-default_saving_path= 'Desktop'
-default_folder_name = 'Testing'
-global_config_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
-global_config_archive_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config_archive'
-global_log_path=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\log'
-namespace_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\assets\namespace\namespace.json'
+from utils.datajoint_utils import DjConn
+from global_settings import saving_path_prefix,default_saving_path,default_folder_name,GLOBAL_CONFIG_PATH,GLOBAL_CONFIG_ARCHIVE_PATH,global_log_path,namespace_path
 
 @property
 def get_saving_path_prefix():
@@ -45,30 +39,32 @@ def change_path_prefix(input_prefix):
 	else:
 		raise NotADirectoryError("The specified path doesn't exist!")
 
-def get_extrinsic_path(camera:list,config_path=global_config_path):
+def get_extrinsic_path(camera:list,config_path=GLOBAL_CONFIG_PATH):
 	path=list(map(lambda x: os.path.join(config_path,'config_extrinsic_%s_temp.MOV'%x),camera))
 	path.append(None)
 	path.append(None)
 	return path
 
+
 def seperate_name(name):
 	if name[0]=='&':
 		name_list=re.split(r'[&]',name[1:])
-		if len(name_list[0])==0: # empty animal name
-			name_list[0]='unnamedAnimal'
+		if len(name_list[0])==0: # empty animal ID
+			name_list[0]='unnamedAnmial'
 		if len(name_list[1]) ==0: # empty animaltype
-			name_list[1]='unknownAnimalType'
+			name_list[1]='none'
 		if len(name_list[2]) ==0: # emtpy window A
-			name_list[2]='None'
+			name_list[2]='empty'
 		if len(name_list[3]) == 0:  # emtpy window B
-			name_list[3] = 'None'
+			name_list[3] = 'empty'
 		if len(name_list[4]) ==0: # emtpy window C
-			name_list[4]='None'
+			name_list[4]='empty'
 		return name_list
 	else:
 		raise NameError('Wrong naming system!')
 
-def add_to_namespace(namelist):
+
+def update_namespace(namelist):
 	animalID = namelist[0]
 	animalType = namelist[1]
 	windows = namelist[2:]  # list
@@ -89,9 +85,18 @@ def add_to_namespace(namelist):
 		print('updated namespace.json')
 
 
+def add_new_type_to_datajoint(namelist):
+	conn = DjConn()
+	connected = conn.connect_to_datajoint()
+	print(connected)
+	conn.get_main_schema()
+	status=conn.add_new_type_to_dj(namelist)
+	return status,conn
+
+
 def reformat_filepath(path,name,camera:list):
 
-	date= time.strftime("%Y-%m-%d_",time.localtime())
+	date= time.strftime("_%Y-%m-%d_",time.localtime())
 	if path == '':
 		real_path = os.path.join(saving_path_prefix,default_saving_path)
 		print("No file path specified. Will use default path")
@@ -105,100 +110,72 @@ def reformat_filepath(path,name,camera:list):
 	namelist=seperate_name(name)
 	subfolder=os.path.join(real_path,namelist[0]) # namelist[0] is animal ID
 
-	add_to_namespace(namelist)
+	result,conn=add_new_type_to_datajoint(namelist)
 
-	if not os.path.exists(subfolder):
-		os.mkdir(subfolder)
-		print("file path %s doesn't exist, creating one..." % real_path)
+	if result[0]:
+		sessID=conn.update_session(namelist)
 
-	if namelist[2]=='None' and namelist[3]=='None' and namelist[4]=='None':
-		full_path = os.path.join(subfolder,date+namelist[1]+'_habituation')
+		if not os.path.exists(subfolder):
+			os.mkdir(subfolder)
+			print("file path %s doesn't exist, creating one..." % real_path)
+
+		if namelist[2]=='empty' and namelist[3]=='empty' and namelist[4]=='empty':
+			full_path = os.path.join(subfolder,sessID+date+namelist[1]+'_habituation')
+		else:
+			full_path=os.path.join(subfolder,sessID+date+namelist[1]+r"_(A)"+namelist[2]+r"_(B)"+namelist[3]+r"_(C)"+namelist[4])
+
+		if not os.path.exists(full_path):
+			os.mkdir(full_path)
+		else:
+			i=2
+			while True:
+				if os.path.exists(full_path+'(%s)'%i):
+					i+=1
+				else:
+					full_path=full_path+'(%s)'%i
+					os.mkdir(full_path)
+					break
+
+		filepaths = []
+		for serial_number in camera:
+			camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
+			filepaths.append(camera_filepath)
+
+		mic_filepath=os.path.join(full_path,'Dodo_audio.tdms')
+		filepaths.append(mic_filepath)
+
+		audio_filepath = os.path.join(full_path,'B&K_audio.tdms')
+		filepaths.append(audio_filepath)
+
+		# TODO: need to implement the handling in GUI to popup a new alert window if updating is not successful
+		return result[1],filepaths #description + filepaths
 	else:
-		full_path=os.path.join(subfolder,date+namelist[1]+r"_(A)"+namelist[2]+r"_(B)"+namelist[3]+r"_(C)"+namelist[4])
-
-	if not os.path.exists(full_path):
-		os.mkdir(full_path)
-	else:
-		i=2
-		while True:
-			if os.path.exists(full_path+'(%s)'%i):
-				i+=1
-			else:
-				full_path=full_path+'(%s)'%i
-				os.mkdir(full_path)
-				break
-
-	filepaths = []
-	for serial_number in camera:
-		camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
-		filepaths.append(camera_filepath)
-
-	mic_filepath=os.path.join(full_path,'Dodo_audio.tdms')
-	filepaths.append(mic_filepath)
-
-	audio_filepath = os.path.join(full_path,'B&K_audio.tdms')
-	filepaths.append(audio_filepath)
-
-	return filepaths
-
-'''
-def reformat_filepath(path,name,camera:list):
-	date= time.strftime("%Y-%m-%d_",time.localtime())
-	if path == '':
-		real_path = os.path.join(saving_path_prefix,default_saving_path)
-		print("No file path specified. Will use default path")
-	else:
-		real_path = os.path.join(saving_path_prefix,path)
-
-	if not os.path.exists(real_path):
-		os.makedirs(real_path)
-		print("file path %s doesn't exist, creating one..." % real_path)
-
-	if name =='':
-		full_path = os.path.join(real_path, date + default_folder_name)
-		print("No folder name specified. Will use default folder name")
-	else:
-		full_path = os.path.join(real_path, date + name)
-
-	if not os.path.exists(full_path):
-		os.mkdir(full_path)
-		print("file path %s doesn't exist, creating one..." % real_path)
-	else:
-		i=1
-		while True:
-			if os.path.exists(full_path+'(%s)'%i):
-				i+=1
-			else:
-				full_path=full_path+'(%s)'%i
-				os.mkdir(full_path)
-				break
-
-	filepaths = []
-	for serial_number in camera:
-		camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
-		filepaths.append(camera_filepath)
-
-	mic_filepath=os.path.join(full_path,'Dodo_audio.tdms')
-	filepaths.append(mic_filepath)
-
-	audio_filepath = os.path.join(full_path,'B&K_audio.tdms')
-	filepaths.append(audio_filepath)
-
-	return filepaths
-'''
+		return result[1],None #description + None
 
 def copy_config(filepath,version=None):
-	# TODO：version control not implemented
+	# version should be int
+	# TODO：version control not implemented. Now it always saves the latest version
 	local_config_path = os.path.join(filepath, 'config')
-	archive_items=os.listdir(global_config_archive_path)
-	versions=[(int(re.findall(r"_v(\d+)_", i)[0]),i) for i in archive_items]
-	versions=sorted(versions)
-	latest_version=versions[-1][1]
-	config_path = os.path.join(global_config_archive_path,latest_version)
+	archive_items = os.listdir(GLOBAL_CONFIG_ARCHIVE_PATH)
+	versions = [(int(re.findall(r"_v(\d+)_", i)[0]), i) for i in archive_items]
+	versions = sorted(versions)
+
+	if version is None:
+		version_fullname=versions[-1][1]
+		this_version=versions[-1][0]
+	else:
+		version_numbers=[a[0] for a in versions]
+		if version not in version_numbers:
+			raise Exception("the version number of configuration file is not found")
+		else:
+			this_version=version
+			version_fullname=versions[version][1]
+
+	config_path = os.path.join(GLOBAL_CONFIG_ARCHIVE_PATH,version_fullname)
 	if not os.path.exists(local_config_path):
 		shutil.copytree(config_path, local_config_path)
 
-	return versions[-1][0]
+	return this_version
 
 
 def load_config(filepath):

@@ -3,10 +3,8 @@ import cv2
 import toml
 import pandas as pd
 import os
+from global_settings import dt,CUTOFF,DISTRUSTNESS
 
-dt = 1 / 30
-CUTOFF = 0.7
-DISTRUSTNESS = 1e22
 
 
 def get_rid_of_outliers(points):

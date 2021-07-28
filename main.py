@@ -20,8 +20,11 @@ if __name__ == "__main__":
     from setup import setup
     from callbacks import initCallbacks
 
+  # initiate acquisition group and status
   ag, status = setup()
+  # initiate call backs
   initCallbacks(ag, status)
+  # start to connecto to GUI
   app, socket = initServer(ag, status)
   print('Serving on port 5001')
   socket.run(app, port=5001)

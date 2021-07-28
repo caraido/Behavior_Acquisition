@@ -10,8 +10,8 @@ from numba import jit
 from scipy.spatial.transform import Rotation as R
 from collections import defaultdict
 import itertools
+from global_settings import TRI_THRESHOLD
 
-THRESHOLD = 0.7
 
 
 def project(p3d,in_mat,ex_mat):
@@ -815,7 +815,7 @@ def reconstruct_3d_kalman(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict:dict
     num_cams = np.zeros((shape[0], shape[2]))
     num_cams.fill(np.nan)
 
-    all_points[all_scores < THRESHOLD] = np.nan
+    all_points[all_scores < TRI_THRESHOLD] = np.nan
     n_cams = all_points.shape[1]  # TODO:need to check
 
     # get constraints

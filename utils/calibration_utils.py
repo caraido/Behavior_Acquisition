@@ -10,12 +10,7 @@ import ffmpeg
 import re
 import utils.calibration_3d_utils as ex_3d
 from utils.calibration_3d_utils import get_expected_corners
-from utils.path_operation_utils import global_config_path as GLOBAL_CONFIG_PATH
-from utils.path_operation_utils import global_config_archive_path as GLOBAL_CONFIG_ARCHIVE_PATH
-
-
-CALIB_UPDATE_EACH = 1  # frame interval for calibration update
-TOP_CAM='17391304'
+from global_settings import CALIB_UPDATE_EACH,TOP_CAM,GLOBAL_CONFIG_PATH,GLOBAL_CONFIG_ARCHIVE_PATH
 
 
 def transform_ids(ids):
@@ -33,6 +28,7 @@ def transform_corners(corners):
     item = np.array(item, dtype=np.float32)
     new_corners.append(item)
   return new_corners
+
 
 def transform_cornersWorld(corners):
   new_corners=[]
@@ -128,7 +124,7 @@ def reformat_corners(allCorners, allIds):
 
   return allCornersConcat, allIdsConcat,markerCounter
 
-
+# wrapped by quick_calibrate()
 def quick_calibrate_charuco(allCorners, allIds, board, width, height):
   print("\ncalibrating...")
   tstart = time.time()
@@ -165,7 +161,7 @@ def quick_calibrate_charuco(allCorners, allIds, board, width, height):
 
   return out
 
-
+# entrance for intrinsic calibration for side cameras
 def quick_calibrate_fisheye(someCorners,width,height):
 
     print("\ncalibrating...")
@@ -204,7 +200,7 @@ def quick_calibrate_fisheye(someCorners,width,height):
     out['height'] = height
     return out
 
-
+# entrance for intrinsic calibration for top camera
 def quick_calibrate(someCorners, someIds,board, width, height):
   allCorners = []
   allIds = []
@@ -230,7 +226,9 @@ def quick_calibrate(someCorners, someIds,board, width, height):
     return calib_params
 
 
+# checkerboard is used to generate printable boards and calibrate fisheye cameras
 class Checkerboard:
+  # less restriction to generate the board the shape should be no less than the size of detectable size. (4*5)
   def __init__(self, squaresX, squaresY, squareLength):
     self.squaresX = squaresX
     self.squaresY = squaresY
@@ -252,7 +250,7 @@ class Checkerboard:
   def getSquareLength(self):
     return self.squareLength
 
-
+# charucoboard is used to generate printable boards and calibrate regular cameras
 class CharucoBoard:
   def __init__(self, x, y, marker_size=0.8,type=None):
     self.x = x
@@ -325,6 +323,15 @@ class CharucoBoard:
 
 
 class Calib:
+  '''
+  Calib class is used to load and save temporary calibration files and calibration files.
+  It connects to both the acquisition group and post-processing group
+  When calibration is started in GUI, Acquisition group invokes in_calibrate/al_calibrate/ex_calibrate each frame
+  The temporary results are saved as "temp configs". (takes less time)
+
+  Further in the post-processing group, "temp configs" are processed into "configs" and saved (takes longer time)
+
+  '''
   def __init__(self, calib_type):
     self._get_type(calib_type)
     # TODO: how to set the local config path without assigning it?? Or should we
@@ -335,9 +342,6 @@ class Calib:
     self.allCorners = []
     self.allIds = []
 
-    # for pose estimation in alignment
-    self.rvec=[]
-    self.tvec=[]
 
     self.config = None
     self.temp_file=None
@@ -369,8 +373,6 @@ class Calib:
       self.type = calib_type
       self.x = 3
       self.y = 5
-      #self.x=16
-      #self.y=16
 
     else:
       raise ValueError("wrong type!")
@@ -391,12 +393,13 @@ class Calib:
     params.adaptiveThreshConstant = 5
     return params
 
-  # check before extrinsic calibration
+  # need to load the intrinsic configuration file before extrinsic calibration
   def load_in_config(self, camera_serial_number):
       path = os.path.join(self.root_config_path, 'config_%s_%s.toml' % ('intrinsic', camera_serial_number))
       with open(path, 'r') as f:
         self.config = toml.load(f)
 
+  # load the previously saved temporary calibration config file
   def load_temp_config(self,camera_serial_number):
     load_path = os.path.join( self.root_config_path, 'config_%s_%s_temp.toml' % (self.type, camera_serial_number))
     with open(load_path,'r') as f:
@@ -411,8 +414,6 @@ class Calib:
       if len(self.allCorners)>0:
         stuff={'corners':self.allCorners,
               'ids':self.allIds,
-               'rvec':self.rvec,
-               'tvec':self.tvec,
               'camera_serial_number': camera_serial_number,
               'width':width,
               'height':height,
@@ -433,16 +434,13 @@ class Calib:
         toml.dump(stuff, f, encoder=toml.TomlNumpyEncoder())
       return "temp calibration file saved!"
 
-  # used in post processing
+  # used in post processing. Turn the temporary calibration files into calibrated files
   def save_processed_config(self,temp_path):
     if os.path.exists(temp_path):
       with open(temp_path,'r') as f:
         stuff = toml.load(f)
-      date = time.strftime("%Y-%m-%d_", time.localtime())
       save_path = os.path.join(self.root_config_path,
                                'config_%s_%s.toml' % (self.type, stuff['camera_serial_number']))
-      #archive_path = os.path.join(self.archive_config_path,
-      #                         date+'config_%s_%s.toml' % (self.type, stuff['camera_serial_number']))
 
       if self.type=="intrinsic":
         if str(stuff['camera_serial_number'])==TOP_CAM:
@@ -490,6 +488,7 @@ class Calib:
         # sepearte process in Processing Group
         pass
 
+  # entrance for intrinsic calibration preparation
   def in_calibrate(self, frame, data_count,serial_number):
     # get corners and refine them in openCV for every CALIB_UPDATE_EACH frames
     if data_count % CALIB_UPDATE_EACH == 0:
@@ -520,6 +519,7 @@ class Calib:
         else:
           return {'corners': [], 'ids': []}
 
+  # entrance for alignment calibration preparation
   def al_calibrate(self, frame, data_count):
     allDetected = False
     if data_count % CALIB_UPDATE_EACH == 0:
@@ -545,6 +545,7 @@ class Calib:
     else:
       return {'corners': [], 'ids': [], 'allDetected': allDetected}
 
+  # entrance for extrinsic calibration preparation
   def ex_calibrate(self,frame, data_count):
     if self.config is not None:
       if data_count % CALIB_UPDATE_EACH == 0:
@@ -592,7 +593,6 @@ def undistort_videos(rootpath):
       cap = cv2.VideoCapture(movie_path)
       run_rate=cap.get(cv2.CAP_PROP_FPS)
 
-      # TODO: frame rate needs to coordinate with raw video
       video_writer = ffmpeg \
           .input('pipe:', format='rawvideo', pix_fmt='gray', s=f'{width}x{height}', framerate=run_rate) \
           .output(os.path.join(processed_path, 'undistorted_'+movie[0]), vcodec='libx265') \
@@ -635,7 +635,7 @@ def undistort_markers(corners, camera_mat,dist):
   undistort_corners = np.swapaxes(np.array(new_corners), 1, 2)
   return undistort_corners
 
-
+# an archived function for undistort the marker for top camera
 def undistort_markers_archive(rootpath):
   config_path = os.path.join(rootpath, 'config')
   items = os.listdir(config_path)

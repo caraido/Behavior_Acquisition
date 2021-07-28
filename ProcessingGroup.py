@@ -55,7 +55,6 @@ import filecmp
 # top camera dlc config
 top_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\config.yaml'
 # side camera dlc config
-#side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras-Devon-2021-03-10\config.yaml'
 side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras_distorted-Devon-2021-03-17\config.yaml'
 dlc_path = [top_config,side_config]
 HDD_path = r'E:\behavior_data_archive'
@@ -65,24 +64,38 @@ server_path=r'R:\SchwartzLab\Behavior'
 class ProcessingGroup:
 
 	def __init__(self):
-		self.rootpath = None
-		self.dlcpath = None
-		self.global_config_path = global_config_path
+		self.rootpath = None # rootpath refers to the working directory
+		self.dlcpath = None # dlc path is a default path for the trained dlc model
+		self.global_config_path = global_config_path # this is the path for the orginal copy of configuration/calibration information
 		self.in_calib = Calib('intrinsic')
 		self.al_calib = Calib('alignment')
 		self.ex_calib = Calib('extrinsic')
 		self.server_thread=None
 		self.squeak_ob=Squeaks()
 
-	# rootpath refers to the working directory
+		# default setting
+		self.config_version=None
+		self.dlc_top=True
+		self.dlc_side=True
+		self.save_spectrogram=True
+
+
+	# if settings are not assigned, it will use the default setting
+	def assign_settings(self,settings:dict):
+		self.config_version=settings['config_version']
+		self.dlc_top=settings['dlc_top']
+		self.dlc_side=settings['dlc_side']
+		self.save_spectrogram=settings['save_spectrogram']
+
 	# dlc path is a default path for the trained dlc model
 	def __call__(self, rootpath, dlcpath=None):
+		# configuring the instance
 		if dlcpath is None:
 			dlcpath = dlc_path
 		self.dlcpath = dlcpath
 		self.rootpath = rootpath
-		self.processpath = 'undistorted'
-		self.config_path = 'config'
+		self.processpath = 'undistorted' # process path creates a folder to save processed undistorted videos under root path
+		self.config_path = os.path.join(self.rootpath, 'config')
 		self.squeak_ob.set_root_path(rootpath)
 
 	@property
@@ -96,22 +109,12 @@ class ProcessingGroup:
 			os.mkdir(path)
 		self._processpath=path
 
-	@property
-	def config_path(self):
-		return self._config_path
-
-	@config_path.setter
-	def config_path(self, folder_name):
-		path = os.path.join(self.rootpath, folder_name)
-		#if not os.path.exists(path):
-		#	os.mkdir(path)
-		self._config_path = path
 
 	def copy_configs(self):
 		#TODO: save a reference to the config for each acquisition, then copy the right one, rather than the most recent one
 		if self.rootpath:
 			# if version == None it will copy the latest version
-			version = copy_config(self.rootpath,version=None)
+			version = copy_config(self.rootpath,version=self.config_version)
 			return version
 		else:
 			raise Exception('root path incorrect/unimplemented')
@@ -157,22 +160,28 @@ class ProcessingGroup:
 		undistort_thread=None
 		dlc_threads=None
 		reproject_threads=None
+
+		# to decide if we need to update new configuration version
 		intrinsic_count=0
 		alignment_count=0
 		extrinsic_count=0
 
+		# skip if no temporary config file found
 		if intrinsic:
 			# do the following under behavior_rig/config/
 			intrinsic_count = self.get_intrinsic_config()
 
+		# skip if no temporary config file found
 		if alignment:
 			alignment_count = self.get_alignment_config()
 			self.find_windows()
 
+		# skip if the temporary videos don't match the number of intrinsic calibration files
 		if extrinsic:
 			extrinsic_count = self.get_extrinsic_config()
 
 		# if any of the calibration happened: creat another version and save it to config_archive
+		# this happens automatically
 		if intrinsic_count+alignment_count+extrinsic_count:
 			archive_items=os.listdir(global_config_archive_path)
 			if len(archive_items):
@@ -187,22 +196,29 @@ class ProcessingGroup:
 			# archive to config_archive
 			shutil.copytree(global_config_path,new_config_archive_path)
 
+		# overwrite
 		if copy_config:
-
 			version=self.copy_configs()
 			self.add_local_config(version)
 
+		# overwrite
 		if undistort:
 			undistort_thread=threading.Thread(target=undistort_videos,args=(self.rootpath,))
 			undistort_thread.start()
-			#undistort_videos(self.rootpath)
+
+		# overwrite
 		if dlc:
 			dlc_threads=self.dlc_analysis()
 
+		# overwrite
 		if gaze:
 			self.gaze_analysis()
+
+		# overwrite
 		if triangulate:
 			triangulate_kalman(self.rootpath)
+
+		# overwrite
 		if reproject:
 			reproject_threads=reproject_3d_to_2d(self.rootpath)
 
@@ -221,12 +237,16 @@ class ProcessingGroup:
 				thread.join()
 		except: pass
 
+		# squeaks can only be organized after dlc analysis is all finished
 		if dsqk:
 			self.audio_processing()
-			self.dsqk_analysis(save_spectrogram=True)
+			self.dsqk_analysis(save_spectrogram=self.save_spectrogram)
 
+		# if there are not files to reorganize, skip
 		if reorganize:
 			self.reorganize()
+
+		# compare the files and folders in server and update the difference
 		if server:
 			self.SSD2server_update()
 			'''
@@ -253,14 +273,13 @@ class ProcessingGroup:
 									  'cutoff':CUTOFF},
 					  'triangulation':{'threshold':TRIANGULATE_THRESHOLD},
 					  'config_version':version,
-
 					  }
 		filepath=os.path.join(self.config_path,'config_local.toml')
 		with open(filepath,'w') as f:
 			toml.dump(local_config,f)
 
 	def get_intrinsic_config(self):
-		# get item list
+		# get tmp item list
 		# if count == 0 it means no calibration done
 		count=0
 		items = os.listdir(self.global_config_path)
@@ -304,7 +323,8 @@ class ProcessingGroup:
 				video_path = os.path.join(self.global_config_path, item)
 				video_list.append(video_path)
 
-		if len(video_list)==4:
+		# only calibrate when there're 4 videos and 4 intrinsic config detected
+		if len(video_list)==4 and len(intrinsic_list)==4:
 
 			# get intrinsic matrices and video list
 			intrinsic_list.sort()
@@ -363,7 +383,7 @@ class ProcessingGroup:
 
 	def dlc_analysis(self):
 		# dlc anlysis on both top and side cameras
-		threads=dlc_analysis(self.rootpath, self.dlcpath)
+		threads=dlc_analysis(self.rootpath, self.dlcpath,dlc_top=self.dlc_top,dlc_side=self.dlc_side)
 		if threads is not None:
 			return threads
 		else:
@@ -385,6 +405,7 @@ class ProcessingGroup:
 		gaze_model.plot(mono,savepath=self.rootpath)
 
 	def audio_processing(self):
+		# if no audio file found, the process stops and raises error
 		BK_filepath=os.path.join(self.rootpath,'B&K_audio.tdms')
 		dodo_filepath=os.path.join(self.rootpath, 'dodo_audio.tdms')
 		BK_audio=read_audio(BK_filepath)
@@ -409,12 +430,12 @@ class ProcessingGroup:
 			call_time2=self.squeak_ob(fname2)
 			self.squeak_ob.draw_BK_squeaks(self.rootpath, call_time2)
 		if save_spectrogram:
+			# only save spectrogram for B&K mic
 			working_path=os.path.join(self.rootpath,filepath2[:-4]+'_squeaks.mat')
 			self.squeak_ob.draw_spectrogram(working_path,self.rootpath)
 
 
 	def reorganize(self):
-		# TODO: add everything to .mat file
 
 		reorganize_mat_file(self.rootpath,self.squeak_ob.load_squeak_time_matlab)
 
@@ -612,30 +633,14 @@ class ProcessingGroup:
 
 if __name__ == '__main__':
 	import tqdm
-	# GLOBAL_CONFIG_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig'
 	working_dir = r'D:\Desktop'
+	settings={'config_version':None,
+			  'dlc_top':True,
+			  'dlc_side':True,
+			  'save_spectrogram':True
+			  }
 	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
-
-	'''
-	mouse='2160'
-	item='2021-06-17_habituation_unnamedTrial'
-	path = os.path.join(working_dir,mouse,item)
-	pg(path)
-	pg.post_process(intrinsic=False,
-					alignment=True,
-					extrinsic=False,
-					undistort=False,
-					copy=True,
-					dlc=False,
-					triangulate=False,
-					reproject=False,
-					gaze=True,
-					dsqk=False,
-					reorganize=True,
-					server=False,
-					HDD=False)
-	'''
 	server_items=os.listdir(server_path)
 
 	useful=list(map(lambda x:x.isdigit(),items))
@@ -660,43 +665,20 @@ if __name__ == '__main__':
 					full_path=os.path.join(path,subitem)
 					if full_path!='D:\\Desktop\\1131\\2021-06-17_habituation' and full_path!='D:\\Desktop\\1136\\2021-06-17_habituation':
 							#pg.half_revert(full_path)
-							'''
-							print(subitem)
-							local_config_path=os.path.join(full_path,'config')
-							local_gaze_path = os.path.join(full_path, 'gaze')
-							local_reorg_dlc_path=os.path.join(full_path,'DLC')
-							local_full_data_path = os.path.join(full_path,'full_data.mat')
-							remote_full_data_path = os.path.join(server_animal_path,subitem,'full_data.mat')
-	
-							gaze=Gaze_angle(local_config_path)
-							gaze.gazePoint=0
-							bino=gaze(local_reorg_dlc_path,save=False)
-							#bino_path=os.path.join(full_path,'gaze_angle_0.mat')
-							gaze.save(full_path,bino)
-							print('saved gaze')
-	
-							gaze.gazePoint = 0.5725
-							mono = gaze(local_reorg_dlc_path, save=False)
-							#mono_path = os.path.join(full_path, 'gaze_angle_32.mat')
-							gaze.save(full_path, mono)
-							print('saved gaze')
-	
-							reorganize_mat_file2(full_path)
-							#add_new_gaze_to_full_mat(local_gaze_path,local_full_data_path)
-							shutil.copy(local_full_data_path,remote_full_data_path)
-							'''
+
 							pg(full_path)
+							pg.assign_settings(settings)
 							pg.post_process(intrinsic=False,
 											alignment=False,
 											extrinsic=False,
 											undistort=False,
-											copy_config=False,
+											copy_config=True,
 											dlc=False,
 											triangulate=False,
 											reproject=False,
 											reorganize=False,
-											gaze=True,
-											dsqk=True,
+											gaze=False,
+											dsqk=False,
 											server=False,
 											HDD=False)
 
