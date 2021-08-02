@@ -1,6 +1,6 @@
 # from setup import ag, status
 from utils import path_operation_utils as pop
-from utils.dlc_utils import DLC_LIVE_MODEL_PATH
+from global_settings import DLC_LIVE_MODEL_PATH
 
 
 # serialNumbers=[19287342,19412282,17391304,17391290]

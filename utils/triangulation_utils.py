@@ -767,6 +767,7 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
 
     return dout
 
+# entrance for 3d smoothing
 def reconstruct_3d_kalman(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict:dict,all_points_3d):
     '''
     :param extrinsic_3d: list of camera matrix, aligned with camera ids

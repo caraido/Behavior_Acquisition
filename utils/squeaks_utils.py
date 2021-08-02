@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matlab.engine
 from global_settings import UTILS_PATH, DEEPSQUEAK_PATH,default_network,SETTINGS
+import os
 
 
 class Squeaks:

@@ -25,11 +25,12 @@ dt = 1 / 30
 CUTOFF = 0.7
 DISTRUSTNESS = 1e22
 
-# gemometry settings
+# video settings
 FRAME_RATE=15
 
 # imag draw settings
 TOP_THRESHOLD=0.8
+SIDE_THRESHOLD=0.6
 
 # path operation settings
 saving_path_prefix = 'D:\\'
@@ -44,5 +45,5 @@ namespace_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gu
 UTILS_PATH=r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\utils'
 DEEPSQUEAK_PATH=r"C:\\Users\\SchwartzLab\\MatlabProjects"
 default_network='All Short Calls_Network_V1.mat'
-SETTINGS=[0,8,0.002,80,35,0,1]
+SETTINGS=[0,8,0.002,80,35,0,1] # TODO
 

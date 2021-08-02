@@ -31,9 +31,10 @@
 import re
 import threading
 
-from utils.path_operation_utils import copy_config, global_config_path,global_config_archive_path
+from utils.path_operation_utils import copy_config
 from utils.calibration_utils import undistort_videos,  Calib, TOP_CAM
-from utils.dlc_utils import dlc_analysis,SIDE_THRESHOLD,TOP_THRESHOLD
+from utils.dlc_utils import dlc_analysis
+from global_settings import SIDE_THRESHOLD,TOP_THRESHOLD, GLOBAL_CONFIG_PATH,GLOBAL_CONFIG_ARCHIVE_PATH,TRI_THRESHOLD
 from utils.geometry_utils import find_board_center_and_windows,Gaze_angle,FRAME_RATE
 from kalman_filter import triangulate_kalman,DISTRUSTNESS,CUTOFF,dt
 from utils.audio_processing import read_audio,sample_rate
@@ -47,7 +48,6 @@ import toml
 import time
 from utils.calibration_3d_utils import get_extrinsics
 from utils.reorganize_utils import reorganize_mat_file
-from utils.triangulation_utils import THRESHOLD as TRIANGULATE_THRESHOLD
 from utils.squeaks_utils import Squeaks
 import filecmp
 
@@ -66,7 +66,7 @@ class ProcessingGroup:
 	def __init__(self):
 		self.rootpath = None # rootpath refers to the working directory
 		self.dlcpath = None # dlc path is a default path for the trained dlc model
-		self.global_config_path = global_config_path # this is the path for the orginal copy of configuration/calibration information
+		self.global_config_path = GLOBAL_CONFIG_PATH # this is the path for the orginal copy of configuration/calibration information
 		self.in_calib = Calib('intrinsic')
 		self.al_calib = Calib('alignment')
 		self.ex_calib = Calib('extrinsic')
@@ -183,7 +183,7 @@ class ProcessingGroup:
 		# if any of the calibration happened: creat another version and save it to config_archive
 		# this happens automatically
 		if intrinsic_count+alignment_count+extrinsic_count:
-			archive_items=os.listdir(global_config_archive_path)
+			archive_items=os.listdir(GLOBAL_CONFIG_ARCHIVE_PATH)
 			if len(archive_items):
 				versions=[int(re.findall(r"_v(\d+)_",i)[0]) for i in archive_items]
 				latest=max(versions)
@@ -191,10 +191,10 @@ class ProcessingGroup:
 				latest=0
 			date_time=time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
 			new_config_name=f"{date_time}_v{latest+1}_config"
-			new_config_archive_path = os.path.join(global_config_archive_path,new_config_name)
+			new_config_archive_path = os.path.join(GLOBAL_CONFIG_ARCHIVE_PATH,new_config_name)
 
 			# archive to config_archive
-			shutil.copytree(global_config_path,new_config_archive_path)
+			shutil.copytree(GLOBAL_CONFIG_PATH,new_config_archive_path)
 
 		# overwrite
 		if copy_config:
@@ -271,7 +271,7 @@ class ProcessingGroup:
 					 'kalman_filter':{'dt':dt,
 									  'distrustness':DISTRUSTNESS,
 									  'cutoff':CUTOFF},
-					  'triangulation':{'threshold':TRIANGULATE_THRESHOLD},
+					  'triangulation':{'threshold':TRI_THRESHOLD},
 					  'config_version':version,
 					  }
 		filepath=os.path.join(self.config_path,'config_local.toml')
@@ -396,12 +396,12 @@ class ProcessingGroup:
 
 		# binocular gaze
 		gaze_model.gazePoint = 0
-		bino = gaze_model(self.rootpath, save=True)
+		bino = gaze_model(self.rootpath, save=True,cutoff=0.9)
 		gaze_model.plot(bino, savepath=self.rootpath)
 
 		# monocular gaze
 		gaze_model.gazePoint = 0.5725
-		mono = gaze_model(self.rootpath, save=True)
+		mono = gaze_model(self.rootpath, save=True,cutoff=0.9)
 		gaze_model.plot(mono,savepath=self.rootpath)
 
 	def audio_processing(self):
@@ -646,7 +646,7 @@ if __name__ == '__main__':
 	useful=list(map(lambda x:x.isdigit(),items))
 	new_items=list(np.array(items)[useful])
 	for item in tqdm.tqdm(new_items):
-		if int(item)>=1131:
+		#if int(item)>=1131:
 			print(item)
 			path = os.path.join(working_dir, item)
 			server_animal_path = os.path.join(server_path, item)
