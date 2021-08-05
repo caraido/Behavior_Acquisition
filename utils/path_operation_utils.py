@@ -51,14 +51,22 @@ def seperate_name(name):
 		name_list=re.split(r'[&]',name[1:])
 		if len(name_list[0])==0: # empty animal ID
 			name_list[0]='unnamedAnmial'
-		if len(name_list[1]) ==0: # empty animaltype
+		if len(name_list[1]) == 0: # empty animaltype
 			name_list[1]='none'
-		if len(name_list[2]) ==0: # emtpy window A
-			name_list[2]='empty'
-		if len(name_list[3]) == 0:  # emtpy window B
-			name_list[3] = 'empty'
-		if len(name_list[4]) ==0: # emtpy window C
-			name_list[4]='empty'
+		if len(name_list[2]) == 0: # empty sessiontype
+			name_list[2] ='none'
+		if len(name_list[3]) ==0: # emtpy window A
+			name_list[3]='empty'
+		if name_list[3] == 'empty':
+			name_list[4]='' # window A DJID ==0
+		if len(name_list[5]) == 0 :  # emtpy window B
+			name_list[5] = 'empty'
+		if name_list[5] == 'empty':
+			name_list[6]='' # window B DJID==0
+		if len(name_list[7]) ==0 : # emtpy window C
+			name_list[7]='empty'
+		if name_list[7]=='empty':
+			name_list[8]=''
 		return name_list
 	else:
 		raise NameError('Wrong naming system!')
@@ -112,45 +120,59 @@ def reformat_filepath(path,name,camera:list):
 
 	result,conn=add_new_type_to_datajoint(namelist)
 
-	if result[0]:
-		sessID=conn.update_session(namelist)
-
-		if not os.path.exists(subfolder):
-			os.mkdir(subfolder)
-			print("file path %s doesn't exist, creating one..." % real_path)
-
-		if namelist[2]=='empty' and namelist[3]=='empty' and namelist[4]=='empty':
-			full_path = os.path.join(subfolder,sessID+date+namelist[1]+'_habituation')
+	if result:
+		sessID,info=conn.update_session(namelist)
+		if not sessID:
+			return False,info
 		else:
-			full_path=os.path.join(subfolder,sessID+date+namelist[1]+r"_(A)"+namelist[2]+r"_(B)"+namelist[3]+r"_(C)"+namelist[4])
+			if not os.path.exists(subfolder):
+				os.mkdir(subfolder)
+				print("file path %s doesn't exist, creating one..." % real_path)
 
-		if not os.path.exists(full_path):
-			os.mkdir(full_path)
-		else:
-			i=2
-			while True:
-				if os.path.exists(full_path+'(%s)'%i):
-					i+=1
-				else:
-					full_path=full_path+'(%s)'%i
-					os.mkdir(full_path)
-					break
+			#condition1=namelist[3]=='empty' and namelist[5]=='empty' and namelist[7]=='empty'
+			condition2=namelist[2]=='habituation'
+			if condition2:
+				full_path = os.path.join(subfolder,sessID+date+namelist[1]+'_habituation')
+			else:
+				full_path=os.path.join(subfolder,sessID+date+namelist[1]+'_'+namelist[2]+r"_(A)"+namelist[3]+r"_(B)"+namelist[5]+r"_(C)"+namelist[7])
 
-		filepaths = []
-		for serial_number in camera:
-			camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
-			filepaths.append(camera_filepath)
+			# for repeated sessions, the following method overwrite the original
+			if os.path.exists(full_path):
+				shutil.rmtree(full_path)
+				os.mkdir(full_path)
+			else:
+				os.mkdir(full_path)
 
-		mic_filepath=os.path.join(full_path,'Dodo_audio.tdms')
-		filepaths.append(mic_filepath)
+			# for repeated sessions, the following method keeps the orginal and save a new one
+			'''
+			if not os.path.exists(full_path):
+				os.mkdir(full_path)
+			else:
+				i=2
+				while True:
+					if os.path.exists(full_path+'(%s)'%i):
+						i+=1
+					else:
+						full_path=full_path+'(%s)'%i
+						os.mkdir(full_path)
+						break
+			'''
 
-		audio_filepath = os.path.join(full_path,'B&K_audio.tdms')
-		filepaths.append(audio_filepath)
+			filepaths = []
+			for serial_number in camera:
+				camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
+				filepaths.append(camera_filepath)
 
-		# TODO: need to implement the handling in GUI to popup a new alert window if updating is not successful
-		return result[1],filepaths #description + filepaths
+			mic_filepath=os.path.join(full_path,'Dodo_audio.tdms')
+			filepaths.append(mic_filepath)
+
+			audio_filepath = os.path.join(full_path,'B&K_audio.tdms')
+			filepaths.append(audio_filepath)
+
+			# TODO: need to implement the handling in GUI to popup a new alert window indicating the status
+			return True,filepaths
 	else:
-		return result[1],None #description + None
+		return False,'something wrong with updating new type to datajoint. Abort recording'
 
 def copy_config(filepath,version=None):
 	# version should be int

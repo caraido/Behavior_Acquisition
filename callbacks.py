@@ -3,7 +3,7 @@ from utils import path_operation_utils as pop
 from global_settings import DLC_LIVE_MODEL_PATH
 
 
-# serialNumbers=[19287342,19412282,17391304,17391290]
+
 
 def initCallbacks(ag, status):
 
@@ -24,15 +24,19 @@ def initCallbacks(ag, status):
       camera_list = []
       for i in range(ag.nCameras):
         camera_list.append(ag.cameras[i].device_serial_number)
-      filepaths = pop.reformat_filepath('', rootfilename, camera_list)
+      fp_status,result = pop.reformat_filepath('', rootfilename, camera_list)
+      if fp_status:
+        ag.stop()
+        ag.start(filepaths=result)
 
-      ag.stop()
-      ag.start(filepaths=filepaths)
+        ag.run()
+        status['initialization'].immutable()
+        status['calibration'].immutable()
+        status['alert']('If you input animal ID, then the session is entered in datajoint. Now start recording...\n If you did not input animal ID. the session is NOT entered in datajoing. Now start recording')
+        # TODO: make rootfilename and notes immutable here? and mutable below? for safety
+      else:
+        status['alert'](result)
 
-      ag.run()
-      status['initialization'].immutable()
-      status['calibration'].immutable()
-      # TODO: make rootfilename and notes immutable here? and mutable below? for safety
     else:
       ag.print('got stop message')
       ag.stop()
@@ -42,6 +46,7 @@ def initCallbacks(ag, status):
       status['initialization'].mutable()
       status['calibration'].mutable()
       status['rootfilename']('')  # to make sure we don't accidentally
+      status['alert']('')
 
   status['recording'].callback(recording)
 
@@ -102,7 +107,8 @@ def initCallbacks(ag, status):
 
   def spectrogram(state):
     ag.print(f'applying new status from state: {state}')
-    ag.mic.parse_settings(status['spectrogram'].current)
+    #ag.mic.parse_settings(status['spectrogram'].current)
+    ag.nidaq.parse_settings(status['spectrogram'].current)
     # TODO: trying to update _nx or _nfft will cause an error
     # that means we can only update log scaling and noise correction
 

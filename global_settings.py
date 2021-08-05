@@ -4,6 +4,9 @@
 DLC_LIVE_MODEL_PATH=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\exported-models\DLC_Alec_second_try_resnet_50_iteration-0_shuffle-1'
 number_of_camera=4
 
+# datajoint settings
+namespace_path=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\assets\namespace\namespace_test.json'
+from datajoint_configs import config as config
 
 # camera settings
 FRAME_TIMEOUT = 10  # time in milliseconds to wait for pyspin to retrieve the frame

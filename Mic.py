@@ -69,7 +69,7 @@ class Mic(AcquisitionObject):
 
   def start(self, filepath=None, display=False):
     if self.index is not None:
-      self.stream = self.audio.open(format=self.format,
+        self.stream = self.audio.open(format=self.format,
                                     channels=self.channels,
                                     input_device_index=self.index,
                                     frames_per_buffer=int(
@@ -78,10 +78,10 @@ class Mic(AcquisitionObject):
                                     stream_callback=self.capture_chunk,
                                     input=True
                                     )
-    self.filepath = filepath
-    self.file = filepath
-    self.data = display
-    self.running = True
+        self.filepath = filepath
+        self.file = filepath
+        self.data = display
+        self.running = True
 
     if filepath is None:
       self._has_filepath = False
@@ -89,18 +89,19 @@ class Mic(AcquisitionObject):
       self._has_filepath = True
 
   def run(self):
-      if self._has_runner:
-          return
-      self._has_runner = True
-      self.stream.start_stream()
-      data_time = time.time() - self.run_interval
-      while True:
-          self.sleep(data_time)
-          with self._running_lock:
-              # try to capture the next data segment
-              if not self._running:
-                  self._has_runner = False
-                  return
+      if self.index is not None:
+          if self._has_runner:
+              return
+          self._has_runner = True
+          self.stream.start_stream()
+          data_time = time.time() - self.run_interval
+          while True:
+              self.sleep(data_time)
+              with self._running_lock:
+                  # try to capture the next data segment
+                  if not self._running:
+                      self._has_runner = False
+                      return
 
   def capture_chunk(self, in_data, frame_count, time_info, status):
     self.data = np.fromstring(in_data, dtype=np.float32)

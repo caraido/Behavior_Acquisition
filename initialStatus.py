@@ -12,6 +12,13 @@ initialStatus = {  # just an example
         'current': '',
         'mutable': True,
     },
+    'alert':{
+        'allowedValues':[],
+        'category':'Acquisition',
+        'current':'',
+        'mutable':True
+    },
+
     'notes': {
         'allowedValues': [],  # allows anything
         'category': 'Acquisition',
