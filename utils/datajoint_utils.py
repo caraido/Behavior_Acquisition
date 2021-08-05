@@ -22,7 +22,7 @@ def get_notes(updates):
 	if len(updates[8])!=0:
 		windowC=f"{updates[8]} {updates[7]} in C, "
 	else:
-		windowC=f"{updates[8]} in C, "
+		windowC=f"{updates[7]} in C, "
 
 	text=windowA+windowB+windowC+updates[10]
 	return text
@@ -166,7 +166,7 @@ class DjConn:
 
 			return event_id,info
 		else:
-			return 'None','Test animal ID does not match the database! Session is not inserted on Datajoint. Still Recording'
+			return 'None','Test animal ID does not match the database! \n Session is not inserted on Datajoint. Still Recording'
 
 	def get_latest_event_id(self):
 		sessions=self.get_all_Sessions()
@@ -201,31 +201,42 @@ class DjConn:
 			return False,f"can't find this mouse DJID: {some_update[7]} in database. Datajoint not updated"
 
 		try:
+			count=0
 			if some_update[1] not in animalType:
 				self.sl.TestAnimalType.insert1([str(some_update[1]),''])
+				count+=1
 			if some_update[2] not in experimentType:
 				self.sl.SocialBehaviorExperimentType.insert1([str(some_update[2]),''])
+				count+=1
 			if windowA[0] not in stimulusType:
 				if len(some_update[4])==0:
 					needs_id='F'
 				else:
 					needs_id='T'
 				self.sl.BehaviorVisualStimulusType.insert1([windowA[0],needs_id,''])
+				count += 1
 			if windowB[0] not in stimulusType:
 				if len(some_update[6])==0:
 					needs_id='F'
 				else:
 					needs_id='T'
 				self.sl.BehaviorVisualStimulusType.insert1([windowB[0],needs_id,''])
+				count += 1
 			if windowC[0] not in stimulusType:
 				if len(some_update[7])==0:
 					needs_id='F'
 				else:
 					needs_id='T'
 				self.sl.BehaviorVisualStimulusType.insert1([windowC[0],needs_id,''])
-			return True
+				count += 1
+
+			if count:
+				message='Updated the type!'
+			else:
+				message=''
+			return True,message
 		except:
-			return False
+			return False,'Failed to update the type '
 		# with c.transaction(): # try to update the entire package
 			# status = sl.testanimaltype.insert1({})
 			# status =sl.testanimaltype.insert1({})

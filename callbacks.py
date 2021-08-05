@@ -32,7 +32,7 @@ def initCallbacks(ag, status):
         ag.run()
         status['initialization'].immutable()
         status['calibration'].immutable()
-        status['alert']('If you input animal ID, then the session is entered in datajoint. Now start recording...\n If you did not input animal ID. the session is NOT entered in datajoing. Now start recording')
+        status['alert']('If you input animal ID, then the session is entered in datajoint.\n If not, no entry in datajoint.\n start recording...')
         # TODO: make rootfilename and notes immutable here? and mutable below? for safety
       else:
         status['alert'](result)

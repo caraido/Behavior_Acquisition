@@ -98,8 +98,8 @@ def add_new_type_to_datajoint(namelist):
 	connected = conn.connect_to_datajoint()
 	print(connected)
 	conn.get_main_schema()
-	status=conn.add_new_type_to_dj(namelist)
-	return status,conn
+	status,info=conn.add_new_type_to_dj(namelist)
+	return status,info,conn
 
 
 def reformat_filepath(path,name,camera:list):
@@ -118,12 +118,12 @@ def reformat_filepath(path,name,camera:list):
 	namelist=seperate_name(name)
 	subfolder=os.path.join(real_path,namelist[0]) # namelist[0] is animal ID
 
-	result,conn=add_new_type_to_datajoint(namelist)
+	result,info_type,conn=add_new_type_to_datajoint(namelist)
 
 	if result:
 		sessID,info=conn.update_session(namelist)
 		if not sessID:
-			return False,info
+			return False,info_type+'\n'+info
 		else:
 			if not os.path.exists(subfolder):
 				os.mkdir(subfolder)
@@ -132,9 +132,9 @@ def reformat_filepath(path,name,camera:list):
 			#condition1=namelist[3]=='empty' and namelist[5]=='empty' and namelist[7]=='empty'
 			condition2=namelist[2]=='habituation'
 			if condition2:
-				full_path = os.path.join(subfolder,sessID+date+namelist[1]+'_habituation')
+				full_path = os.path.join(subfolder,str(sessID)+date+namelist[1]+'_habituation')
 			else:
-				full_path=os.path.join(subfolder,sessID+date+namelist[1]+'_'+namelist[2]+r"_(A)"+namelist[3]+r"_(B)"+namelist[5]+r"_(C)"+namelist[7])
+				full_path=os.path.join(subfolder,str(sessID)+date+namelist[1]+'_'+namelist[2]+r"_(A)"+namelist[3]+r"_(B)"+namelist[5]+r"_(C)"+namelist[7])
 
 			# for repeated sessions, the following method overwrite the original
 			if os.path.exists(full_path):
@@ -157,7 +157,6 @@ def reformat_filepath(path,name,camera:list):
 						os.mkdir(full_path)
 						break
 			'''
-
 			filepaths = []
 			for serial_number in camera:
 				camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
@@ -172,7 +171,7 @@ def reformat_filepath(path,name,camera:list):
 			# TODO: need to implement the handling in GUI to popup a new alert window indicating the status
 			return True,filepaths
 	else:
-		return False,'something wrong with updating new type to datajoint. Abort recording'
+		return False,info_type
 
 def copy_config(filepath,version=None):
 	# version should be int
