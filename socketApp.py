@@ -1,18 +1,34 @@
 from flask import Flask
 from flask_socketio import SocketIO, emit
 from datetime import datetime
+from utils import datajoint_utils as dju
 
 
 def initServer(ag, status):
   app = Flask(__name__)
   socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')
+  conn = dju.DjConn()
+  conn.connect_to_datajoint()
 
-#TODO: decorator
+  #TODO: decorator
   def printToGUI(*args):
     socketio.emit('message', ' '.join([str(arg)
                                        for arg in args]), broadcast=True)
     ts = datetime.utcnow().strftime("%H:%M:%S.%f")
     print(ts, args)
+
+  def send_database_updates():
+    if not conn.is_connected:
+        conn.connect_to_datajoint()
+    if conn.is_connected:
+      socketio.emit('database', {'recent_animals': [1127, 1130, 1135]}, broadcast=True)
+    else:
+      socketio.emit('message', 'Error connecting to datajoint', broadcast=True)
+      socketio.emit('database', {}, broadcast=True)
+      
+      # return {'recent_animals': []}
+
+  ag.send_database_updates = send_database_updates
 
   @socketio.on('connect')
   def handle_new_connection():
@@ -74,8 +90,6 @@ def initServer(ag, status):
               ]
           ]
       }
-
-
 
   @socketio.on('post')
   def parse_update(update):

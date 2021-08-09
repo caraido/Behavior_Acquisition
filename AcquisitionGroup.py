@@ -173,6 +173,9 @@ class AcquisitionGroup:
   def print(self, *args):
     print(*args)
 
+  def send_database_updates(self):
+    pass
+
   # def update(self, rootfilename, stepnumber):
   #   #send a message to the gui that a step ahs been completed
 
