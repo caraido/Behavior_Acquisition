@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import json
 import datetime
-from global_settings import config, namespace_path
+from global_settings import config, namespace_path, N_ANIMALS_TO_DISPLAY
 
 
 def get_notes(updates):
@@ -79,9 +79,9 @@ class DjConn:
 		return animal_types
 
 	# fetch entities from tables
-	def get_all_AnimalIds(self):
+	def get_AnimalIds(self, count=None):
 		if self.sl is not None:
-			all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id')
+			all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id', order_by='entry_time desc', limit=count)
 			unique_ID=np.unique(all_ID)
 			return unique_ID.tolist()
 
@@ -118,7 +118,7 @@ class DjConn:
 
 	def update_json(self):
 		file={}
-		animalID=self.get_all_AnimalIds()
+		animalID=self.get_AnimalIds(count=N_ANIMALS_TO_DISPLAY)
 		animalType=self.get_all_AnimalType()
 		stimulusType=self.get_all_StimulusType()
 		experimentType=self.get_all_ExperimentType()
@@ -251,7 +251,7 @@ if __name__ is '__main__':
 	print(connected)
 	status=conn.get_main_schema()
 	print(status)
-	conn.update_json()
+	# conn.update_json()
 
 	pass
 
