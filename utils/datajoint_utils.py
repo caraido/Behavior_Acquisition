@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import json
 import datetime
-from global_settings import config, namespace_path, N_ANIMALS_TO_DISPLAY
+from global_settings import config, N_ANIMALS_TO_DISPLAY
 
 
 def get_notes(updates):
@@ -81,9 +81,16 @@ class DjConn:
 	# fetch entities from tables
 	def get_AnimalIds(self, count=None):
 		if self.sl is not None:
-			all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id', order_by=('date desc', 'time desc', 'entry_time desc'), limit=count)
-			unique_ID=np.unique(all_ID)
-			return unique_ID.tolist()
+			all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id', order_by=('date desc', 'time desc', 'entry_time desc'), limit=2*count)
+			unique_ID, ind=np.unique(all_ID, return_index=True)
+			return unique_ID[np.argsort(ind)][:count].tolist()
+
+	def get_StimAnimalIds(self, count=None):
+		raise 'Not yet implemented'
+		if self.sl is not None:
+			# all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id', order_by=('date desc', 'time desc', 'entry_time desc'), limit=count)
+			unique_ID, ind=np.unique(all_ID, return_index=True)
+			return unique_ID[np.argsort(ind)][:count].tolist()
 
 	# fetch all behavior session
 	def get_all_Sessions(self):
@@ -116,22 +123,31 @@ class DjConn:
 			print('cannot find schema')
 			return
 
-	def update_json(self):
-		file={}
-		animalID=self.get_AnimalIds(count=N_ANIMALS_TO_DISPLAY)
-		animalType=self.get_all_AnimalType()
-		stimulusType=self.get_all_StimulusType()
-		experimentType=self.get_all_ExperimentType()
-		file['animalID']=[str(a) for a in animalID]
-		file['animalType']=[str(a) for a in animalType]
-		file['experimentType']=[str(a) for a in experimentType]
-		file['windows'] = [str(a) for a in stimulusType]
+	# def update_json(self):
+	# 	file={}
+	# 	animalID=self.get_AnimalIds(count=N_ANIMALS_TO_DISPLAY)
+	# 	animalType=self.get_all_AnimalType()
+	# 	stimulusType=self.get_all_StimulusType()
+	# 	experimentType=self.get_all_ExperimentType()
+	# 	file['animalID']=[str(a) for a in animalID]
+	# 	file['animalType']=[str(a) for a in animalType]
+	# 	file['experimentType']=[str(a) for a in experimentType]
+	# 	file['windows'] = [str(a) for a in stimulusType]
 
-		with open(namespace_path,'w') as f:
-			json.dump(file,f)
+	# 	with open(namespace_path,'w') as f:
+	# 		json.dump(file,f)
 
-		return # something tells the gui to update?
+	# 	return # something tells the gui to update?
 
+	def package_data(self):
+		animalIds = self.get_AnimalIds(count=N_ANIMALS_TO_DISPLAY)
+		return {
+			'recent_test_animals': animalIds,
+			'recent_stim_animals': animalIds, #TODO: implement get_StimAnimalIds
+			'animal_types': self.get_all_AnimalType(),
+			'stimulus_types': self.get_all_StimulusType(),
+			'experiment_types': self.get_all_ExperimentType()
+		}
 
 	def update_session(self,some_update):
 		animal_id=some_update[0]

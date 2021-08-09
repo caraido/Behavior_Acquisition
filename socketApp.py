@@ -19,9 +19,9 @@ def initServer(ag, status):
 
   def send_database_updates():
     if not conn.is_connected:
-        conn.connect_to_datajoint()
+      conn.connect_to_datajoint()
     if conn.is_connected:
-      socketio.emit('database', {'recent_animals': [1127, 1130, 1135]}, broadcast=True)
+      socketio.emit('database', conn.package_data(), broadcast=True)
     else:
       socketio.emit('message', 'Error connecting to datajoint', broadcast=True)
       socketio.emit('database', {}, broadcast=True)
@@ -64,7 +64,7 @@ def initServer(ag, status):
       if not conn.is_connected:
         conn.connect_to_datajoint()
       if conn.is_connected:
-        return {'recent_animals': [1127, 1130, 1135]}
+        return conn.package_data()
       else:
         emit('message', 'Error connecting to datajoint', broadcast=True)
         emit('database', {}, broadcast=True, include_self=False)

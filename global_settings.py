@@ -5,7 +5,7 @@ DLC_LIVE_MODEL_PATH=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec
 number_of_camera=4
 
 # datajoint settings
-namespace_path=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\assets\namespace\namespace_test.json'
+# namespace_path=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\assets\namespace\namespace_test.json'
 from datajoint_configs import config as config
 N_ANIMALS_TO_DISPLAY = 5
 
