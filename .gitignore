@@ -3,3 +3,8 @@ node_modules/
 react/
 pose/
 *.pyc
+datajoint_configs.py
+
+DLC
+!DLC/*.ipynb
+!DLC/*.py
