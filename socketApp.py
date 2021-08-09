@@ -59,6 +59,15 @@ def initServer(ag, status):
               'status': getRandomStatus('testingA')} for i in range(args[0], min(args[0] + args[1], numberofrecordedsessions))]
         #a=rgs[1] = number of rootfilenames
       }  # suppose 110 is the number of actual sessions in existence
+    elif request_type == 'database':
+      if not conn.is_connected:
+        conn.connect_to_datajoint()
+      if conn.is_connected:
+        return {'recent_animals': [1127, 1130, 1135]}
+      else:
+        emit('message', 'Error connecting to datajoint', broadcast=True)
+        emit('database', {}, broadcast=True, include_self=False)
+        return {}
 
     elif request_type == 'processing categories':
       return {
