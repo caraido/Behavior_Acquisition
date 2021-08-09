@@ -60,6 +60,7 @@ def initServer(ag, status):
         #a=rgs[1] = number of rootfilenames
       }  # suppose 110 is the number of actual sessions in existence
     elif request_type == 'database':
+      print('Returning db info to client')
       if not conn.is_connected:
         conn.connect_to_datajoint()
       if conn.is_connected:
