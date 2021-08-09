@@ -38,36 +38,42 @@ class DjConn:
 		self.sl_behavior=None
 
 	def connect_to_datajoint(self):
+		if self.is_connected:
+			return True
+			
 		for key, value in self.config.items():
 			dj.config[key] = value
 		self.connection=dj.conn()
 		self.is_connected=self.connection.is_connected
+		if self.is_connected:
+			for schema in dj.list_schemas():
+				setattr(self, schema, dj.create_virtual_module(f'{schema}.py', schema))
 		return self.is_connected
 
 	def drop_connection(self):
 		if self.connection is not None:
 			self.connection.close()
 
-	def get_test_schema(self):
-		if self.connection:
-			self.sl_test = dj.create_virtual_module('sl_test.py', 'sl_test')
-			return True
-		else:
-			return False
+	# def get_test_schema(self):
+	# 	if self.connection:
+	# 		self.sl_test = dj.create_virtual_module('sl_test.py', 'sl_test')
+	# 		return True
+	# 	else:
+	# 		return False
 
-	def get_main_schema(self):
-		if self.connection:
-			self.sl = dj.create_virtual_module('sl.py', 'sl')
-			return True
-		else:
-			return False
+	# def get_main_schema(self):
+	# 	if self.connection:
+	# 		self.sl = dj.create_virtual_module('sl.py', 'sl')
+	# 		return True
+	# 	else:
+	# 		return False
 
-	def get_behavior_schema(self):
-		if self.connection:
-			self.sl_behavior = dj.create_virtual_module('sl_behavior.py', 'sl_behavior')
-			return True
-		else:
-			return False
+	# def get_behavior_schema(self):
+	# 	if self.connection:
+	# 		self.sl_behavior = dj.create_virtual_module('sl_behavior.py', 'sl_behavior')
+	# 		return True
+	# 	else:
+	# 		return False
 
 		# fetch entities from tables
 	def get_all_AnimalType(self):
@@ -265,7 +271,7 @@ if __name__ is '__main__':
 	conn=DjConn()
 	connected=conn.connect_to_datajoint()
 	print(connected)
-	status=conn.get_main_schema()
+	# status=conn.get_main_schema()
 	print(status)
 	# conn.update_json()
 

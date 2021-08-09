@@ -97,7 +97,7 @@ def add_new_type_to_datajoint(namelist):
 	conn = DjConn()
 	connected = conn.connect_to_datajoint()
 	print(connected)
-	conn.get_main_schema()
+	# conn.get_main_schema()
 	status,info=conn.add_new_type_to_dj(namelist)
 	return status,info,conn
 
