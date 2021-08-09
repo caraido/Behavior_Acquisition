@@ -81,7 +81,7 @@ class DjConn:
 	# fetch entities from tables
 	def get_AnimalIds(self, count=None):
 		if self.sl is not None:
-			all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id', order_by='entry_time desc', limit=count)
+			all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id', order_by=('date desc', 'time desc', 'entry_time desc'), limit=count)
 			unique_ID=np.unique(all_ID)
 			return unique_ID.tolist()
 
