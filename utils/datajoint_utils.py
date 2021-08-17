@@ -157,7 +157,7 @@ class DjConn:
 
 	def update_session(self,some_update):
 		animal_id=some_update[0]
-		all_ids=[str(a) for a in self.get_all_AnimalIds()]
+		all_ids=[str(a) for a in self.get_AnimalIds()]
 		if animal_id in all_ids:
 			user_name=some_update[9]
 			purpose=some_update[2]
@@ -202,7 +202,7 @@ class DjConn:
 		windowB = re.split(r'[(](\d+)[)]', some_update[5])
 		windowC = re.split(r'[(](\d+)[)]', some_update[7])
 
-		animalID = [str(a) for a in self.get_all_AnimalIds()]
+		animalID = [str(a) for a in self.get_AnimalIds()]
 		animalType = self.get_all_AnimalType()
 		stimulusType = self.get_all_StimulusType()
 		experimentType = self.get_all_ExperimentType()
@@ -267,7 +267,7 @@ class DjConn:
 			#	sl.AnimalEventSocialBehaviorSessionStimulus.insert1({...})
 
 
-if __name__ is '__main__':
+if __name__ == '__main__':
 	conn=DjConn()
 	connected=conn.connect_to_datajoint()
 	print(connected)
