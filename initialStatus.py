@@ -1,4 +1,4 @@
-serialNumbers = [17391304, 17391290, 19287342, 19412282]
+serialNumbers = [17391304, 17391290, 21259803, 19412282]
 initialStatus = {  # just an example
     'initialization': {
         'allowedValues': ['uninitialized', 'initialized', 'deinitialized'],
@@ -202,6 +202,7 @@ for i in range(4):
               'current': 0,  # unix timestamp
               'allowedValues': {'min': 0, 'max': int(1e10)}
           },
+
           'port': {
               'category': 'Video',
               'current': 5003 + i,

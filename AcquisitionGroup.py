@@ -9,7 +9,8 @@ from Mic import Mic
 
 # import ProcessingGroup as pg
 # import RigStatus
-CAM_LIST = [17391304, 17391290, 19287342, 19412282]
+CAM_LIST = [17391304, 17391290, 21259803, 19412282]
+# serialNumbers = [17391304, 17391290, 21259803, 19412282]
 
 
 def rearrange_cameras(cameras: list):
