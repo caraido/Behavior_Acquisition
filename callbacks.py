@@ -91,7 +91,7 @@ def initCallbacks(ag, status):
         ag.stop()
         ag.start(filepaths=config_filepaths)
         ag.process(cam_num, options=process)
-        # ag.run()
+        ag.run()
       else:
         ag.process(cam_num, options=process)
 
