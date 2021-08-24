@@ -46,11 +46,13 @@ def get_extrinsic_path(camera:list,config_path=GLOBAL_CONFIG_PATH):
 	return path
 
 
-def seperate_name(name):
+def separate_name(name):
 	if name[0]=='&':
+		result = True
 		name_list=re.split(r'[&]',name[1:])
 		if len(name_list[0])==0: # empty animal ID
-			name_list[0]='unnamedAnmial'
+			name_list[0]='unnamedAnimal'
+			result = False
 		if len(name_list[1]) == 0: # empty animaltype
 			name_list[1]='none'
 		if len(name_list[2]) == 0: # empty sessiontype
@@ -67,7 +69,7 @@ def seperate_name(name):
 			name_list[7]='empty'
 		if name_list[7]=='empty':
 			name_list[8]=''
-		return name_list
+		return result,name_list
 	else:
 		raise NameError('Wrong naming system!')
 
@@ -115,63 +117,51 @@ def reformat_filepath(path,name,camera:list):
 		os.makedirs(real_path)
 		print("file path %s doesn't exist, creating one..." % real_path)
 
-	namelist=seperate_name(name)
+	result,namelist=separate_name(name)
 	subfolder=os.path.join(real_path,namelist[0]) # namelist[0] is animal ID
 
-	result,info_type,conn=add_new_type_to_datajoint(namelist)
+	if result:
+		result,info_type,conn=add_new_type_to_datajoint(namelist)
 
 	if result:
 		sessID,info=conn.update_session(namelist)
-		if not sessID:
-			return False,info_type+'\n'+info
-		else:
-			if not os.path.exists(subfolder):
-				os.mkdir(subfolder)
-				print("file path %s doesn't exist, creating one..." % real_path)
-
-			#condition1=namelist[3]=='empty' and namelist[5]=='empty' and namelist[7]=='empty'
-			condition2=namelist[2]=='habituation'
-			if condition2:
-				full_path = os.path.join(subfolder,str(sessID)+date+namelist[1]+'_habituation')
-			else:
-				full_path=os.path.join(subfolder,str(sessID)+date+namelist[1]+'_'+namelist[2]+r"_(A)"+namelist[3]+r"_(B)"+namelist[5]+r"_(C)"+namelist[7])
-
-			# for repeated sessions, the following method overwrite the original
-			if os.path.exists(full_path):
-				shutil.rmtree(full_path)
-				os.mkdir(full_path)
-			else:
-				os.mkdir(full_path)
-
-			# for repeated sessions, the following method keeps the orginal and save a new one
-			'''
-			if not os.path.exists(full_path):
-				os.mkdir(full_path)
-			else:
-				i=2
-				while True:
-					if os.path.exists(full_path+'(%s)'%i):
-						i+=1
-					else:
-						full_path=full_path+'(%s)'%i
-						os.mkdir(full_path)
-						break
-			'''
-			filepaths = []
-			for serial_number in camera:
-				camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
-				filepaths.append(camera_filepath)
-
-			mic_filepath=os.path.join(full_path,'Dodo_audio.tdms')
-			filepaths.append(mic_filepath)
-
-			audio_filepath = os.path.join(full_path,'B&K_audio.tdms')
-			filepaths.append(audio_filepath)
-
-			# TODO: need to implement the handling in GUI to popup a new alert window indicating the status
-			return True,filepaths
+		if not sessID or sessID is None:
+			return False,info_type+'\n'+info #there was an error, so return and don't record anything
 	else:
-		return False,info_type
+		sessID = 0 #in case we are not trying to update the database... ?
+			
+	if not os.path.exists(subfolder): #make the folder for this animal
+		os.mkdir(subfolder)
+		print("file path %s doesn't exist, creating one..." % real_path)
+
+	#next, set up the folder for this session
+	condition2=namelist[2]=='habituation'
+	if condition2:
+		full_path = os.path.join(subfolder,str(sessID)+date+namelist[1]+'_habituation')
+	else:
+		full_path=os.path.join(subfolder,str(sessID)+date+namelist[1]+'_'+namelist[2]+r"_(A)"+namelist[3]+r"_(B)"+namelist[5]+r"_(C)"+namelist[7])
+
+	# for repeated sessions, the following method overwrite the original
+	# TODO: is this ever invoked?
+	if os.path.exists(full_path):
+		shutil.rmtree(full_path)
+		os.mkdir(full_path)
+	else:
+		os.mkdir(full_path)
+
+	filepaths = []
+	for serial_number in camera:
+		camera_filepath = os.path.join(full_path,'camera_%s.MOV'%serial_number)
+		filepaths.append(camera_filepath)
+
+	mic_filepath=os.path.join(full_path,'Dodo_audio.tdms')
+	filepaths.append(mic_filepath)
+
+	audio_filepath = os.path.join(full_path,'B&K_audio.tdms')
+	filepaths.append(audio_filepath)
+
+	# TODO: need to implement the handling in GUI to popup a new alert window indicating the status
+	return True,filepaths
 
 def copy_config(filepath,version=None):
 	# version should be int
@@ -254,8 +244,15 @@ def save_notes(content:str, save_paths):
 		except:
 			pass
 
+def main():
+	# filename = '&1190&male_unknown_social_status&habituation&&&&&&&Devon&'
+	filename = '&1207&alec_testing&alec_testing&&&&&&&Zach&'
+	camera_list = [17391304, 17391290, 21259803, 19412282]
 
+	reformat_filepath('', filename, camera_list)
 
+if __name__ == '__main__':
+	main()
 
 
 

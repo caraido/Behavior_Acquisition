@@ -155,10 +155,15 @@ class DjConn:
 			'experiment_types': self.get_all_ExperimentType()
 		}
 
+	def find_animalID(self, animal_IDs):
+
+		all_IDs=((self.sl.Animal & [f"animal_id={animal_ID}" for animal_ID in animal_IDs if animal_ID is not '' ])- self.sl.AnimalEventDeceased).fetch('animal_id')
+		is_in_DB = [animal_ID is '' or int(animal_ID) in all_IDs for animal_ID in animal_IDs]
+		return is_in_DB
+
 	def update_session(self,some_update):
 		animal_id=some_update[0]
-		all_ids=[str(a) for a in self.get_AnimalIds()]
-		if animal_id in all_ids:
+		if self.find_animalID(animal_id):
 			user_name=some_update[9]
 			purpose=some_update[2]
 			animal_type_name=some_update[1]
@@ -188,7 +193,7 @@ class DjConn:
 
 			return event_id,info
 		else:
-			return 'None','Test animal ID does not match the database! \n Session is not inserted on Datajoint. Still Recording'
+			return None,'Test animal ID does not match the database! \n Session is not inserted on Datajoint. Still Recording'
 
 	def get_latest_event_id(self):
 		sessions=self.get_all_Sessions()
@@ -202,23 +207,24 @@ class DjConn:
 		windowB = re.split(r'[(](\d+)[)]', some_update[5])
 		windowC = re.split(r'[(](\d+)[)]', some_update[7])
 
-		animalID = [str(a) for a in self.get_AnimalIds()]
+		# animalID = [str(a) for a in self.get_AnimalIds()]
 		animalType = self.get_all_AnimalType()
 		stimulusType = self.get_all_StimulusType()
 		experimentType = self.get_all_ExperimentType()
 		if str(some_update[0]) == 'unnamedAnimal':
 			return True,'unnamed Animal. Datajoint not updated'
-		is_avail_windowA_DJID = some_update[4] in animalID or len(some_update[4])== 0
-		is_avail_windowB_DJID = some_update[6] in animalID or len(some_update[6])== 0
-		is_avail_windowC_DJID = some_update[8] in animalID or len(some_update[8])== 0
+		# is_avail_windowA_DJID = some_update[4] in animalID or len(some_update[4])== 0
+		# is_avail_windowB_DJID = some_update[6] in animalID or len(some_update[6])== 0
+		# is_avail_windowC_DJID = some_update[8] in animalID or len(some_update[8])== 0
+		a_in_DJ,b_in_DJ,c_in_DJ = self.find_animalID(some_update[4:9:2])
 
-		if not is_avail_windowA_DJID:
+		if not a_in_DJ:
 			# database must have the DJID of this mouse first
 			return False,f"can't find this mouse DJID: {some_update[4]} in database. Datajoint not updated"
-		if not is_avail_windowB_DJID:
+		if not b_in_DJ:
 			# database must have the DJID of this mouse first
 			return False,f"can't find this mouse DJID: {some_update[6]} in database. Datajoint not updated"
-		if not is_avail_windowC_DJID:
+		if not c_in_DJ:
 			# database must have the DJID of this mouse first
 			return False,f"can't find this mouse DJID: {some_update[7]} in database. Datajoint not updated"
 
