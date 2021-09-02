@@ -123,12 +123,16 @@ def reformat_filepath(path,name,camera:list):
 	if result:
 		result,info_type,conn=add_new_type_to_datajoint(namelist)
 
-	if result:
+	if namelist[0] == 'unnamedAnimal':
+		sessID = 0 # not updating db...
+		info = ''
+	elif result:
 		sessID,info=conn.update_session(namelist)
-		if not sessID or sessID is None:
-			return False,info_type+'\n'+info #there was an error, so return and don't record anything
+		if not sessID:
+			return False,None,info_type+'\n'+info #there was an error, so return and don't record anything
 	else:
-		sessID = 0 #in case we are not trying to update the database... ?
+		return False,None,info_type
+		# sessID = 0 #in case we are not trying to update the database... ?
 			
 	if not os.path.exists(subfolder): #make the folder for this animal
 		os.mkdir(subfolder)
@@ -161,7 +165,7 @@ def reformat_filepath(path,name,camera:list):
 	filepaths.append(audio_filepath)
 
 	# TODO: need to implement the handling in GUI to popup a new alert window indicating the status
-	return True,filepaths
+	return True,filepaths,info_type+'\n'+info
 
 def copy_config(filepath,version=None):
 	# version should be int
@@ -246,7 +250,9 @@ def save_notes(content:str, save_paths):
 
 def main():
 	# filename = '&1190&male_unknown_social_status&habituation&&&&&&&Devon&'
-	filename = '&1207&alec_testing&alec_testing&&&&&&&Zach&'
+	# filename = '&1207&alec_testing&alec_testing&&&&&&&Zach&'
+	filename = '&1207&alec_testing&alec_testing&juvenile&1190&&&&&Zach&'
+	
 	camera_list = [17391304, 17391290, 21259803, 19412282]
 
 	reformat_filepath('', filename, camera_list)

@@ -2,9 +2,6 @@
 from utils import path_operation_utils as pop
 from global_settings import DLC_LIVE_MODEL_PATH
 
-
-
-
 def initCallbacks(ag, status):
 
   def initialization(state):
@@ -24,7 +21,7 @@ def initCallbacks(ag, status):
       camera_list = []
       for i in range(ag.nCameras):
         camera_list.append(ag.cameras[i].device_serial_number)
-      fp_status,result = pop.reformat_filepath('', rootfilename, camera_list)
+      fp_status,result,info = pop.reformat_filepath('', rootfilename, camera_list)
       if fp_status:
         ag.stop()
         ag.start(filepaths=result)
@@ -35,7 +32,7 @@ def initCallbacks(ag, status):
         status['alert']('If you input animal ID, then the session is entered in datajoint.\n If not, no entry in datajoint.\n start recording...')
         # TODO: make rootfilename and notes immutable here? and mutable below? for safety
       else:
-        status['alert'](result)
+        status['alert'](info)
 
     else:
       ag.print('got stop message')

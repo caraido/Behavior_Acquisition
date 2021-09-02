@@ -156,6 +156,9 @@ class DjConn:
 		}
 
 	def find_animalID(self, animal_IDs):
+		#checks for animal IDs in sl.Animal
+		#returns false if animal id is missing
+		#excepts the case that no animal_ID is provided (returns true)
 
 		all_IDs=((self.sl.Animal & [f"animal_id={animal_ID}" for animal_ID in animal_IDs if animal_ID is not '' ])- self.sl.AnimalEventDeceased).fetch('animal_id')
 		is_in_DB = [animal_ID is '' or int(animal_ID) in all_IDs for animal_ID in animal_IDs]
@@ -184,8 +187,21 @@ class DjConn:
 							 notes=notes)
 
 			try:
-				self.sl.AnimalEventSocialBehaviorSession.insert1(insert_item)
-				event_id=self.get_latest_event_id()
+				with self.connection.transaction:
+					self.sl.AnimalEventSocialBehaviorSession.insert1(insert_item)
+					# event_id=self.get_latest_event_id()
+					event_id=self.get_matching_event_id(insert_item)
+					if event_id is None: #does this ever happen???
+						raise
+					items = []
+					for stim_type,stim_ID,arm in zip(some_update[3:8:2],some_update[4:9:2], ('A','B','C')):
+						items.append(dict(
+								event_id = event_id,
+								arm = arm,
+								stim_type=stim_type,
+								stimulus_animal_id = stim_ID if stim_ID != '' else None
+							))
+					self.sl.AnimalEventSocialBehaviorSession.Stimulus.insert(items)
 				info='session insertion successful. Start recording'
 			except:
 				event_id=False
@@ -193,19 +209,33 @@ class DjConn:
 
 			return event_id,info
 		else:
-			return None,'Test animal ID does not match the database! \n Session is not inserted on Datajoint. Still Recording'
+			return False,'Test animal ID does not match the database! \n Session is not inserted on Datajoint. Still Recording'
+	
+	def get_matching_event_id(self, event):
+		event['date'] = str(event['date'])
+		event['time'] = str(event['time'])
+		
+		return (self.sl.AnimalEventSocialBehaviorSession & event).fetch1('event_id')
 
 	def get_latest_event_id(self):
-		sessions=self.get_all_Sessions()
+		#deprecated: see below
+
+		#TODO: ought'nt we fetch the entry that matches ours, in case of collisions?
+		# if we're in a transaction, it's probably okay
+		# also we don't expect any collisions in normal use
+
+		sessions=self.get_all_Sessions() #we don't need all of this!!
 		event_ids=sessions['event_id']
 		latest_event_id=numpy.array(event_ids)[-1]
 		return latest_event_id
 
 	# talk to dj for permission
 	def add_new_type_to_dj(self,some_update):
-		windowA=re.split(r'[(](\d+)[)]',some_update[3])
-		windowB = re.split(r'[(](\d+)[)]', some_update[5])
-		windowC = re.split(r'[(](\d+)[)]', some_update[7])
+
+		#no clue what this block is for... what is the stuff in parens that we're ignoring?:
+		some_update[3] = re.split(r'[(](\d+)[)]',some_update[3])[0]
+		some_update[5] = re.split(r'[(](\d+)[)]', some_update[5])[0]
+		some_update[7] = re.split(r'[(](\d+)[)]', some_update[7])[0]
 
 		# animalID = [str(a) for a in self.get_AnimalIds()]
 		animalType = self.get_all_AnimalType()
@@ -218,6 +248,10 @@ class DjConn:
 		# is_avail_windowC_DJID = some_update[8] in animalID or len(some_update[8])== 0
 		a_in_DJ,b_in_DJ,c_in_DJ = self.find_animalID(some_update[4:9:2])
 
+		su_ids = [some_update[i]  for i in [0,4,6,8] if some_update[i]!='']
+		if len(set(su_ids)) != len(su_ids):
+			return False,'Tried to enter the same mouse in multiple windows!'
+
 		if not a_in_DJ:
 			# database must have the DJID of this mouse first
 			return False,f"can't find this mouse DJID: {some_update[4]} in database. Datajoint not updated"
@@ -229,6 +263,11 @@ class DjConn:
 			return False,f"can't find this mouse DJID: {some_update[7]} in database. Datajoint not updated"
 
 		try:
+			#TODO: no need to query the stimulus types again... just bring this down from .getAllStimulusTypes
+			tested = []
+
+			# TODO: no need to do so many insert1's... insert as a batch
+			#honestly we should just get rid of this maybe...
 			count=0
 			if some_update[1] not in animalType:
 				self.sl.TestAnimalType.insert1([str(some_update[1]),''])
@@ -236,32 +275,56 @@ class DjConn:
 			if some_update[2] not in experimentType:
 				self.sl.SocialBehaviorExperimentType.insert1([str(some_update[2]),''])
 				count+=1
-			if windowA[0] not in stimulusType:
+			if some_update[3] not in stimulusType:
 				if len(some_update[4])==0:
 					needs_id='F'
+					tested.append(False)
 				else:
 					needs_id='T'
-				self.sl.BehaviorVisualStimulusType.insert1([windowA[0],needs_id,''])
+					tested.append(True)
+
+				self.sl.BehaviorVisualStimulusType.insert1([some_update[3],needs_id,''])
 				count += 1
-			if windowB[0] not in stimulusType:
+			else:
+				tested.append((self.sl.BehaviorVisualStimulusType & f'stim_type="{some_update[3]}"').fetch1('needs_id') ==  'T')
+			if some_update[5] not in stimulusType:
 				if len(some_update[6])==0:
 					needs_id='F'
+					tested.append(False)
 				else:
 					needs_id='T'
-				self.sl.BehaviorVisualStimulusType.insert1([windowB[0],needs_id,''])
+					tested.append(True)
+				self.sl.BehaviorVisualStimulusType.insert1([some_update[5],needs_id,''])
 				count += 1
-			if windowC[0] not in stimulusType:
+			elif some_update[5]==some_update[3]:
+				tested.append(tested[0])
+			else:
+				tested.append((self.sl.BehaviorVisualStimulusType & f'stim_type="{some_update[5]}"').fetch1('needs_id') ==  'T')
+			
+			if some_update[7] not in stimulusType:
 				if len(some_update[7])==0:
 					needs_id='F'
+					tested.append(False)
 				else:
 					needs_id='T'
-				self.sl.BehaviorVisualStimulusType.insert1([windowC[0],needs_id,''])
+					tested.append(True)
+				self.sl.BehaviorVisualStimulusType.insert1([some_update[7],needs_id,''])
 				count += 1
-
+			elif some_update[7]==some_update[3]:
+				tested.append(tested[0])
+			elif some_update[7]==some_update[5]:
+				tested.append(tested[1])
+			else:
+				tested.append((self.sl.BehaviorVisualStimulusType & f'stim_type="{some_update[7]}"').fetch1('needs_id') ==  'T')
+			
 			if count:
 				message='Updated the type!'
 			else:
 				message=''
+
+			if tested != [some_update[4]!='',some_update[6]!='',some_update[8]!='']:
+				return False,'The specified stimulus types require DJIDs!'
+
 			return True,message
 		except:
 			return False,'Failed to update the type '
