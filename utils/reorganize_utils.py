@@ -41,7 +41,11 @@ def reorganize_mat_file(rootpath,load_squeak_time=None):
 	# load dlc data
 	dlc_dict = {}
 	for i,item in enumerate(dlc_file):
-		data=pd.read_csv(item,header=[1,2])
+		data=pd.read_csv(item,header=[1,2,3])
+		if 'individuals' not in data.columns[0]:
+			data = pd.concat([pd.DataFrame({p:p[2] for p in data.columns}, index=[0]), data]).reset_index(drop = True)
+			data.columns = data.columns.droplevel(2)
+
 		data = data.to_dict()
 		new_data={}
 		for key, value in data.items(): # here value is another dict
@@ -61,20 +65,19 @@ def reorganize_mat_file(rootpath,load_squeak_time=None):
 	# load reproejction data
 	reproject_dict={}
 	for i,item in enumerate(reproject_file):
-		data=pd.read_csv(item)
-		data=data.to_dict()
-		data.pop('Unnamed: 0')
+		data = pd.read_csv(item, header=[0,1],index_col=0).to_dict()
 		for key, value in data.items(): # here value is another dict
 			data[key]=np.array(list(value.values())).astype(np.float32)
 		reproject_dict[f"camera_{i}"]=data
 
-	try:
+	if len(reconstruct_file):
+		# TODO: this seems to be wrong
 		reconstruct_data=pd.read_csv(reconstruct_file[0])
 		reconstruct_data=reconstruct_data.to_dict()
 		for key, value in reconstruct_data.items():  # here value is another dict
 			reconstruct_data[key] = np.array(list(value.values())).astype(np.float32)
 		reconstruct_data.pop('Unnamed: 0')
-	except:
+	else:
 		reconstruct_data={}
 
 	# if squeak data are organized
@@ -108,7 +111,7 @@ def reorganize_mat_file(rootpath,load_squeak_time=None):
 	}
 
 	savepath=os.path.join(rootpath,'full_data.mat')
-	sio.savemat(savepath,full_data)
+	sio.savemat(savepath,full_data, long_field_names=True)
 	print('saved full data')
 
 '''
@@ -143,7 +146,7 @@ def reorganize_mat_file2(rootpath):
 
 	dlc_dict={}
 	for i,item in enumerate(dlc_file):
-		data=pd.read_csv(item,header=[1,2])
+		data=pd.read_csv(item,header=[1,2,3]).center_mouse
 		data = data.to_dict()
 		new_data={}
 		for key, value in data.items(): # here value is another dict

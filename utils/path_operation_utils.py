@@ -40,7 +40,7 @@ def change_path_prefix(input_prefix):
 		raise NotADirectoryError("The specified path doesn't exist!")
 
 def get_extrinsic_path(camera:list,config_path=GLOBAL_CONFIG_PATH):
-	path=list(map(lambda x: os.path.join(config_path,'config_extrinsic_%s_temp.MOV'%x),camera))
+	path=list(map(lambda x: os.path.join(config_path,'config_extrinsic_%s.MOV'%x),camera))
 	path.append(None)
 	path.append(None)
 	return path
@@ -139,14 +139,14 @@ def reformat_filepath(path,name,camera:list):
 		print("file path %s doesn't exist, creating one..." % real_path)
 
 	#next, set up the folder for this session
-	condition2=namelist[2]=='habituation'
-	if condition2:
-		full_path = os.path.join(subfolder,str(sessID)+date+namelist[1]+'_habituation')
-	else:
-		full_path=os.path.join(subfolder,str(sessID)+date+namelist[1]+'_'+namelist[2]+r"_(A)"+namelist[3]+r"_(B)"+namelist[5]+r"_(C)"+namelist[7])
+#	condition2=namelist[2]=='habituation'
+#	if condition2:
+#		full_path = os.path.join(subfolder,str(sessID)+date+namelist[1]+'_habituation')
+#	else:
+	full_path=os.path.join(subfolder,str(sessID)+date+namelist[1]+'_'+namelist[2]+r"_(A)"+namelist[3]+namelist[4]+r"_(B)"+namelist[5]+namelist[6]+r"_(C)"+namelist[7]+namelist[8])
 
 	# for repeated sessions, the following method overwrite the original
-	# TODO: is this ever invoked?
+	# TODO: is this ever invoked? - no because event_id can't be a duplicate
 	if os.path.exists(full_path):
 		shutil.rmtree(full_path)
 		os.mkdir(full_path)
@@ -174,10 +174,24 @@ def copy_config(filepath,version=None):
 	archive_items = os.listdir(GLOBAL_CONFIG_ARCHIVE_PATH)
 	versions = [(int(re.findall(r"_v(\d+)_", i)[0]), i) for i in archive_items]
 	versions = sorted(versions)
+	versions.reverse()
+
+	subitems = [re.search(r'_(\d+).MOV', i) for i in os.listdir(os.path.join(filepath, 'raw'))]
+	local_cameras = {i.group(1) for i in subitems if i is not None}
+	this_version = None
 
 	if version is None:
-		version_fullname=versions[-1][1]
-		this_version=versions[-1][0]
+		#check the camera numbers in the archive against the recorded cameras for this session
+		for v in versions:
+			subitems = [re.search(r'_(\d+).toml', i) for i in os.listdir(os.path.join(GLOBAL_CONFIG_ARCHIVE_PATH,v[1]))]
+			archive_cameras = {i.group(1) for i in subitems if i is not None}
+
+			if local_cameras == archive_cameras:			
+				version_fullname=v[1]
+				this_version=v[0]
+				break
+		if this_version is None:
+			raise Exception('Could not find an archived configuration with the recorded cameras!')
 	else:
 		version_numbers=[a[0] for a in versions]
 		if version not in version_numbers:
@@ -187,8 +201,9 @@ def copy_config(filepath,version=None):
 			version_fullname=versions[version][1]
 
 	config_path = os.path.join(GLOBAL_CONFIG_ARCHIVE_PATH,version_fullname)
-	if not os.path.exists(local_config_path):
-		shutil.copytree(config_path, local_config_path)
+	if os.path.exists(local_config_path):
+		shutil.rmtree(local_config_path) #TODO: we may want to have an overwrite option?
+	shutil.copytree(config_path, local_config_path)
 
 	return this_version
 
@@ -253,7 +268,7 @@ def main():
 	# filename = '&1207&alec_testing&alec_testing&&&&&&&Zach&'
 	filename = '&1207&alec_testing&alec_testing&juvenile&1190&&&&&Zach&'
 	
-	camera_list = [17391304, 17391290, 21259803, 19412282]
+	camera_list = [17391304, 17391290, 21340171, 19412282]
 
 	reformat_filepath('', filename, camera_list)
 

@@ -13,7 +13,7 @@ from scipy.cluster.vq import whiten
 from scipy.sparse import lil_matrix
 from scipy.cluster.hierarchy import linkage, fcluster
 
-from utils.calibration_utils import get_expected_corners
+from utils.calibration_3d_utils import get_expected_corners
 
 from utils.triangulate import triangulate_simple, triangulate_points, \
     reprojection_error_und
@@ -56,12 +56,12 @@ def reconstruct_checkerboard(row, camera_mats, camera_mats_dist):
     
     return p3ds, errors
 
-def detect_aruco_2(gray,intrinsics, board,params):
+def detect_aruco_2(gray,intrinsics=None, board=None,params=None):
     # gray = cv2.GaussianBlur(gray, (5, 5), 0)
 
     corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
         gray, board.dictionary, parameters=params)
-    cv2.aruco.drawDetectedMarkers(gray, corners, ids, borderColor=225)
+    # cv2.aruco.drawDetectedMarkers(gray, corners, ids, borderColor=225)
 
     if intrinsics is None:
         INTRINSICS_K = INTRINSICS_D = None
@@ -70,9 +70,9 @@ def detect_aruco_2(gray,intrinsics, board,params):
         INTRINSICS_D = np.array(intrinsics['dist_coeff'])
 
     if ids is None:
-        return [], []
+        return [], [], [], []
     elif len(ids) < 2:
-        return corners, ids
+        return corners, ids, corners, ids
 
     detectedCorners, detectedIds, rejectedCorners, recoveredIdxs = \
         cv2.aruco.refineDetectedMarkers(gray, board, corners, ids,
@@ -87,17 +87,16 @@ def detect_aruco_2(gray,intrinsics, board,params):
         if detectedIds is None:
             detectedCorners = detectedIds = []
 
-    return detectedCorners, detectedIds
+    return detectedCorners, detectedIds, corners, ids
+
+params = cv2.aruco.DetectorParameters_create()
+params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
+params.adaptiveThreshWinSizeMin = 100
+params.adaptiveThreshWinSizeMax = 600
+params.adaptiveThreshWinSizeStep = 50
+params.adaptiveThreshConstant = 5
 
 def detect_aruco(gray, intrinsics, board):
-    #gray = cv2.GaussianBlur(gray, (5, 5), 0)
-
-    params = cv2.aruco.DetectorParameters_create()
-    params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
-    params.adaptiveThreshWinSizeMin = 100
-    params.adaptiveThreshWinSizeMax = 600
-    params.adaptiveThreshWinSizeStep = 50
-    params.adaptiveThreshConstant = 5
 
     corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
         gray, board.dictionary, parameters=params)

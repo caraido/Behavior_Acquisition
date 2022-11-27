@@ -34,9 +34,9 @@ D = dlmread(dlc_filename, ',', 3, 1);
 Nframes = size(D,1);
 
 %% acquire the original data
-snout_x = D(:,1);
-snout_y = D(:,2);
-snout_L = D(:,3);
+nose_x = D(:,1);
+nose_y = D(:,2);
+nose_L = D(:,3);
 
 earL_x = D(:,4);
 earL_y = D(:,5);
@@ -46,15 +46,15 @@ earR_x = D(:,7);
 earR_y = D(:,8);
 earR_L = D(:,9);
 
-tailbase_x = D(:,10);
-tailbase_y = D(:,11);
-tailbase_L = D(:,12);
+tail_base_x = D(:,10);
+tail_base_y = D(:,11);
+tail_base_L = D(:,12);
 
 %% pass the threshold
-ok_ind = snout_L > likelihood_thres & ...
+ok_ind = nose_L > likelihood_thres & ...
     earL_L > likelihood_thres & ...
     earR_L > likelihood_thres & ...
-    tailbase_L > likelihood_thres;
+    tail_base_L > likelihood_thres;
 
 Nframes_passed = sum(ok_ind);
 
@@ -62,14 +62,14 @@ msg = sprintf('%d of %d frames passed likelihood threshold', Nframes_passed, Nfr
 disp(msg);
 
 %% data that passed the threshold
-snout_x = snout_x(ok_ind);
-snout_y = snout_y(ok_ind);
+nose_x = nose_x(ok_ind);
+nose_y = nose_y(ok_ind);
 earL_x = earL_x(ok_ind);
 earL_y = earL_y(ok_ind);
 earR_x = earR_x(ok_ind);
 earR_y = earR_y(ok_ind);
-tailbase_x = tailbase_x(ok_ind);
-tailbase_y = tailbase_y(ok_ind);
+tail_base_x = tail_base_x(ok_ind);
+tail_base_y = tail_base_y(ok_ind);
 
 headbase_x = mean([earL_x, earR_x],2);
 headbase_y = mean([earL_y, earR_y],2);
@@ -77,12 +77,12 @@ headbase_y = mean([earL_y, earR_y],2);
 resultStruct.headbase_x = headbase_x;
 resultStruct.headbase_y = headbase_y;
 
-dx = snout_x-headbase_x;
-dy = snout_y-headbase_y;
+dx = nose_x-headbase_x;
+dy = nose_y-headbase_y;
 
 body_center = zeros(Nframes_passed,2);
 for i=1:Nframes_passed
-    body_center(i,:) = polygonCentroid([earR_x(i), earR_y(i); earL_x(i), earL_y(i); snout_x(i), snout_y(i); tailbase_x(i) tailbase_y(i)]);
+    body_center(i,:) = polygonCentroid([earR_x(i), earR_y(i); earL_x(i), earL_y(i); nose_x(i), nose_y(i); tail_base_x(i) tail_base_y(i)]);
 end
 
 dx = body_center(:,1) - arena_center(1);
@@ -93,12 +93,12 @@ resultStruct.bodyCenterAngle = 180+rad2deg(cart2pol(dx,dy));
 %% get head triangle area
 head_triangle_area = zeros(Nframes_passed,1);
 for i=1:Nframes_passed
-  head_triangle_area(i) = abs(triangleArea([earR_x(i), earR_y(i); earL_x(i), earL_y(i); snout_x(i), snout_y(i)]));
+  head_triangle_area(i) = abs(triangleArea([earR_x(i), earR_y(i); earL_x(i), earL_y(i); nose_x(i), nose_y(i)]));
 end
 %% get body triangle area
 body_triangle_area = zeros(Nframes_passed,1);
 for i=1:Nframes_passed
-  body_triangle_area(i) = abs(triangleArea([earR_x(i), earR_y(i); earL_x(i), earL_y(i); tailbase_x(i), tailbase_y(i)]));
+  body_triangle_area(i) = abs(triangleArea([earR_x(i), earR_y(i); earL_x(i), earL_y(i); tail_base_x(i), tail_base_y(i)]));
 end
 
 %% get binocular view
@@ -114,7 +114,7 @@ gazeLeft_lines = [headbase_x, headbase_y, dx_L, dy_L];
 gazeRight_lines = [headbase_x, headbase_y, dx_R, dy_R];
 gazeFront_lines = [headbase_x, headbase_y, dx, dy];
 
-%center_to_snout = sqrt((snout_x - arena_center(1)).^2 + (snout_y - arena_center(2)).^2);
+%center_to_nose = sqrt((nose_x - arena_center(1)).^2 + (nose_y - arena_center(2)).^2);
 
 circ_inner = double([arena_center, inner_r_pixel]);
 circ_outer = double([arena_center, outer_r_pixel]);
@@ -177,8 +177,8 @@ for i=1:Nframes_passed
        outer_angles_left(i) = nan;
    end
 
-   dist_snout2center = sqrt((snout_x(i)-arena_center(1))^2+(snout_y(i)-arena_center(2))^2);
-   logic_snout2center = dist_snout2center>outer_r_pixel | dist_snout2center<inner_r_pixel;
+   dist_nose2center = sqrt((nose_x(i)-arena_center(1))^2+(nose_y(i)-arena_center(2))^2);
+   logic_nose2center = dist_nose2center>outer_r_pixel | dist_nose2center<inner_r_pixel;
 
    dist_earL2center = sqrt((earL_x(i)-arena_center(1))^2+(earL_y(i)-arena_center(2))^2);
    logic_earL2center = dist_earL2center>outer_r_pixel | dist_earL2center<inner_r_pixel;
@@ -186,10 +186,10 @@ for i=1:Nframes_passed
    dist_earR2center = sqrt((earR_x(i)-arena_center(1))^2+(earR_y(i)-arena_center(2))^2);
    logic_earR2center = dist_earR2center>outer_r_pixel | dist_earR2center<inner_r_pixel;
 
-   dist_tail2center = sqrt((tailbase_x(i)-arena_center(1))^2+(tailbase_y(i)-arena_center(2))^2);
+   dist_tail2center = sqrt((tail_base_x(i)-arena_center(1))^2+(tail_base_y(i)-arena_center(2))^2);
    logic_tail2center = dist_tail2center>outer_r_pixel | dist_tail2center<inner_r_pixel;
 
-   if logic_earL2center|logic_earR2center|logic_snout2center|logic_tail2center
+   if logic_earL2center|logic_earR2center|logic_nose2center|logic_tail2center
        inner_angles_left(i)=nan;
        outer_angles_left(i)=nan;
     end
@@ -234,8 +234,8 @@ for i=1:Nframes_passed
        inner_angles_right(i) = rad2deg(cart2pol(dx,dy));  
        outer_angles_right(i) = nan;
    end
-    dist_snout2center = sqrt((snout_x(i)-arena_center(1))^2+(snout_y(i)-arena_center(2))^2);
-   logic_snout2center = dist_snout2center>outer_r_pixel | dist_snout2center<inner_r_pixel;
+    dist_nose2center = sqrt((nose_x(i)-arena_center(1))^2+(nose_y(i)-arena_center(2))^2);
+   logic_nose2center = dist_nose2center>outer_r_pixel | dist_nose2center<inner_r_pixel;
 
    dist_earL2center = sqrt((earL_x(i)-arena_center(1))^2+(earL_y(i)-arena_center(2))^2);
    logic_earL2center = dist_earL2center>outer_r_pixel | dist_earL2center<inner_r_pixel;
@@ -243,10 +243,10 @@ for i=1:Nframes_passed
    dist_earR2center = sqrt((earR_x(i)-arena_center(1))^2+(earR_y(i)-arena_center(2))^2);
    logic_earR2center = dist_earR2center>outer_r_pixel | dist_earR2center<inner_r_pixel;
 
-   dist_tail2center = sqrt((tailbase_x(i)-arena_center(1))^2+(tailbase_y(i)-arena_center(2))^2);
+   dist_tail2center = sqrt((tail_base_x(i)-arena_center(1))^2+(tail_base_y(i)-arena_center(2))^2);
    logic_tail2center = dist_tail2center>outer_r_pixel | dist_tail2center<inner_r_pixel;
 
-   if logic_earL2center|logic_earR2center|logic_snout2center|logic_tail2center
+   if logic_earL2center|logic_earR2center|logic_nose2center|logic_tail2center
        inner_angles_right(i)=nan;
        outer_angles_right(i)=nan;
    end
@@ -290,8 +290,8 @@ for i=1:Nframes_passed
        outer_angles_front(i) = nan;
    end
 
-   dist_snout2center = sqrt((snout_x(i)-arena_center(1))^2+(snout_y(i)-arena_center(2))^2);
-   logic_snout2center = dist_snout2center>outer_r_pixel | dist_snout2center<inner_r_pixel;
+   dist_nose2center = sqrt((nose_x(i)-arena_center(1))^2+(nose_y(i)-arena_center(2))^2);
+   logic_nose2center = dist_nose2center>outer_r_pixel | dist_nose2center<inner_r_pixel;
 
    dist_earL2center = sqrt((earL_x(i)-arena_center(1))^2+(earL_y(i)-arena_center(2))^2);
    logic_earL2center = dist_earL2center>outer_r_pixel | dist_earL2center<inner_r_pixel;
@@ -299,10 +299,10 @@ for i=1:Nframes_passed
    dist_earR2center = sqrt((earR_x(i)-arena_center(1))^2+(earR_y(i)-arena_center(2))^2);
    logic_earR2center = dist_earR2center>outer_r_pixel | dist_earR2center<inner_r_pixel;
 
-   dist_tail2center = sqrt((tailbase_x(i)-arena_center(1))^2+(tailbase_y(i)-arena_center(2))^2);
+   dist_tail2center = sqrt((tail_base_x(i)-arena_center(1))^2+(tail_base_y(i)-arena_center(2))^2);
    logic_tail2center = dist_tail2center>outer_r_pixel | dist_tail2center<inner_r_pixel;
 
-   if logic_earL2center|logic_earR2center|logic_snout2center|logic_tail2center
+   if logic_earL2center|logic_earR2center|logic_nose2center|logic_tail2center
        inner_angles_front(i)=nan;
        outer_angles_front(i)=nan;
    end

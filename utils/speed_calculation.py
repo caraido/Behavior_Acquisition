@@ -8,12 +8,12 @@ def get_speed(pose):
 	get_speed() takes the pose of each frame, arena center and the radius of the arena to calculate the speed of each time point
 	'''
 	left_ear = np.stack((
-		pose['leftear']['x'],
-		pose['leftear']['y'],
+		pose['left_ear']['x'],
+		pose['left_ear']['y'],
 	)).transpose()  # should be t-by-2
 	right_ear = np.stack((
-		pose['rightear']['x'],
-		pose['rightear']['y'],
+		pose['right_ear']['x'],
+		pose['right_ear']['y'],
 	)).transpose()  # should be t-by-2
 
 	head_center = (left_ear + right_ear) / 2

@@ -13,6 +13,19 @@ from scipy.sparse import lil_matrix
 from scipy.cluster.hierarchy import linkage, fcluster
 from utils.triangulation_utils import triangulate_points, triangulate_simple, reprojection_error_und
 
+# params = cv2.aruco.DetectorParameters_create()
+# params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX#CONTOUR
+# params.adaptiveThreshWinSizeMin = 3
+# params.adaptiveThreshWinSizeMax = 100
+# params.adaptiveThreshWinSizeStep = 2 #should be 1, maybe?
+# params.adaptiveThreshConstant = 2
+# params.detectInvertedMarker = True #big performance improvement?
+params = cv2.aruco.DetectorParameters_create()
+params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
+params.adaptiveThreshWinSizeMin = 100
+params.adaptiveThreshWinSizeMax = 600
+params.adaptiveThreshWinSizeStep = 50
+params.adaptiveThreshConstant = 5
 
 def get_expected_corners(board):
 	board_size = board.getChessboardSize()
@@ -38,12 +51,7 @@ def fill_points(corners, ids, board):
 
 def detect_aruco(gray, intrinsics, board):
 
-	params = cv2.aruco.DetectorParameters_create()
-	params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
-	params.adaptiveThreshWinSizeMin = 100
-	params.adaptiveThreshWinSizeMax = 700
-	params.adaptiveThreshWinSizeStep = 50
-	params.adaptiveThreshConstant = 5
+	
 
 	corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
 		gray, board.dictionary, parameters=params)
@@ -65,6 +73,11 @@ def detect_aruco(gray, intrinsics, board):
 										INTRINSICS_K, INTRINSICS_D,
 										parameters=params)
 
+	# detectedCorners = np.ascontiguousarray(np.array(detectedCorners)[:,0,0,:].reshape((-1,1,2)))
+
+	#this only returns the CHECKERBOARD corners, not the markers
+	#NOTE: the checkerboard affords sub-pixel resolution, thus why it is used
+	# but it is important to ensure that there are enough frames to calibrate correctly
 	if len(detectedCorners) > 0:
 		ret, detectedCorners, detectedIds = cv2.aruco.interpolateCornersCharuco(
 			detectedCorners, detectedIds, gray, board)
@@ -77,20 +90,30 @@ def detect_aruco(gray, intrinsics, board):
 
 def estimate_pose_aruco(gray, intrinsics, board):
 	detectedCorners, detectedIds = detect_aruco(gray, intrinsics, board)
-	if len(detectedIds) < 3:
+	if len(detectedIds) < 3: #cannot solve the pose estimation problem
 		return False, None
+	elif len(detectedIds) < 5: #points might be colinear
+		columnId = detectedIds % 2 #TODO: this assumes a particular charuco board!!
+		if not any(columnId) or all(columnId): #the points are colinear 
+			return False, None
 
+	#TODO: defer estimation until we know we've detected corners from multiple cameras
+	
 	INTRINSICS_K = np.array(intrinsics['camera_mat'])
 	INTRINSICS_D = np.array(intrinsics['dist_coeff'])
-	if len(INTRINSICS_D)==4:
+	if len(INTRINSICS_D)==4: #for side cameras
 		undistortedCorners=cv2.fisheye.undistortPoints(detectedCorners,INTRINSICS_K,INTRINSICS_D)
 		ret,rvec,tvec= cv2.aruco.estimatePoseCharucoBoard(undistortedCorners,detectedIds,board,cameraMatrix=np.eye(3),
 														  distCoeffs=np.zeros([5]),rvec=np.array([]),tvec=np.array([]),useExtrinsicGuess=False)
-	else:
+	else: #for top camera
 		undistortedCorners=cv2.undistortPoints(detectedCorners,INTRINSICS_K,INTRINSICS_D)
 		ret, rvec, tvec = cv2.aruco.estimatePoseCharucoBoard(
 			undistortedCorners, detectedIds, board, cameraMatrix=np.eye(3), distCoeffs=np.zeros([5]),
 			rvec=np.array([]), tvec=np.array([]), useExtrinsicGuess=False)
+		# ret, rvec, tvec = cv2.aruco.estimatePoseCharucoBoard(
+		# 	detectedCorners, detectedIds, board, INTRINSICS_K, INTRINSICS_D,
+		# 	rvec=np.array([]), tvec=np.array([]), useExtrinsicGuess=False)
+			
 
 	if not ret or rvec is None or tvec is None:
 		return False, None
@@ -164,6 +187,10 @@ def mean_transform_robust(M_list, approx=None, error=0.3):
 def get_matrices(vid_indices, videos, intrinsics_dict, board, skip=80):
 	minlen = np.inf
 	caps = dict()
+	# print(board)
+	# print(vid_indices)
+	# print(intrinsics_dict)
+
 	for vid_idx, vid in zip(vid_indices, videos):
 		cap = cv2.VideoCapture(vid)
 		caps[vid_idx] = cap
@@ -173,12 +200,13 @@ def get_matrices(vid_indices, videos, intrinsics_dict, board, skip=80):
 	go = skip
 	all_Ms = []
 	all_points = []
+	# history = []
 
 	for framenum in trange(minlen, ncols=70):
 		M_dict = dict()
 		point_dict = dict()
 
-		for vid_idx in vid_indices:
+		for vid_idx in reversed(vid_indices): #3,2,1,0
 			cap = caps[vid_idx]
 			ret, frame = cap.read()
 
@@ -188,9 +216,18 @@ def get_matrices(vid_indices, videos, intrinsics_dict, board, skip=80):
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			intrinsics = intrinsics_dict[vid_idx]
 			success, result = estimate_pose_aruco(gray, intrinsics, board)
-			if not success:
-				continue
+			# print(success)
+			# print(result)
 
+			if not success:
+				# if vid_idx == 1 and len(M_dict) > 0:
+				# 	history.append({'frame':framenum,'numUndistorted':result})
+				continue
+			# elif vid_idx == 1 and len(M_dict) > 0:
+				#we have succeeeded (on camera 3 or 2)
+				# print('great')
+			
+			
 			corners, ids, rvec, tvec = result
 			M_dict[vid_idx] = make_M(rvec, tvec)
 
@@ -484,8 +521,9 @@ def bundle_adjust(all_points, vid_indices, cam_mats, loss='linear'):
 	return extrinsics_new
 
 
-def get_extrinsics(vid_indices, videos, intrinsics_dict, cam_align, board, skip=30):
-	matrix_list, point_list = get_matrices(vid_indices, videos, intrinsics_dict, board, skip=skip)
+def get_extrinsics(vid_indices, videos, intrinsics_dict, cam_align, board, skip=50):
+	matrix_list, point_list = get_matrices(vid_indices, videos, intrinsics_dict, board, skip=1)
+	print(f'Got {len(matrix_list)} matrices')
 
 	graph = get_calibration_graph(matrix_list, vid_indices)
 	pairs = find_calibration_pairs(graph, source=cam_align)

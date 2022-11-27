@@ -28,6 +28,7 @@
 
 # when all the threads are done
 # delete SSD folder
+from multiprocessing.sharedctypes import Value
 import re
 import threading
 
@@ -46,6 +47,7 @@ import scipy.io.wavfile as wavfile
 import shutil
 import toml
 import time
+from datetime import datetime
 from utils.calibration_3d_utils import get_extrinsics
 from utils.reorganize_utils import reorganize_mat_file
 from utils.squeaks_utils import Squeaks
@@ -53,12 +55,14 @@ import filecmp
 
 
 # top camera dlc config
-top_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\config.yaml'
+top_model =  'HipsDontLieBacksDo'
+top_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\\' + top_model + r'-Devon-2021-10-27\config.yaml'
 # side camera dlc config
-side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\side_cameras_distorted-Devon-2021-03-17\config.yaml'
+# side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\SideCamera2-Devon-2021-11-01\config.yaml'
+side_config = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\SideCamera3-Devon-2022-01-27\config.yaml'
 dlc_path = [top_config,side_config]
 HDD_path = r'E:\behavior_data_archive'
-server_path=r'R:\SchwartzLab\Behavior'
+server_path=r'\\fsmresfiles.fsm.northwestern.edu\fsmresfiles\Ophthalmology\Research\SchwartzLab\Behavior'
 
 
 class ProcessingGroup:
@@ -97,6 +101,12 @@ class ProcessingGroup:
 		self.processpath = 'undistorted' # process path creates a folder to save processed undistorted videos under root path
 		self.config_path = os.path.join(self.rootpath, 'config')
 		self.squeak_ob.set_root_path(rootpath)
+		self.raw_path = os.path.join(self.rootpath, 'raw')
+		self.tracked_path = os.path.join(self.rootpath, 'DLC')
+		self.audio_path = os.path.join(self.rootpath, 'audio')
+		self.gaze_path = os.path.join(self.rootpath, 'gaze')
+		self.undistorted_path = os.path.join(self.rootpath, 'undistorted')
+		self.reprojected_path = os.path.join(self.rootpath, 'reproject')
 
 	@property
 	def processpath(self):
@@ -142,19 +152,21 @@ class ProcessingGroup:
 		pass
 
 	def post_process(self,
-					 intrinsic=True,
-					 alignment=True,
+					 intrinsic=False,
+					 alignment=False,
 					 extrinsic=True,
 					 undistort=True,
 					 copy_config=True,
-					 dlc=True,
+					 dlc_top=True,
+					 dlc_side=True,
 					 triangulate=True,
 					 reproject=True,
 					 gaze=True,
 					 dsqk=True,
-					 reorganize=True,
-					 server=True,
-					 HDD=True):
+					 reorganize=False,
+					 server=False,
+					 HDD=False):
+		#self.reorganize()
 
 		# self.copy_configs()
 		undistort_thread=None
@@ -207,8 +219,8 @@ class ProcessingGroup:
 			undistort_thread.start()
 
 		# overwrite
-		if dlc:
-			dlc_threads=self.dlc_analysis()
+		if dlc_top or dlc_side:
+			dlc_threads=self.dlc_analysis(top=dlc_top, side=dlc_side)
 
 		# overwrite
 		if gaze:
@@ -216,11 +228,11 @@ class ProcessingGroup:
 
 		# overwrite
 		if triangulate:
-			triangulate_kalman(self.rootpath)
+			triangulate_kalman(self.tracked_path, self.config_path, top_config, side_config)
 
 		# overwrite
 		if reproject:
-			reproject_threads=reproject_3d_to_2d(self.rootpath)
+			reproject_threads=reproject_3d_to_2d(self.raw_path, self.tracked_path, self.config_path, self.reprojected_path)
 
 		# join all the threads
 		try:
@@ -288,7 +300,7 @@ class ProcessingGroup:
 				temp_config_path = os.path.join(self.global_config_path, item)
 				self.in_calib.save_processed_config(temp_config_path)
 				try:
-					os.remove(temp_config_path)
+					os.remove(temp_config_path) #TODO: DEFINITIELY NOT THIS
 					count += 1
 				except:
 					Warning("can't remove the temp config file")
@@ -299,7 +311,7 @@ class ProcessingGroup:
 		path = os.path.join(self.global_config_path, alignment)
 		self.al_calib.save_processed_config(path)
 		try:
-			os.remove(path)
+			os.remove(path) #TODO: DEFINITELY NOT THIS
 			count=1
 		except:
 			Warning("can't remove the temp config file")
@@ -321,6 +333,7 @@ class ProcessingGroup:
 				intrinsic_list.append(intrinsic_path)
 			if 'MOV' in item:
 				video_path = os.path.join(self.global_config_path, item)
+				print(video_path)
 				video_list.append(video_path)
 
 		# only calibrate when there're 4 videos and 4 intrinsic config detected
@@ -354,8 +367,8 @@ class ProcessingGroup:
 
 			# remove everything after calibration
 			for item in items:
-				if 'extrinsic' in item and 'temp' in item:
-					os.remove(os.path.join(self.global_config_path,item))
+				if 'extrinsic' in item and 'temp' in item and 'MOV' not in item:
+					os.remove(os.path.join(self.global_config_path,item)) #TODO: MOST DEFINITELY NOT THIS
 		return count
 
 	def find_windows(self):
@@ -381,9 +394,19 @@ class ProcessingGroup:
 			with open(os.path.join(self.global_config_path, alignment), 'a') as f:
 				toml.dump(results, f, encoder=toml.TomlNumpyEncoder())
 
-	def dlc_analysis(self):
+	def dlc_analysis(self, top=True, side=True):
 		# dlc anlysis on both top and side cameras
-		threads=dlc_analysis(self.rootpath, self.dlcpath,dlc_top=self.dlc_top,dlc_side=self.dlc_side)
+		if top:
+			dlc_top = self.dlc_top
+		else:
+			dlc_top = top
+		
+		if side:
+			dlc_side = self.dlc_side
+		else:
+			dlc_side = side
+
+		threads=dlc_analysis(self.raw_path, self.tracked_path, self.dlcpath,dlc_top=dlc_top,dlc_side=dlc_side)
 		if threads is not None:
 			return threads
 		else:
@@ -392,7 +415,7 @@ class ProcessingGroup:
 	def gaze_analysis(self):
 		# gaze analysis on top camera
 		warnings.filterwarnings('ignore') # ignore warning
-		gaze_model = Gaze_angle(self.config_path)
+		gaze_model = Gaze_angle(self.config_path, model_name=top_model)
 
 		# binocular gaze
 		gaze_model.gazePoint = 0
@@ -409,10 +432,13 @@ class ProcessingGroup:
 		BK_filepath=os.path.join(self.rootpath,'B&K_audio.tdms')
 		dodo_filepath=os.path.join(self.rootpath, 'dodo_audio.tdms')
 		BK_audio=read_audio(BK_filepath)
-		dodo_audio=read_audio(os.path.join(dodo_filepath))
-
 		wavfile.write(BK_filepath[:-4] + 'wav', int(sample_rate), BK_audio[0])
-		wavfile.write(dodo_filepath[:-4] + 'wav', int(sample_rate), dodo_audio[0])
+
+		try:
+			dodo_audio=read_audio(os.path.join(dodo_filepath))
+			wavfile.write(dodo_filepath[:-4] + 'wav', int(sample_rate), dodo_audio[0])
+		except:
+			pass
 		print("saved audio file")
 
 	def dsqk_analysis(self,save_spectrogram=False):
@@ -423,7 +449,7 @@ class ProcessingGroup:
 		saving_filepath1=os.path.join(self.rootpath,'Dodo_audio_squeaks.mat')
 		saving_filepath2 = os.path.join(self.rootpath, 'B&K_audio_squeaks.mat')
 
-		if not os.path.exists(saving_filepath1):
+		if not os.path.exists(saving_filepath1) and os.path.exists(filepath1):
 			call_time1 = self.squeak_ob(fname1)
 			self.squeak_ob.draw_Dodo_squeaks(self.rootpath, call_time1)
 		if not os.path.exists(saving_filepath2):
@@ -436,48 +462,48 @@ class ProcessingGroup:
 
 
 	def reorganize(self):
-
+		if not os.path.exists(self.reprojected_path):
+			os.mkdir(self.reprojected_path)
+		if not os.path.exists(self.tracked_path):
+			os.mkdir(self.tracked_path)
+		if not os.path.exists(self.raw_path):
+			os.mkdir(self.raw_path)
+		if not os.path.exists(self.audio_path):
+			os.mkdir(self.audio_path)
+			
 		reorganize_mat_file(self.rootpath,self.squeak_ob.load_squeak_time_matlab)
-
+		
 		items = os.listdir(self.rootpath)
-		if 'reproject' in str(items):
-			if not os.path.exists(os.path.join(self.rootpath, 'reproject')):
-				os.mkdir(os.path.join(self.rootpath,'reproject'))
+		if 'reproject' in str(items):			
 			for item in items:
 				if os.path.isfile(os.path.join(self.rootpath, item)):
 					if 'reproject' in item:
 						file=os.path.join(self.rootpath,item)
-						file2=os.path.join(self.rootpath,'reproject',item)
+						file2=os.path.join(self.reprojected_path,item)
 						shutil.move(file,file2)
 
 		if 'DLC' in str(items):
-			if not os.path.exists(os.path.join(self.rootpath, 'DLC')):
-				os.mkdir(os.path.join(self.rootpath, 'DLC'))
 			for item in items:
 				if os.path.isfile(os.path.join(self.rootpath, item)):
 					if 'DLC' in item:
 						file = os.path.join(self.rootpath, item)
-						file2 = os.path.join(self.rootpath, 'DLC', item)
+						file2 = os.path.join(self.tracked_path, item)
 						shutil.move(file, file2)
 
 		if '.MOV' in str(items):
-			if not os.path.exists(os.path.join(self.rootpath, 'raw')):
-				os.mkdir(os.path.join(self.rootpath, 'raw'))
 			for item in items:
 				if os.path.isfile(os.path.join(self.rootpath, item)):
 					if '.MOV' in item:
 						file = os.path.join(self.rootpath, item)
-						file2 = os.path.join(self.rootpath, 'raw', item)
+						file2 = os.path.join(self.raw_path, item)
 						shutil.move(file, file2)
 
 		if 'audio' in str(items):
-			if not os.path.exists(os.path.join(self.rootpath, 'audio')):
-				os.mkdir(os.path.join(self.rootpath, 'audio'))
 			for item in items:
 				if os.path.isfile(os.path.join(self.rootpath, item)):
 					if 'audio' in item or 'squeaks' in item or 'spectrogram' in item:
 						file = os.path.join(self.rootpath, item)
-						file2 = os.path.join(self.rootpath, 'audio', item)
+						file2 = os.path.join(self.audio_path, item)
 						shutil.move(file, file2)
 
 		print('finish reorganizing folder %s'%self.rootpath)
@@ -500,6 +526,7 @@ class ProcessingGroup:
 		else:
 			items=os.listdir(self.rootpath)
 			for i in items:
+				
 				full_server_i=os.path.join(full_server_path,i)
 				full_local_i=os.path.join(self.rootpath,i)
 				if os.path.isdir(full_local_i): # if it is a folder
@@ -509,6 +536,8 @@ class ProcessingGroup:
 					else:
 						subitems = os.listdir(full_local_i)
 						for sub_i in subitems:
+							if '.ipynb_checkpoints' in sub_i: #TODO: this is a bug, these folders shouldn't be here
+								continue
 							full_local_sub_i=os.path.join(full_local_i,sub_i)
 							full_server_sub_i=os.path.join(full_server_i,sub_i)
 							if not os.path.isfile(full_server_sub_i) or not filecmp.cmp(full_server_sub_i, full_local_sub_i):
@@ -554,7 +583,7 @@ class ProcessingGroup:
 		name = os.path.split(self.rootpath)[-1]
 		backup_path = os.path.join(HDD_path, name)
 		try:
-			shutil.copytree(self.rootpath, backup_path)
+			shutil.copytree(self.rootpath, backup_path, dirs_exist_ok=True)
 		except shutil.Error as e:
 			for src, dst, msg in e.args[0]:
 				# src is source name
@@ -631,56 +660,77 @@ class ProcessingGroup:
 				shutil.rmtree(subpath)
 
 
-if __name__ == '__main__':
-	import tqdm
+def main():
 	working_dir = r'D:\Desktop'
 	settings={'config_version':None,
 			  'dlc_top':True,
 			  'dlc_side':True,
 			  'save_spectrogram':True
 			  }
-	items =os.listdir(working_dir)
 	pg = ProcessingGroup()
-	server_items=os.listdir(server_path)
+	logger = open(os.path.join(working_dir,'log.txt'),'a')
 
-	useful=list(map(lambda x:x.isdigit(),items))
-	new_items=list(np.array(items)[useful])
-	for item in tqdm.tqdm(new_items):
-		#if int(item)>=1131:
-			print(item)
-			path = os.path.join(working_dir, item)
-			server_animal_path = os.path.join(server_path, item)
-			server_subitem=None
+	from utils.datajoint_utils import DjConn
+	conn = DjConn()
+	conn.connect_to_datajoint()
 
-			subitems= os.listdir(path)
-			subitems=list(sorted(subitems))
-			for i, subitem in enumerate(subitems):
-				try:
-					server_subitem = os.listdir(server_animal_path)
-				except:
-					pass
-				#if server_subitem is None or subitem not in server_subitem:
+	# choose which sessions to run by a database query
+	# order by session id == chronological
+	sessions = (conn.sln.SocialBehaviorSession() & 'event_id>836').fetch('event_id','animal_id',as_dict=True,order_by='event_id')
+	
+	for session in sessions:
+		print(session)
+		animal_path = os.path.join(working_dir, str(session['animal_id']))
+		try:
+			session_path, = [x for x in os.listdir(animal_path) if x.startswith(str(session['event_id'])+'_')]
+		except ValueError:
+			logger.write(f'[{datetime.now()}]:\n\t{session}\n\tNOT FOUND\n') #TODO: flesh this out
+			continue	
 
-				if '07-23' in subitem or '07-22' in subitem:
-					full_path=os.path.join(path,subitem)
-					if full_path!='D:\\Desktop\\1131\\2021-06-17_habituation' and full_path!='D:\\Desktop\\1136\\2021-06-17_habituation':
-							#pg.half_revert(full_path)
+		full_path=os.path.join(animal_path,session_path)
+		pg(full_path)
+		print('Analysing {}'.format(full_path))
+		pg.assign_settings(settings)
+		pg.post_process(intrinsic=False,
+						alignment=True,
+						extrinsic=True,
+						undistort=False,
+						copy_config=False,
+						dlc_top=False,
+						dlc_side=False,
+						triangulate=False,
+						reproject=False,
+						reorganize=False,
+						gaze=False,
+						dsqk=False,
+						server=False,
+						HDD=False)
+		logger.write(f'[{datetime.now()}]:\n\t{session}\n\t{top_config}\n\t{side_config}\n') #TODO: flesh this out
+	logger.close()
 
-							pg(full_path)
-							pg.assign_settings(settings)
-							pg.post_process(intrinsic=False,
-											alignment=False,
-											extrinsic=False,
-											undistort=False,
-											copy_config=True,
-											dlc=False,
-											triangulate=False,
-											reproject=False,
-											reorganize=False,
-											gaze=False,
-											dsqk=False,
-											server=False,
-											HDD=False)
+def not_main():
+	pg = ProcessingGroup()
+	pg('D:\\Desktop\\1257\\1132_2022-09-06_alec_testing_alec_testing_(A)empty_(B)empty_(C)empty')
+	# pg('D:\\Desktop\\')
+	pg.post_process(intrinsic=False,
+		alignment=False,
+		extrinsic=False,
+		undistort=True,
+		copy_config=True,
+		dlc_top=True,
+		dlc_side=True,#True,
+		triangulate=True, #generate 3d coordinates of DLC
+		reproject=True, # generate projection to the camera
+		reorganize=False,
+		gaze=True,
+		dsqk=False,
+		server=False,#True,
+		HDD=False)#copy to HDD hardrive
+
+if __name__ == '__main__':
+	not_main()
+
+
 
 
 

@@ -85,7 +85,7 @@ class Squeaks:
 		if not os.path.exists(video_path):
 			video_path = os.path.join(root_path, 'raw', 'camera_17391304.MOV')
 
-		pose = pd.read_csv(pose_path, header=[1, 2])
+		pose = pd.read_csv(pose_path, header=[1, 2, 3]).center_mouse
 		image,fps = get_thumbnail_and_fps(video_path)
 
 		if squeak_time is None:
@@ -102,20 +102,60 @@ class Squeaks:
 			pose_snapshot = pose.loc[indices]
 			length = pose_snapshot.shape[0]
 
-			pos_x = (pose_snapshot['leftear']['x'] + pose_snapshot['rightear']['x']) / 2
-			pos_y = (pose_snapshot['leftear']['y'] + pose_snapshot['rightear']['y']) / 2
+			cols = np.unique([c[0] for c in pose_snapshot.columns])
+
+			pos_x = (pose_snapshot['left_ear']['x'] + pose_snapshot['right_ear']['x']) / 2
+			pos_y = (pose_snapshot['left_ear']['y'] + pose_snapshot['right_ear']['y']) / 2
 
 			pos_x = np.array(pos_x)
 			pos_y = np.array(pos_y)
 
-			snout_x = np.array(pose_snapshot['snout']['x'])
-			snout_y = np.array(pose_snapshot['snout']['y'])
+			nose_x = np.array(pose_snapshot['nose']['x'])
+			nose_y = np.array(pose_snapshot['nose']['y'])
+
+			skull_x = np.array(pose_snapshot['skull_base']['x'])
+			skull_y = np.array(pose_snapshot['skull_base']['y'])
 
 			pseudo_colorbar = np.linspace(0, 255, length)
 			for i in range(length):
-				start = (int(pos_x[i]), int(pos_y[i]))
-				end = (int(snout_x[i]), int(snout_y[i]))
-				image = cv2.arrowedLine(image, start, end, color=(255, 125, 250), thickness=2)
+				start = end = (np.nan, np.nan)
+				if not np.isnan(skull_x) and not np.isnan(skull_y):
+					start = (int(skull_x[i]), int(skull_y[i]))
+					if not np.isnan(nose_x) and not np.isnan(nose_y):  
+						end = (int(nose_x[i]), int(nose_y[i]))
+						color = (255,0,255)
+					elif not np.isnan(pos_x) and not np.isnan(pos_y):
+						end = (int(pos_x[i]), int(pos_y[i]))
+						color = (0,255,0)
+					else:
+						color = (255,0,0)
+				elif not np.isnan(pos_x) and not np.isnan(pos_y):
+					start = (int(pos_x[i]), int(pos_y[i]))
+					if not np.isnan(nose_x) and not np.isnan(nose_y):  
+						end = (int(nose_x[i]), int(nose_y[i]))
+						color = (0,255,255)
+					else:
+						color = (0,0,255)
+				elif not np.isnan(nose_x) and not np.isnan(nose_y):  
+					start = (int(nose_x[i]), int(nose_y[i]))
+					color = (255,255,0)
+				else:
+					good = [
+						(pose_snapshot.iloc[i][c]['x'],pose_snapshot.iloc[i][c]['y'])
+						for c in cols
+						if not np.isnan(pose_snapshot.iloc[i][c]['x'])
+						and not np.isnan(pose_snapshot.iloc[i][c]['y'])
+						]
+					if len(good):
+						start = good[0]
+						color = (100,100,100)
+					else:
+						raise Exception('no tracks for a frame with a squeak!!')
+				if not np.isnan(end[0]):
+					image = cv2.arrowedLine(image, start, end, color=color, thickness=2)
+				else:
+					image = cv2.circle(image, start, end, radius=7, color=color)
+
 				image = cv2.circle(image, start, radius=6, color=(50, int(pseudo_colorbar[i]), 125), thickness=-1)
 			image = cv2.putText(image, root_name, org=(100, 80), fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=1.5,
 								color=(255, 255, 255))
@@ -141,7 +181,7 @@ class Squeaks:
 		if not os.path.exists(video_path):
 			video_path = os.path.join(root_path, 'raw', 'camera_17391304.MOV')
 
-		pose = pd.read_csv(pose_path, header=[1, 2])
+		pose = pd.read_csv(pose_path, header=[1, 2, 3]).center_mouse
 		image, fps = get_thumbnail_and_fps(video_path)
 
 		if squeak_time is None:
@@ -158,19 +198,19 @@ class Squeaks:
 			pose_snapshot = pose.loc[indices]
 			length = pose_snapshot.shape[0]
 
-			pos_x = (pose_snapshot['leftear']['x'] + pose_snapshot['rightear']['x']) / 2
-			pos_y = (pose_snapshot['leftear']['y'] + pose_snapshot['rightear']['y']) / 2
+			pos_x = (pose_snapshot['left_ear']['x'] + pose_snapshot['right_ear']['x']) / 2
+			pos_y = (pose_snapshot['left_ear']['y'] + pose_snapshot['right_ear']['y']) / 2
 
 			pos_x = np.array(pos_x)
 			pos_y = np.array(pos_y)
 
-			snout_x = np.array(pose_snapshot['snout']['x'])
-			snout_y = np.array(pose_snapshot['snout']['y'])
+			nose_x = np.array(pose_snapshot['nose']['x'])
+			nose_y = np.array(pose_snapshot['nose']['y'])
 
 			pseudo_colorbar = np.linspace(0, 255, length)
 			for i in range(length):
 				start = (int(pos_x[i]), int(pos_y[i]))
-				end = (int(snout_x[i]), int(snout_y[i]))
+				end = (int(nose_x[i]), int(nose_y[i]))
 				image = cv2.arrowedLine(image, start, end, color=(255, 125, 250), thickness=2)
 				image = cv2.circle(image, start, radius=6, color=(50, int(pseudo_colorbar[i]), 125), thickness=-1)
 			image = cv2.putText(image, root_name, org=(100, 80), fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=1.5,

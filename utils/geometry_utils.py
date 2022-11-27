@@ -182,37 +182,37 @@ def _triangle_area(point1,point2,point3):
     return area
 
 def triangle_area(pose):
-    snout_x = pose['snout']['x'].to_numpy()
-    snout_y = pose['snout']['y'].to_numpy()
+    nose_x = pose['nose']['x'].to_numpy()
+    nose_y = pose['nose']['y'].to_numpy()
 
-    leftear_x = pose['leftear']['x'].to_numpy()
-    leftear_y = pose['leftear']['y'].to_numpy()
+    left_ear_x = pose['left_ear']['x'].to_numpy()
+    left_ear_y = pose['left_ear']['y'].to_numpy()
 
-    rightear_x = pose['rightear']['x'].to_numpy()
-    rightear_y = pose['rightear']['y'].to_numpy()
+    right_ear_x = pose['right_ear']['x'].to_numpy()
+    right_ear_y = pose['right_ear']['y'].to_numpy()
 
-    tailbase_x = pose['rightear']['x'].to_numpy()
-    tailbase_y = pose['rightear']['y'].to_numpy()
+    tail_base_x = pose['right_ear']['x'].to_numpy()
+    tail_base_y = pose['right_ear']['y'].to_numpy()
 
-    snout=np.array([snout_x,snout_y])
-    leftear = np.array([leftear_x, leftear_y])
-    rightear = np.array([rightear_x, rightear_y])
-    tailbase = np.array([tailbase_x, tailbase_y])
+    nose=np.array([nose_x,nose_y])
+    left_ear = np.array([left_ear_x, left_ear_y])
+    right_ear = np.array([right_ear_x, right_ear_y])
+    tail_base = np.array([tail_base_x, tail_base_y])
 
-    head_triangle_area = _triangle_area(snout,leftear,rightear)
-    body_triangle_area = _triangle_area(tailbase,leftear,rightear)
+    head_triangle_area = _triangle_area(nose,left_ear,right_ear)
+    body_triangle_area = _triangle_area(tail_base,left_ear,right_ear)
 
     return head_triangle_area,body_triangle_area
 
 
 def body_center(pose):
-    leftear_x = pose['leftear']['x'].to_numpy()
-    leftear_y = pose['leftear']['y'].to_numpy()
+    left_ear_x = pose['left_ear']['x'].to_numpy()
+    left_ear_y = pose['left_ear']['y'].to_numpy()
 
-    rightear_x = pose['rightear']['x'].to_numpy()
-    rightear_y = pose['rightear']['y'].to_numpy()
+    right_ear_x = pose['right_ear']['x'].to_numpy()
+    right_ear_y = pose['right_ear']['y'].to_numpy()
 
-    center = np.array([(leftear_x+rightear_x)/2,(leftear_y+rightear_y)/2])
+    center = np.array([(left_ear_x+right_ear_x)/2,(left_ear_y+right_ear_y)/2])
     return center
 
 def window_crossings(arc_body, body_long,smoothed_speed):
@@ -364,7 +364,7 @@ def accumulative_window_preference(long):
 
 
 class Gaze_angle:
-    def __init__(self, config_folder_path, gazePoint=0.5725, main_config_path=None):
+    def __init__(self, config_folder_path, gazePoint=0.5725, main_config_path=None, model_name=None):
         if main_config_path:
             main_config = Config(main_config_path)
             local_config = toml.load(config_folder_path)
@@ -395,6 +395,7 @@ class Gaze_angle:
         self.outer=None
         self.title_name=None
         self.gazePoint=gazePoint
+        self.model_name = model_name
 
     def __call__(self,root_path, cutoff=0.95, save=True):
         # get the pose estimation path
@@ -402,19 +403,19 @@ class Gaze_angle:
         self.title_name = os.path.split(root_path)[-1]
 
         all_file = os.listdir(root_path)
-        name = [a for a in all_file if 'second' in a and 'csv' in a]
+        name = [a for a in all_file if self.model_name in a and 'csv' in a]
         coord = os.path.join(root_path,name[0])
-        pose = pd.read_csv(coord, header=[1,2])
+        pose = pd.read_csv(coord, header=[1,2,3]).center_mouse
 
         # cutoff (doesn't know if it works
-        pose.loc[pose.leftear.likelihood < cutoff, [('leftear', 'x'), ('leftear', 'y')]] = np.nan
-        pose.loc[pose.rightear.likelihood < cutoff, [('rightear', 'x'), ('rightear', 'y')]] = np.nan
-        pose.loc[pose.snout.likelihood < cutoff, [('snout', 'x'), ('snout', 'y')]] = np.nan
-        pose.loc[pose.tailbase.likelihood < cutoff, [('tailbase', 'x'), ('tailbase', 'y')]] = np.nan
-        empty = [pose['leftear']['x'].sum(),pose['leftear']['y'].sum(),
-                pose['rightear']['x'].sum(),pose['rightear']['y'].sum(),
-                pose['snout']['x'].sum(),pose['snout']['y'].sum(),
-                pose['tailbase']['x'].sum(),pose['tailbase']['y'].sum()]
+        pose.loc[pose.left_ear.likelihood < cutoff, [('left_ear', 'x'), ('left_ear', 'y')]] = np.nan
+        pose.loc[pose.right_ear.likelihood < cutoff, [('right_ear', 'x'), ('right_ear', 'y')]] = np.nan
+        pose.loc[pose.nose.likelihood < cutoff, [('nose', 'x'), ('nose', 'y')]] = np.nan
+        pose.loc[pose.tail_base.likelihood < cutoff, [('tail_base', 'x'), ('tail_base', 'y')]] = np.nan
+        empty = [pose['left_ear']['x'].sum(),pose['left_ear']['y'].sum(),
+                pose['right_ear']['x'].sum(),pose['right_ear']['y'].sum(),
+                pose['nose']['x'].sum(),pose['nose']['y'].sum(),
+                pose['tail_base']['x'].sum(),pose['tail_base']['y'].sum()]
         if not any(np.array(empty)==0):
             # gaze
             inner_left,outer_left, inner_right, outer_right = project_from_head_to_walls(pose,
@@ -525,9 +526,9 @@ class Gaze_angle:
             body_accum=accumulative_window_preference(body_long)
 
             # radian of nose circle center
-            nose_circle_center_arc=np.arctan2(pose['snout']['y']-self.circle_center[1],pose['snout']['x']-self.circle_center[0])
-            nose_distance = self.outer_r - np.sqrt((pose['snout']['x'] - self.circle_center[0]) ** 2 + (
-                    pose['snout']['y'] - self.circle_center[1]) ** 2) * self.outer_r/self.outer_r_pixel
+            nose_circle_center_arc=np.arctan2(pose['nose']['y']-self.circle_center[1],pose['nose']['x']-self.circle_center[0])
+            nose_distance = self.outer_r - np.sqrt((pose['nose']['x'] - self.circle_center[0]) ** 2 + (
+                    pose['nose']['y'] - self.circle_center[1]) ** 2) * self.outer_r/self.outer_r_pixel
             #minimum_distance=min(nose_distance[nose_distance>0])
             #nose_distance=np.array(nose_distance)-minimum_distance # assume that nose always poke the outer wall
 

@@ -1,4 +1,4 @@
-serialNumbers = [17391304, 17391290, 21259803, 19412282]
+serialNumbers = [17391304, 17391290, 21340171, 19412282]
 initialStatus = {  # just an example
     'initialization': {
         'allowedValues': ['uninitialized', 'initialized', 'deinitialized'],

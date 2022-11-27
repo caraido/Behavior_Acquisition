@@ -8,7 +8,8 @@ import matplotlib as mpl
 import toml
 import ffmpeg
 import re
-import utils.calibration_3d_utils as ex_3d
+# import utils.calibration_3d_utils as ex_3d
+import utils.extrinsic as ex_3d
 from utils.calibration_3d_utils import get_expected_corners
 from global_settings import CALIB_UPDATE_EACH,TOP_CAM,GLOBAL_CONFIG_PATH,GLOBAL_CONFIG_ARCHIVE_PATH
 
@@ -240,6 +241,7 @@ class Checkerboard:
     self.chessboardCorners = objp
     self.objPoints = objp
 
+
   def getChessboardSize(self):
     size = (self.squaresX, self.squaresY)
     return size
@@ -350,6 +352,8 @@ class Calib:
     self.board = self.charuco_board.board
 
     self.max_size = get_expected_corners(self.board)
+    
+    self.useableFrames = 0
 
   def get_top_intrinsic(self,calib_type):
     if calib_type=='alignment':
@@ -398,6 +402,9 @@ class Calib:
       path = os.path.join(self.root_config_path, 'config_%s_%s.toml' % ('intrinsic', camera_serial_number))
       with open(path, 'r') as f:
         self.config = toml.load(f)
+        self.config['camera_mat'] = np.array(self.config['camera_mat'])
+        self.config['dist_coeff'] = np.array(self.config['dist_coeff'])
+        
 
   # load the previously saved temporary calibration config file
   def load_temp_config(self,camera_serial_number):
@@ -545,18 +552,52 @@ class Calib:
     else:
       return {'corners': [], 'ids': [], 'allDetected': allDetected}
 
+  
   # entrance for extrinsic calibration preparation
   def ex_calibrate(self,frame, data_count):
     if self.config is not None:
       if data_count % CALIB_UPDATE_EACH == 0:
         # detect corners
-        detectedCorners, detectedIds, corners, ids=ex_3d.detect_aruco_2(frame,
-                                                                        intrinsics=self.config,
-                                                                        params=self.params,
-                                                                        board=self.board)
-        self.allCorners.append(detectedCorners)
-        self.allIds.append(detectedIds)
-        return {'corners': corners, 'ids': ids}
+        # detectedCorners, detectedIds, corners, ids=ex_3d.detect_aruco_2(frame,
+        #                                                                 intrinsics=self.config,
+        #                                                                 params=self.params,
+        #                                                                 board=self.board)
+        # print('got to calibrate')
+        ret = False
+        markerCorners,markerIds, rejectedCorners = cv2.aruco.detectMarkers(frame, self.board.dictionary, parameters=self.params)
+        markerCorners,markerIds, _,_ = cv2.aruco.refineDetectedMarkers(
+            frame, self.board, markerCorners, markerIds,rejectedCorners,
+            self.config['camera_mat'], self.config['dist_coeff'],
+            parameters=self.params)
+        markerCorners = np.array(markerCorners)
+        # rejectedCorners = np.array(rejectedCorners)
+        # print('did init calib')
+
+        if len(markerCorners):
+            #get the checkboard corners
+            _, checkerCorners, checkerIds = cv2.aruco.interpolateCornersCharuco(
+                markerCorners, markerIds, frame, self.board)
+            
+            if checkerIds is not None and len(checkerIds)>3:
+              if len(self.config['dist_coeff']) == 4:
+                #case fisheye
+                fn = cv2.fisheye.undistortPoints
+              else:
+                fn = cv2.undistortPoints
+              undistorted = fn(np.ascontiguousarray(checkerCorners.reshape((-1,1,2))), self.config['camera_mat'], self.config['dist_coeff'])
+              camera_mat = np.eye(3)
+              dist_coeffs = np.zeros((5))
+              rvec = np.empty((3,1))
+              tvec = np.empty((3,1))
+              ret,_,_ = cv2.aruco.estimatePoseCharucoBoard(undistorted,checkerIds,self.board,cameraMatrix=camera_mat,distCoeffs=dist_coeffs,rvec=rvec,tvec=tvec,useExtrinsicGuess=False)
+              if ret:
+                self.useableFrames += 1#[data_count]
+                # print('had a useable frame')
+
+        # print('done calib')
+        self.allCorners.append(markerCorners)
+        self.allIds.append(markerIds)
+        return {'corners': markerCorners, 'ids': markerIds, 'ret': ret}
       else:
         return {'corners': [], 'ids': []}
     else:
@@ -587,7 +628,10 @@ def undistort_videos(rootpath):
           mtx, dist, resolution, 1, resolution)
 
       movie = [a for a in raw_items if serial_number in a and '.MOV' in a]
+      if not len(movie):
+        continue
       movie_path = os.path.join(rootpath, movie[0])
+
 
 
       cap = cv2.VideoCapture(movie_path)

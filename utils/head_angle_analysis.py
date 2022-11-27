@@ -116,26 +116,26 @@ def intersect_ray_circle(head_center, arena_center, eye_head, head_arena, r0, r1
 
 
 def project_from_head_to_walls(pose, radiusInner, radiusOuter, center, gazePoint=0.5725):
-  # left_ear = pose['leftear'][['x', 'y']].to_numpy()  # should be t-by-2
-  # right_ear = pose['rightear'][['x', 'y']].to_numpy()
-  # snout = pose['snout'][['x', 'y']].to_numpy()
+  # left_ear = pose['left_ear'][['x', 'y']].to_numpy()  # should be t-by-2
+  # right_ear = pose['right_ear'][['x', 'y']].to_numpy()
+  # nose = pose['nose'][['x', 'y']].to_numpy()
   left_ear = np.stack((
-      pose['leftear']['x'],
-      pose['leftear']['y'],
+      pose['left_ear']['x'],
+      pose['left_ear']['y'],
   )).transpose()  # should be t-by-2
   right_ear = np.stack((
-      pose['rightear']['x'],
-      pose['rightear']['y'],
+      pose['right_ear']['x'],
+      pose['right_ear']['y'],
   )).transpose()  # should be t-by-2
-  snout = np.stack((
-      pose['snout']['x'],
-      pose['snout']['y'],
+  nose = np.stack((
+      pose['nose']['x'],
+      pose['nose']['y'],
   )).transpose()  # should be t-by-2
 
   head_center = (left_ear + right_ear)/2
   head_center_axis = head_center - center
 
-  head_long_axis = snout - head_center
+  head_long_axis = nose - head_center
   head_angle = angle_2pi(head_long_axis)
 
   # we assume that the top of the mouse's head is... well... pointing upward
@@ -182,25 +182,25 @@ def is_in_window(theta, theta_window,arena_center):
 
 if __name__ == '__main__':
   # do some tests
-  leftear_x = np.array([1.4, -1.6, -.1])
-  leftear_y = np.array([1.1, 1.1, -1.5])
+  left_ear_x = np.array([1.4, -1.6, -.1])
+  left_ear_y = np.array([1.1, 1.1, -1.5])
 
-  rightear_x = np.array([1.6, -1.4, +.1])
-  rightear_y = np.array([1.1, 1.1, -1.5])
+  right_ear_x = np.array([1.6, -1.4, +.1])
+  right_ear_y = np.array([1.1, 1.1, -1.5])
 
-  snout_x = np.array([1.5, -1.5, 0])
-  snout_y = np.array([1.5, 1.5, -1.1])
+  nose_x = np.array([1.5, -1.5, 0])
+  nose_y = np.array([1.5, 1.5, -1.1])
 
   pose = DataFrame(
-      {'leftear': {
-          'x': leftear_x,
-          'y': leftear_y
-      }, 'rightear': {
-          'x': rightear_x,
-          'y': rightear_y,
-      }, 'snout': {
-          'x': snout_x,
-          'y': snout_y,
+      {'left_ear': {
+          'x': left_ear_x,
+          'y': left_ear_y
+      }, 'right_ear': {
+          'x': right_ear_x,
+          'y': right_ear_y,
+      }, 'nose': {
+          'x': nose_x,
+          'y': nose_y,
       }})
 
   tLI, tLO, tRI, tRO = project_from_head_to_walls(

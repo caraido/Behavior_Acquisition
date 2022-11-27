@@ -36,6 +36,7 @@ class DjConn:
 		self.sl_test=None
 		self.sl=None
 		self.sl_behavior=None
+		self.sln_animal = None
 
 	def connect_to_datajoint(self):
 		if self.is_connected:
@@ -48,6 +49,10 @@ class DjConn:
 		if self.is_connected:
 			for schema in dj.list_schemas():
 				setattr(self, schema, dj.create_virtual_module(f'{schema}.py', schema))
+				# self.sl = dj.create_virtual_module('sl.py', 'sl')
+				# self.sl.Animal() == `sl`.`animal`
+				# self.sln_animal = dj.create_virtual_module('sln_animal.py','sln_animal')
+
 		return self.is_connected
 
 	def drop_connection(self):
@@ -78,7 +83,7 @@ class DjConn:
 		# fetch entities from tables
 	def get_all_AnimalType(self):
 		# animal_types,types_description = sl.TestAnimalType.fetch()
-		all_animal_types= self.sl.TestAnimalType.fetch()
+		all_animal_types= self.sl_behavior.TestAnimalType.fetch()
 		animal_types=[i[0] for i in all_animal_types]
 		types_description=[i[1] for i in all_animal_types]
 
@@ -86,22 +91,22 @@ class DjConn:
 
 	# fetch entities from tables
 	def get_AnimalIds(self, count=5):
-		if self.sl is not None:
-			all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id', order_by=('date desc', 'time desc', 'entry_time desc'), limit=2*count)
+		if self.sln_animal is not None:
+			all_ID=(self.sln_animal.AnimalEvent * self.sln_animal.SocialBehaviorSession).fetch('animal_id', order_by=('date desc', 'time desc', 'entry_time desc'), limit=2*count)
 			unique_ID, ind=np.unique(all_ID, return_index=True)
 			return unique_ID[np.argsort(ind)][:count].tolist()
 
 	def get_StimAnimalIds(self, count=None):
 		raise 'Not yet implemented'
-		if self.sl is not None:
+		if self.sln_animal is not None:
 			# all_ID=self.sl.AnimalEventSocialBehaviorSession.fetch('animal_id', order_by=('date desc', 'time desc', 'entry_time desc'), limit=count)
 			unique_ID, ind=np.unique(all_ID, return_index=True)
 			return unique_ID[np.argsort(ind)][:count].tolist()
 
 	# fetch all behavior session
 	def get_all_Sessions(self):
-		if self.sl is not None:
-			all_Sessions=pd.DataFrame(self.sl.AnimalEventSocialBehaviorSession.fetch())
+		if self.sln_animal is not None:
+			all_Sessions=pd.DataFrame(self.sln_animal.SocialBehaviorSession.fetch())
 			return all_Sessions
 		else:
 			return
@@ -109,8 +114,8 @@ class DjConn:
 
 	# fetch entities from tables
 	def get_all_StimulusType(self):
-		if self.sl is not None:
-			all_stimulus_type=self.sl.BehaviorVisualStimulusType.fetch()
+		if self.sln_animal is not None:
+			all_stimulus_type=self.sl_behavior.VisualStimulusType.fetch()
 			stimulus_type=[i[0] for i in all_stimulus_type]
 			print(stimulus_type)
 			return stimulus_type
@@ -120,8 +125,8 @@ class DjConn:
 
 	# fetch entities from tables
 	def get_all_ExperimentType(self):
-		if self.sl is not None:
-			all_behavior_experiment_type=self.sl.SocialBehaviorExperimentType.fetch()
+		if self.sln_animal is not None:
+			all_behavior_experiment_type=self.sl_behavior.SocialBehaviorExperimentType.fetch()
 			behavior_experiment_type=[i[0] for i in all_behavior_experiment_type]
 			print(behavior_experiment_type)
 			return behavior_experiment_type
@@ -160,7 +165,7 @@ class DjConn:
 		#returns false if animal id is missing
 		#excepts the case that no animal_ID is provided (returns true)
 
-		all_IDs=((self.sl.Animal & [f"animal_id={animal_ID}" for animal_ID in animal_IDs if animal_ID is not '' ])- self.sl.AnimalEventDeceased).fetch('animal_id')
+		all_IDs=((self.sln_animal.Animal & [f"animal_id={animal_ID}" for animal_ID in animal_IDs if animal_ID is not '' ])- (self.sln_animal.Deceased * self.sln_animal.AnimalEvent)).fetch('animal_id')
 		is_in_DB = [animal_ID is '' or int(animal_ID) in all_IDs for animal_ID in animal_IDs]
 		return is_in_DB
 
@@ -177,22 +182,27 @@ class DjConn:
 			time_now=today.time()
 			thistime=datetime.timedelta(days=0,hours=time_now.hour,minutes=time_now.minute,seconds=time_now.second)
 
-			insert_item=dict(animal_id=animal_id,
+			event_insert=dict(animal_id=animal_id,
 							 user_name=user_name,
-							 purpose=purpose,
-							 animal_type_name=animal_type_name,
 							 date=date_now,
 							 time=thistime,
-							 recorded='T',
 							 notes=notes)
+			session_insert=dict(
+							 event_id=None,
+							 purpose=purpose,
+							 animal_type_name=animal_type_name,
+							 recorded='T')
 
 			try:
 				with self.connection.transaction:
-					self.sl.AnimalEventSocialBehaviorSession.insert1(insert_item)
-					# event_id=self.get_latest_event_id()
-					event_id=self.get_matching_event_id(insert_item)
+					self.sln_animal.AnimalEvent.insert1(event_insert)
+					event_id=self.get_matching_event_id(event_insert)
 					if event_id is None: #does this ever happen???
 						raise
+
+					session_insert['event_id'] = event_id
+					self.sln_animal.SocialBehaviorSession.insert1(session_insert)
+					# event_id=self.get_latest_event_id()
 					items = []
 					for stim_type,stim_ID,arm in zip(some_update[3:8:2],some_update[4:9:2], ('A','B','C')):
 						items.append(dict(
@@ -201,7 +211,7 @@ class DjConn:
 								stim_type=stim_type,
 								stimulus_animal_id = stim_ID if stim_ID != '' else None
 							))
-					self.sl.AnimalEventSocialBehaviorSession.Stimulus.insert(items)
+					self.sln_animal.SocialBehaviorSession.Stimulus.insert(items)
 				info='session insertion successful. Start recording'
 			except:
 				event_id=False
@@ -215,7 +225,7 @@ class DjConn:
 		event['date'] = str(event['date'])
 		event['time'] = str(event['time'])
 		
-		return (self.sl.AnimalEventSocialBehaviorSession & event).fetch1('event_id')
+		return (self.sln_animal.AnimalEvent & event).fetch1('event_id')
 
 	def get_latest_event_id(self):
 		#deprecated: see below
@@ -270,10 +280,10 @@ class DjConn:
 			#honestly we should just get rid of this maybe...
 			count=0
 			if some_update[1] not in animalType:
-				self.sl.TestAnimalType.insert1([str(some_update[1]),''])
+				self.sl_behavior.TestAnimalType.insert1([str(some_update[1]),''])
 				count+=1
 			if some_update[2] not in experimentType:
-				self.sl.SocialBehaviorExperimentType.insert1([str(some_update[2]),''])
+				self.sl_behavior.SocialBehaviorExperimentType.insert1([str(some_update[2]),''])
 				count+=1
 			if some_update[3] not in stimulusType:
 				if len(some_update[4])==0:
@@ -283,10 +293,10 @@ class DjConn:
 					needs_id='T'
 					tested.append(True)
 
-				self.sl.BehaviorVisualStimulusType.insert1([some_update[3],needs_id,''])
+				self.sl_behavior.VisualStimulusType.insert1([some_update[3],needs_id,''])
 				count += 1
 			else:
-				tested.append((self.sl.BehaviorVisualStimulusType & f'stim_type="{some_update[3]}"').fetch1('needs_id') ==  'T')
+				tested.append((self.sl_behavior.VisualStimulusType & f'stim_type="{some_update[3]}"').fetch1('needs_id') ==  'T')
 			if some_update[5] not in stimulusType:
 				if len(some_update[6])==0:
 					needs_id='F'
@@ -294,12 +304,12 @@ class DjConn:
 				else:
 					needs_id='T'
 					tested.append(True)
-				self.sl.BehaviorVisualStimulusType.insert1([some_update[5],needs_id,''])
+				self.sl_behavior.VisualStimulusType.insert1([some_update[5],needs_id,''])
 				count += 1
 			elif some_update[5]==some_update[3]:
 				tested.append(tested[0])
 			else:
-				tested.append((self.sl.BehaviorVisualStimulusType & f'stim_type="{some_update[5]}"').fetch1('needs_id') ==  'T')
+				tested.append((self.sl_behavior.VisualStimulusType & f'stim_type="{some_update[5]}"').fetch1('needs_id') ==  'T')
 			
 			if some_update[7] not in stimulusType:
 				if len(some_update[7])==0:
@@ -308,14 +318,14 @@ class DjConn:
 				else:
 					needs_id='T'
 					tested.append(True)
-				self.sl.BehaviorVisualStimulusType.insert1([some_update[7],needs_id,''])
+				self.sl_behavior.VisualStimulusType.insert1([some_update[7],needs_id,''])
 				count += 1
 			elif some_update[7]==some_update[3]:
 				tested.append(tested[0])
 			elif some_update[7]==some_update[5]:
 				tested.append(tested[1])
 			else:
-				tested.append((self.sl.BehaviorVisualStimulusType & f'stim_type="{some_update[7]}"').fetch1('needs_id') ==  'T')
+				tested.append((self.sl_behavior.VisualStimulusType & f'stim_type="{some_update[7]}"').fetch1('needs_id') ==  'T')
 			
 			if count:
 				message='Updated the type!'

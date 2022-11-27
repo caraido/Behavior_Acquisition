@@ -298,7 +298,7 @@ def read_single_2d_data(data: pd.DataFrame):
     index = arr(data.index)
 
     bp_interested = get_bp_interested(data)
-    #bp_interested=['snout', 'leftear', 'rightear', 'tailbase']
+    #bp_interested=['nose', 'left_ear', 'right_ear', 'tail_base']
 
     coords = np.zeros((length, len(bp_interested), 2))
     scores = np.zeros((length, len(bp_interested)))
@@ -651,7 +651,7 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
     :param pose_dict: aligned with camera ids
     :return:
     '''
-    bodypart = ['snout', 'leftear', 'rightear', 'tailbase']
+    bodypart = ['nose', 'left_ear', 'right_ear', 'tail_base']
 
     in_mat_list = []
     ex_mat_list = []
@@ -668,7 +668,7 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
 
     in_mat_list=np.array(in_mat_list)
     ex_mat_list=np.array(ex_mat_list)
-    ex_mat_list[1][0:3,3]=np.array([-.9, -1.6, -.55351041])
+    # ex_mat_list[1][0:3,3]=np.array([-.9, -1.6, -.55351041])
 
     out = load_2d_data(pose_dict)
 
@@ -710,9 +710,9 @@ def reconstruct_3d(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict: dict):
                 scores_3d[i, j] = np.min(all_scores[i, :, j][good])
 
     # get constraints
-    constaints_name=[['leftear','rightear']]
-    weak_constraints_name = [['leftear','rightear'],['snout','leftear'],['snout','rightear']]
-    bodypart =['snout','leftear','rightear','tailbase']
+    constaints_name=[['left_ear','right_ear']]
+    weak_constraints_name = [['left_ear','right_ear'],['nose','left_ear'],['nose','right_ear']]
+    bodypart =['nose','left_ear','right_ear','tail_base']
     constraints = load_constraints(constaints_name,bodypart)
     weak_constraints= load_constraints(weak_constraints_name,bodypart)
 
@@ -791,7 +791,7 @@ def reconstruct_3d_kalman(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict:dict
 
     in_mat_list=np.array(in_mat_list)
     ex_mat_list=np.array(ex_mat_list)
-    ex_mat_list[1][0:3,3]=np.array([-.9, -1.6, -.55351041])
+    # ex_mat_list[1][0:3,3]=np.array([-.9, -1.6, -.55351041])
 
     out = load_2d_data(pose_dict)
 
@@ -820,9 +820,9 @@ def reconstruct_3d_kalman(intrinsic_dict:dict, extrinsic_3d:dict, pose_dict:dict
     n_cams = all_points.shape[1]  # TODO:need to check
 
     # get constraints
-    constaints_name=[['leftear','rightear']]
-    weak_constraints_name = [['leftear','rightear'],['snout','leftear'],['snout','rightear']]
-    bodypart =['snout','leftear','rightear','tailbase']
+    constaints_name=[['left_ear','right_ear']]
+    weak_constraints_name = [['left_ear','right_ear'],['nose','left_ear'],['nose','right_ear']]
+    bodypart =['nose','left_ear','right_ear','tail_base']
     constraints = load_constraints(constaints_name,bodypart)
     weak_constraints= load_constraints(weak_constraints_name,bodypart)
 
@@ -890,7 +890,7 @@ if __name__ =='__main__':
     items=os.listdir(processed_path)
     pose = [item for item in items if '.csv' in item and 'camera' in item]
     pose=sorted(pose)
-    pose_dict = dict([(str(i),pd.read_csv(os.path.join(processed_path,num),header=[1,2])) for i,num in enumerate(pose)])
+    pose_dict = dict([(str(i),pd.read_csv(os.path.join(processed_path,num),header=[1,2,3]).center_mouse) for i,num in enumerate(pose)])
     length_list= [item.shape[0] for item in pose_dict.values()]
     minlen=min(length_list)-1
     for i in pose_dict.keys():
@@ -902,10 +902,10 @@ if __name__ =='__main__':
     try:
         output_3d = pd.read_csv(os.path.join(rootpath,'output_3d_data_kalma.csv'),index_col=0)
         length =len(output_3d)
-        bodypart = ['snout_x','snout_y','snout_z',
-                    'leftear_x', 'leftear_y', 'leftear_z',
-                    'rightear_x', 'rightear_y', 'rightear_z',
-                    'tailbase_x', 'tailbase_y', 'tailbase_z',
+        bodypart = ['nose_x','nose_y','nose_z',
+                    'left_ear_x', 'left_ear_y', 'left_ear_z',
+                    'right_ear_x', 'right_ear_y', 'right_ear_z',
+                    'tail_base_x', 'tail_base_y', 'tail_base_z',
                     ]
         output_3d_new=output_3d[bodypart]
         output_3d_new=output_3d_new.to_numpy()

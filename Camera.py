@@ -192,7 +192,6 @@ class Camera(AcquisitionObject):
           self.print(f'Error in spinnaker: {e}. Assumed innocuous.')
           get_all = True
           continue
-
       yield data_list
 
   def open_file(self, filepath):
@@ -265,6 +264,10 @@ class Camera(AcquisitionObject):
           if process['mode'] == 'extrinsic':
             if results['ids'] is None:
               text = 'Missing board or intrinsic calibration file'
+              cv2.putText(frame, text, (500, 1000),
+                          cv2.FONT_HERSHEY_PLAIN, 2.0, (255, 0, 255), 2)
+            elif results['ret']:
+              text = 'Frame was useable'
               cv2.putText(frame, text, (500, 1000),
                           cv2.FONT_HERSHEY_PLAIN, 2.0, (255, 0, 255), 2)
     return frame #gets drawn to screen

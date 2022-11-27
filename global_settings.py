@@ -26,7 +26,7 @@ CALIB_UPDATE_EACH = 1  # frame interval for calibration frame update
 
 # kalman filter settings
 dt = 1 / 30
-CUTOFF = 0.7
+CUTOFF = 0.3
 DISTRUSTNESS = 1e22
 
 # video settings
@@ -38,7 +38,7 @@ SIDE_THRESHOLD=0.6
 
 # path operation settings
 saving_path_prefix = 'D:\\'
-default_saving_path= 'Desktop'
+default_saving_path= 'SessionsByDJID'
 default_folder_name = 'Testing'
 GLOBAL_CONFIG_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
 GLOBAL_CONFIG_ARCHIVE_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config_archive'

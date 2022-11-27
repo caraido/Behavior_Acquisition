@@ -1,0 +1,874 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="BRANCH:master" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </select>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="1229870a-773d-4c4a-9b65-3fa20b0562fc" name="Default Changelist" comment="modified datajoint integrated. tested the integrity of it.&#10;Need to add a feature: when updating the types from datajoint when clicking &quot;record&quot;">
+      <change beforePath="$PROJECT_DIR$/AcquisitionGroup.py" beforeDir="false" afterPath="$PROJECT_DIR$/AcquisitionGroup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DLC/DLC_top.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/DLC/DLC_top.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProcessingGroup.py" beforeDir="false" afterPath="$PROJECT_DIR$/ProcessingGroup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui" beforeDir="false" afterPath="$PROJECT_DIR$/behavior_gui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_alignment_17391304.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_alignment_17391304.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_behavior_rig.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_behavior_rig.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_extrinsic.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_intrinsic_17391290.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_intrinsic_17391290.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_intrinsic_19287342.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/global_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/global_settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/initialStatus.py" beforeDir="false" afterPath="$PROJECT_DIR$/initialStatus.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kalman_filter.py" beforeDir="false" afterPath="$PROJECT_DIR$/kalman_filter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproject_3d_to_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproject_3d_to_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/calibration_3d_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/calibration_3d_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/calibration_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/calibration_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/datajoint_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/datajoint_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/dlc_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/dlc_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/extrinsic.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/extrinsic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/geometry_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/geometry_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/head_angle_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/head_angle_analysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/path_operation_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/path_operation_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/poseAnalysis.m" beforeDir="false" afterPath="$PROJECT_DIR$/utils/poseAnalysis.m" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/reorganize_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/reorganize_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/speed_calculation.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/speed_calculation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/squeaks_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/squeaks_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/triangulation_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/triangulation_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/windows_visibility.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/windows_visibility.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="caraido &lt;254130357@qq.com&gt;" />
+      </list>
+    </option>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="3e40267193a4e4ed17ebd8f1eb54cfba41ba5b93" />
+        <entry key="$PROJECT_DIR$/behavior_gui" value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+    <option name="SET_USER_NAME_GLOBALLY" value="false" />
+    <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="hiddenUrls">
+      <set>
+        <option value="https://github.com/caraido/bahavior_rig" />
+      </set>
+    </option>
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/main.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/behavior_gui/lib/settings.dart" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/utils/path_operation_utils.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/independent_trigger.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/behavior_gui/pubspec.yaml" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/utils/geometry_utils.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/kalman_filter.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/utils/dlc_utils.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/behavior_gui/lib/main.dart" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/utils/tcp_utils.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/utils/statistics_utils.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/utils/head_angle_analysis.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/utils/calibration_utils.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/ProcessingGroup.py" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="ProjectId" id="1jQfrwvAZUd2PIWAvEy6hv5Ofzt" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="dart.analysis.tool.window.visible" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/config" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui" />
+      <recent name="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\utils" />
+      <recent name="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig" />
+      <recent name="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\templates" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.main">
+    <configuration name="ProcessingGroup" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="bahavior_rig" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="DLClight" value="True" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\SchwartzLab\anaconda3\envs\behavior_rig\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ProcessingGroup.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="bahavior_rig" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\SchwartzLab\anaconda3\envs\behavior_rig\python.exe" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="bahavior_rig" type="PythonConfigurationType" factoryName="Python">
+      <module name="bahavior_rig" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\SchwartzLab\anaconda3\envs\behavior_rig\python.exe" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/socketApp.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="datajoint_utils" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="bahavior_rig" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\SchwartzLab\anaconda3\envs\behavior_rig\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/datajoint_utils.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\SchwartzLab\anaconda3\envs\behavior_rig\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="bahavior_rig" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/temp.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest in test_nidaq.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="bahavior_rig" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_parameters" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/test_nidaq.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.bahavior_rig" />
+      <item itemvalue="Python.ProcessingGroup" />
+      <item itemvalue="Python.main" />
+      <item itemvalue="Python.datajoint_utils" />
+      <item itemvalue="Python.temp" />
+      <item itemvalue="Python tests.pytest in test_nidaq.py" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.datajoint_utils" />
+        <item itemvalue="Python.temp" />
+        <item itemvalue="Python tests.pytest in test_nidaq.py" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1229870a-773d-4c4a-9b65-3fa20b0562fc" name="Default Changelist" comment="" />
+      <created>1603741438853</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1603741438853</updated>
+      <workItem from="1621445687274" duration="11791000" />
+      <workItem from="1621531294777" duration="15350000" />
+      <workItem from="1621871349396" duration="3108000" />
+      <workItem from="1621875318041" duration="45860000" />
+      <workItem from="1622130492404" duration="2266000" />
+      <workItem from="1622136299898" duration="872000" />
+      <workItem from="1622137362299" duration="2230000" />
+      <workItem from="1622140231182" duration="52209000" />
+      <workItem from="1623095722803" duration="28393000" />
+      <workItem from="1623341123780" duration="39175000" />
+      <workItem from="1623785437623" duration="1447000" />
+      <workItem from="1623786919865" duration="2478000" />
+      <workItem from="1623796446277" duration="1308000" />
+      <workItem from="1623803955885" duration="4150000" />
+      <workItem from="1623854818105" duration="265000" />
+      <workItem from="1623855097363" duration="647000" />
+      <workItem from="1623857204257" duration="2540000" />
+      <workItem from="1623861056560" duration="1355000" />
+      <workItem from="1623864813081" duration="608000" />
+      <workItem from="1623867816535" duration="56000" />
+      <workItem from="1623867887232" duration="1296000" />
+      <workItem from="1623869202894" duration="4025000" />
+      <workItem from="1623880412974" duration="24755000" />
+      <workItem from="1624475943705" duration="11748000" />
+      <workItem from="1624562881900" duration="158000" />
+      <workItem from="1624563061031" duration="6145000" />
+      <workItem from="1624647978426" duration="4275000" />
+      <workItem from="1624655145489" duration="11786000" />
+      <workItem from="1624921453131" duration="310000" />
+      <workItem from="1624921789374" duration="13723000" />
+      <workItem from="1625004568958" duration="636000" />
+      <workItem from="1625008397843" duration="9928000" />
+      <workItem from="1625081604801" duration="2859000" />
+      <workItem from="1625088294125" duration="8290000" />
+      <workItem from="1625169253972" duration="72232000" />
+      <workItem from="1625679527645" duration="22476000" />
+      <workItem from="1625713226982" duration="22775000" />
+      <workItem from="1625841768179" duration="16664000" />
+      <workItem from="1625894172271" duration="16205000" />
+      <workItem from="1626128562429" duration="183000" />
+      <workItem from="1626133979359" duration="116000" />
+      <workItem from="1626358896003" duration="970000" />
+      <workItem from="1626360454399" duration="8927000" />
+      <workItem from="1626386683448" duration="35473000" />
+      <workItem from="1626895061312" duration="662000" />
+      <workItem from="1626902098809" duration="85723000" />
+      <workItem from="1627441893798" duration="21355000" />
+      <workItem from="1627578911445" duration="15119000" />
+      <workItem from="1627659572713" duration="25991000" />
+      <workItem from="1627915991312" duration="6832000" />
+      <workItem from="1627923816183" duration="9668000" />
+      <workItem from="1628003968996" duration="42848000" />
+      <workItem from="1630704600010" duration="147000" />
+      <workItem from="1631040761507" duration="7000" />
+      <workItem from="1657916996729" duration="59000" />
+      <workItem from="1662741470538" duration="683000" />
+      <workItem from="1662747068137" duration="3694000" />
+      <workItem from="1663010226829" duration="4678000" />
+      <workItem from="1663081600908" duration="199000" />
+      <workItem from="1663081813189" duration="31000" />
+      <workItem from="1663084255639" duration="4888000" />
+      <workItem from="1663165951032" duration="2385000" />
+      <workItem from="1663180654883" duration="593000" />
+      <workItem from="1663250638676" duration="659000" />
+      <workItem from="1663270761763" duration="14801000" />
+      <workItem from="1663687183068" duration="831000" />
+      <workItem from="1663787305907" duration="860000" />
+      <workItem from="1664808750644" duration="8441000" />
+      <workItem from="1665605697181" duration="5350000" />
+      <workItem from="1669138594154" duration="4515000" />
+    </task>
+    <task id="LOCAL-00038" summary="several changes to make the GUI work with the server on the preview function">
+      <created>1610843676509</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1610843676509</updated>
+    </task>
+    <task id="LOCAL-00039" summary="fixed ag.stop in case filepaths is nonetype">
+      <created>1610923841281</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1610923841281</updated>
+    </task>
+    <task id="LOCAL-00040" summary="small update">
+      <created>1611078659644</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1611078659644</updated>
+    </task>
+    <task id="LOCAL-00041" summary="small update">
+      <created>1611084941421</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1611084941421</updated>
+    </task>
+    <task id="LOCAL-00042" summary="tested routing">
+      <created>1611086984322</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1611086984322</updated>
+    </task>
+    <task id="LOCAL-00043" summary="updates on camera preview, microphone previewing. file saving">
+      <created>1611868054523</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1611868054523</updated>
+    </task>
+    <task id="LOCAL-00044" summary="add 3D calibration and ProcessingGroup">
+      <created>1612453888362</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1612453888362</updated>
+    </task>
+    <task id="LOCAL-00045" summary="added calibration configuration file">
+      <created>1612454014865</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1612454014865</updated>
+    </task>
+    <task id="LOCAL-00046" summary="added a really basic preview function.">
+      <created>1612537188890</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1612537188890</updated>
+    </task>
+    <task id="LOCAL-00047" summary="added record function on the server side">
+      <created>1612555312023</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1612555312023</updated>
+    </task>
+    <task id="LOCAL-00048" summary="added record function on the GUI side. Ready to work after fixing some bugs">
+      <created>1612564891012</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1612564891012</updated>
+    </task>
+    <task id="LOCAL-00049" summary="fix bugs">
+      <created>1612973040008</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1612973040008</updated>
+    </task>
+    <task id="LOCAL-00050" summary="use tcp to display">
+      <created>1612996851625</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1612996851625</updated>
+    </task>
+    <task id="LOCAL-00051" summary="added Dodotronic Mic object">
+      <created>1613592240906</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1613592240907</updated>
+    </task>
+    <task id="LOCAL-00052" summary="added note taking function">
+      <created>1613661535766</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1613661535766</updated>
+    </task>
+    <task id="LOCAL-00053" summary="minor annotation">
+      <created>1613671255115</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1613671255115</updated>
+    </task>
+    <task id="LOCAL-00054" summary="changes from yesterday">
+      <created>1613745662248</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1613745662248</updated>
+    </task>
+    <task id="LOCAL-00055" summary="changes from today">
+      <created>1613779781478</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1613779781478</updated>
+    </task>
+    <task id="LOCAL-00056" summary="finished separating calibration processes to post-processing.">
+      <created>1614615857031</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1614615857031</updated>
+    </task>
+    <task id="LOCAL-00057" summary="Fixed bug in Mic.py. Updated new method for intrinsic calibration.">
+      <created>1614973268474</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1614973268484</updated>
+    </task>
+    <task id="LOCAL-00058" summary="Finished all the calibration operation and most of the processing group.">
+      <created>1615327229631</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1615327229632</updated>
+    </task>
+    <task id="LOCAL-00059" summary="updated triangulation_utils.py">
+      <created>1616017186311</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1616017186313</updated>
+    </task>
+    <task id="LOCAL-00060" summary="fixed top camera intrinsic calibration bug. Added triangulation optimization method">
+      <created>1616887516193</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1616887516193</updated>
+    </task>
+    <task id="LOCAL-00061" summary="fix unsynced frames issue by increasing the buffer">
+      <created>1619108253230</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1619108253230</updated>
+    </task>
+    <task id="LOCAL-00062" summary="modified sleep() function to decrease the lag">
+      <created>1619455156830</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1619455156830</updated>
+    </task>
+    <task id="LOCAL-00063" summary="added kalman filter and smoothing. optimized the file structure">
+      <created>1621366599043</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1621366599043</updated>
+    </task>
+    <task id="LOCAL-00064" summary="moved all video generating to separate threads.&#10;added windows visibility check and speed calculation">
+      <created>1621569462837</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1621569462837</updated>
+    </task>
+    <task id="LOCAL-00065" summary="solved display time lag. added statistics calculation of windows visibility">
+      <created>1621881825269</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1621881825269</updated>
+    </task>
+    <task id="LOCAL-00066" summary="bug fixed">
+      <created>1621888826692</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1621888826692</updated>
+    </task>
+    <task id="LOCAL-00067" summary="modified windows visibility function">
+      <created>1621956736535</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1621956736535</updated>
+    </task>
+    <task id="LOCAL-00068" summary="ting bug fixed on triangulation optimizer">
+      <created>1622037113655</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1622037113655</updated>
+    </task>
+    <task id="LOCAL-00069" summary="fixed bugs in mic display and mic.run()">
+      <created>1622061168382</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1622061168382</updated>
+    </task>
+    <task id="LOCAL-00070" summary="implemenet dlc live with dynamic cropping">
+      <created>1622217291192</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1622217291192</updated>
+    </task>
+    <task id="LOCAL-00071" summary="added accumulative window preference">
+      <created>1623273796514</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1623273796514</updated>
+    </task>
+    <task id="LOCAL-00072" summary="added squeak heatmap analysis.&#10;added dropdown menu to GUI">
+      <created>1623773158443</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1623773158443</updated>
+    </task>
+    <task id="LOCAL-00073" summary="added squeak heatmap analysis.&#10;added dropdown menu to GUI">
+      <created>1623773164597</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1623773164597</updated>
+    </task>
+    <task id="LOCAL-00074" summary="addded loading namepace from .toml file">
+      <created>1623858570089</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1623858570089</updated>
+    </task>
+    <task id="LOCAL-00075" summary="added loading namepace from .json file.&#10;added optogenetic LED toggle on the GUI.">
+      <created>1624393788065</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1624393788066</updated>
+    </task>
+    <task id="LOCAL-00076" summary="minor changes on the GUI side for LED to connect to python">
+      <created>1624993346345</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1624993346345</updated>
+    </task>
+    <task id="LOCAL-00077" summary="stopped trigger before stopping cameras.&#10;removed running lock in AcquisitionObject.data&#10;removed audio format converting in Nidaq.py and mic.py&#10;put AcquisitionGroup.start() in a different thread.">
+      <created>1625086815491</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1625086815491</updated>
+    </task>
+    <task id="LOCAL-00078" summary="added archive feature for calibration files.&#10;moved everything to mat file.&#10;added nose-window distance.&#10;putting processing of .tdms file in processig group.">
+      <created>1625630765574</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1625630765582</updated>
+    </task>
+    <task id="LOCAL-00079" summary="finished squeaks analysis from matlab. fixed bugs in nose window distance">
+      <created>1626296726277</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1626296726277</updated>
+    </task>
+    <task id="LOCAL-00080" summary="added automated squeaks analysis. resolved conflicts in updating folders to server">
+      <created>1626664676424</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1626664676432</updated>
+    </task>
+    <task id="LOCAL-00081" summary="updated spectrogram analysis">
+      <created>1627318514788</created>
+      <option name="number" value="00081" />
+      <option name="presentableId" value="LOCAL-00081" />
+      <option name="project" value="LOCAL" />
+      <updated>1627318514788</updated>
+    </task>
+    <task id="LOCAL-00082" summary="updated alertdialog to link it with datajoint">
+      <created>1627507279635</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1627507279635</updated>
+    </task>
+    <task id="LOCAL-00083" summary="minor changes">
+      <created>1627916023172</created>
+      <option name="number" value="00083" />
+      <option name="presentableId" value="LOCAL-00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1627916023172</updated>
+    </task>
+    <task id="LOCAL-00084" summary="fixed dependency issue. &#10;Added global parameters in global_settings.py&#10;More comments">
+      <created>1627932360158</created>
+      <option name="number" value="00084" />
+      <option name="presentableId" value="LOCAL-00084" />
+      <option name="project" value="LOCAL" />
+      <updated>1627932360158</updated>
+    </task>
+    <task id="LOCAL-00085" summary="add datajoint integration">
+      <created>1628182757221</created>
+      <option name="number" value="00085" />
+      <option name="presentableId" value="LOCAL-00085" />
+      <option name="project" value="LOCAL" />
+      <updated>1628182757221</updated>
+    </task>
+    <task id="LOCAL-00086" summary="modified datajoint integrated. tested the integrity of it.&#10;Need to add a feature: when updating the types from datajoint when clicking &quot;record&quot;">
+      <created>1628193551291</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1628193551291</updated>
+    </task>
+    <option name="localTasksCounter" value="87" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="1">
+          <value>
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="true" />
+                </map>
+              </option>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="test" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="true" />
+                </map>
+              </option>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="test" />
+                </option>
+              </RecentGroup>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/VirtualCam" />
+    </ignored-roots>
+    <MESSAGE value="fix unsynced frames issue by increasing the buffer" />
+    <MESSAGE value="modified sleep() function to decrease the lag" />
+    <MESSAGE value="added kalman filter and smoothing. optimized the file structure" />
+    <MESSAGE value="moved all video generating to separate threads.&#10;added windows visibility check and speed calculation" />
+    <MESSAGE value="solved display time lag. added statistics calculation of windows visibility" />
+    <MESSAGE value="bug fixed" />
+    <MESSAGE value="modified windows visibility function" />
+    <MESSAGE value="ting bug fixed on triangulation optimizer" />
+    <MESSAGE value="fixed bugs in mic display and mic.run()" />
+    <MESSAGE value="implemenet dlc live with dynamic cropping" />
+    <MESSAGE value="added accumulative window preference" />
+    <MESSAGE value="added squeak heatmap analysis.&#10;added dropdown menu to GUI" />
+    <MESSAGE value="addded loading namepace from .toml file" />
+    <MESSAGE value="added loading namepace from .json file.&#10;added optogenetic LED toggle on the GUI." />
+    <MESSAGE value="minor changes on the GUI side for LED to connect to python" />
+    <MESSAGE value="stopped trigger before stopping cameras.&#10;removed running lock in AcquisitionObject.data&#10;removed audio format converting in Nidaq.py and mic.py&#10;put AcquisitionGroup.start() in a different thread." />
+    <MESSAGE value="added archive feature for calibration files.&#10;moved everything to mat file.&#10;added nose-window distance.&#10;putting processing of .tdms file in processig group." />
+    <MESSAGE value="finished squeaks analysis from matlab. fixed bugs in nose window distance" />
+    <MESSAGE value="added automated squeaks analysis. resolved conflicts in updating folders to server" />
+    <MESSAGE value="updated spectrogram analysis" />
+    <MESSAGE value="updated alertdialog to link it with datajoint" />
+    <MESSAGE value="minor changes" />
+    <MESSAGE value="fixed dependency issue. &#10;Added global parameters in global_settings.py&#10;More comments" />
+    <MESSAGE value="add datajoint integration" />
+    <MESSAGE value="modified datajoint integrated. tested the integrity of it.&#10;Need to add a feature: when updating the types from datajoint when clicking &quot;record&quot;" />
+    <option name="LAST_COMMIT_MESSAGE" value="modified datajoint integrated. tested the integrity of it.&#10;Need to add a feature: when updating the types from datajoint when clicking &quot;record&quot;" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/ProcessingGroup.py</url>
+          <line>711</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+        <breakpoint type="dart-exception" />
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1669530342504" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
