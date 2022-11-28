@@ -29,34 +29,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1229870a-773d-4c4a-9b65-3fa20b0562fc" name="Default Changelist" comment="modified datajoint integrated. tested the integrity of it.&#10;Need to add a feature: when updating the types from datajoint when clicking &quot;record&quot;">
-      <change beforePath="$PROJECT_DIR$/AcquisitionGroup.py" beforeDir="false" afterPath="$PROJECT_DIR$/AcquisitionGroup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Camera.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DLC/DLC_top.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/DLC/DLC_top.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProcessingGroup.py" beforeDir="false" afterPath="$PROJECT_DIR$/ProcessingGroup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/behavior_gui" beforeDir="false" afterPath="$PROJECT_DIR$/behavior_gui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/config_alignment_17391304.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_alignment_17391304.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/config_behavior_rig.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_behavior_rig.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/config_extrinsic.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_extrinsic.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/config_intrinsic_17391290.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_intrinsic_17391290.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/config_intrinsic_19287342.toml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/global_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/global_settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/initialStatus.py" beforeDir="false" afterPath="$PROJECT_DIR$/initialStatus.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kalman_filter.py" beforeDir="false" afterPath="$PROJECT_DIR$/kalman_filter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reproject_3d_to_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproject_3d_to_2d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/calibration_3d_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/calibration_3d_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/calibration_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/calibration_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/datajoint_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/datajoint_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/dlc_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/dlc_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/extrinsic.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/extrinsic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/geometry_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/geometry_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/head_angle_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/head_angle_analysis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/path_operation_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/path_operation_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/poseAnalysis.m" beforeDir="false" afterPath="$PROJECT_DIR$/utils/poseAnalysis.m" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/reorganize_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/reorganize_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/speed_calculation.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/speed_calculation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/squeaks_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/squeaks_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/triangulation_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/triangulation_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/windows_visibility.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/windows_visibility.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -401,7 +374,7 @@
       <workItem from="1663787305907" duration="860000" />
       <workItem from="1664808750644" duration="8441000" />
       <workItem from="1665605697181" duration="5350000" />
-      <workItem from="1669138594154" duration="4515000" />
+      <workItem from="1669138594154" duration="7035000" />
     </task>
     <task id="LOCAL-00038" summary="several changes to make the GUI work with the server on the preview function">
       <created>1610843676509</created>
