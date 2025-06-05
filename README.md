@@ -23,6 +23,11 @@
         * make notes while recording
         * toggle and modify the parameters for recording/preview display/
 
+## Publication using this recoding system
+    Greer, Devon and Lei, Tianhao and Kryshtal, Anna and Jessen, Zachary F. and Schwartz, Gregory W., 
+    Visual Identification of Conspecifics Shapes Social Behavior in Mice. 
+    Available at SSRN: https://ssrn.com/abstract=4849132 or http://dx.doi.org/10.2139/ssrn.4849132
+
 
 ## Contact
     Alec: tianhaolei2019@u.northwestern.edu
