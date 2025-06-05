@@ -238,7 +238,7 @@ def get_thumbnail_and_fps(video_path):
 
 
 if __name__=='__main__':
-	root_path=r'D:\\Desktop\\archives\\2021-06-03_alec_testing_rats'
+	root_path=r'your_path'
 	squeaks=Squeaks()
 	squeaks.set_root_path(root_path)
 	fname='Dodo_audio.wav'
@@ -249,22 +249,6 @@ if __name__=='__main__':
 	#call_time=squeaks.load_squeak_time_matlab(squeak_path)
 	# draw squeaks and save
 	squeaks.draw_Dodo_squeaks(root_path,call_time)
-
-
-if __name__=='__main_':
-	import os
-	from shutil import copyfile
-
-	base_path = r'D:\Desktop'
-	save_path = r'C:\Users\SchwartzLab\Desktop\where_are_squeaks'
-	items = os.listdir(base_path)
-	for item in items:
-
-		if 'T' in item:
-			squeaks_path = os.path.join(base_path, item, 'gaze', 'where_are_squeaks.png')
-			copy_name = item + '.png'
-			copy_path = os.path.join(save_path, copy_name)
-			copyfile(squeaks_path, copy_path)
 
 
 

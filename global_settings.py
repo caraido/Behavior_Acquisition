@@ -1,7 +1,7 @@
 # this is the place to put all kinds of settings
 
 # dlc settings
-DLC_LIVE_MODEL_PATH=r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\DLC\Alec_second_try-Devon-2020-12-07\exported-models\DLC_Alec_second_try_resnet_50_iteration-0_shuffle-1'
+DLC_LIVE_MODEL_PATH=r'your_path'
 number_of_camera=4
 
 # datajoint settings
@@ -15,7 +15,7 @@ FRAME_BUFFER = 3 # frames buffer for display and save
 DLC_RESIZE = 0.6  # resize the frame by this factor for DLC
 DLC_UPDATE_EACH = 3  # frame interval for DLC update
 TOP_CAM='17391304'
-TEMP_PATH = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
+TEMP_PATH = r'your_config_path'
 N_BUFFER=2000
 
 # triangulation settings

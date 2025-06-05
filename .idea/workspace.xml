@@ -29,7 +29,186 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1229870a-773d-4c4a-9b65-3fa20b0562fc" name="Default Changelist" comment="modified datajoint integrated. tested the integrity of it.&#10;Need to add a feature: when updating the types from datajoint when clicking &quot;record&quot;">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/3d_troubleshooting-checkpoint.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/Untitled-checkpoint.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/Untitled1-checkpoint.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/calibration_testing-checkpoint.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/global_settings-checkpoint.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/reproject_3d_to_2d-checkpoint.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/3d_troubleshooting.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DLC/DLC_side.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/DLC/DLC_side.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DLC/DLC_side_distorted.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/DLC/DLC_side_distorted.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DLC/DLC_top.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/DLC/DLC_top.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DLC/plotting.py" beforeDir="false" afterPath="$PROJECT_DIR$/DLC/plotting.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProcessingGroup.py" beforeDir="false" afterPath="$PROJECT_DIR$/ProcessingGroup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Untitled.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Untitled1.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui" beforeDir="false" afterPath="$PROJECT_DIR$/behavior_gui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/behavior_gui/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/archive/rawvideotest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/CHANGELOG.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/analysis_options.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/analysis_options.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/lib/main.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/pubspec.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/flutter/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/flutter/generated_plugin_registrant.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/flutter/generated_plugins.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/Runner.rc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/flutter_window.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/flutter_window.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/main.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/resource.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/resources/app_icon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/run_loop.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/run_loop.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/runner.exe.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/utils.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/utils.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/win32_window.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/example/windows/runner/win32_window.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/lib/windows_texture_test.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/pubspec.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/windows/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/windows/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/windows/include/windows_texture_test/windows_texture_test_plugin.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/behavior_gui/windows_texture_test/windows/windows_texture_test_plugin.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/calibration_testing.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_alignment_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_behavior_rig.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic_17391290.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic_17391290_temp.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic_17391304.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic_17391304_temp.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic_19412282.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic_19412282_temp.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic_21340171.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_extrinsic_21340171_temp.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_intrinsic_17391290.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_intrinsic_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_intrinsic_19412282.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_intrinsic_21340171.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-07-09-15-23-25_v1_config/arena.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-07-09-15-23-25_v1_config/config_alignment_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-07-09-15-23-25_v1_config/config_behavior_rig.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-07-09-15-23-25_v1_config/config_extrinsic.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-07-09-15-23-25_v1_config/config_intrinsic_17391290.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-07-09-15-23-25_v1_config/config_intrinsic_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-07-09-15-23-25_v1_config/config_intrinsic_19287342.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-07-09-15-23-25_v1_config/config_intrinsic_19412282.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-10_v2_config/arena.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-10_v2_config/config_alignment_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-10_v2_config/config_behavior_rig.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-10_v2_config/config_extrinsic.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-10_v2_config/config_intrinsic_17391290.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-10_v2_config/config_intrinsic_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-10_v2_config/config_intrinsic_19412282.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-10_v2_config/config_intrinsic_21259803.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/.ipynb_checkpoints/config_extrinsic-checkpoint.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/.ipynb_checkpoints/config_intrinsic_19412282-checkpoint.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/arena.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/config_alignment_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/config_behavior_rig.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/config_extrinsic.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/config_intrinsic_17391290.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/config_intrinsic_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/config_intrinsic_19412282.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-16-09-33-40_v3_config/config_intrinsic_21259803.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/arena.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_alignment_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_behavior_rig.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic_17391290.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic_17391290_temp.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic_17391304.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic_17391304_temp.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic_19412282.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic_19412282_temp.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic_21259803.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_extrinsic_21259803_temp.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_intrinsic_17391290.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_intrinsic_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_intrinsic_19412282.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-20_v3_config/config_intrinsic_21259803.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_alignment_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_behavior_rig.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_extrinsic.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_extrinsic_17391290.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_extrinsic_17391304.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_extrinsic_19412282.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_extrinsic_21340171.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_intrinsic_17391290.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_intrinsic_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_intrinsic_19412282.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v3_config/config_intrinsic_21259803.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_alignment_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_behavior_rig.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_extrinsic.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_extrinsic_17391290.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_extrinsic_17391304.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_extrinsic_19412282.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_extrinsic_21340171.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_intrinsic_17391290.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_intrinsic_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_intrinsic_19412282.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2021-09-22-18-10-46_v4_config/config_intrinsic_21340171.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_alignment_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_behavior_rig.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_extrinsic.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_extrinsic_17391290.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_extrinsic_17391304.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_extrinsic_19412282.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_extrinsic_21340171.MOV" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_intrinsic_17391290.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_intrinsic_17391304.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_intrinsic_19412282.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_archive/2022-09-06-12-01-07_v5_config/config_intrinsic_21340171.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/global_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/global_settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kalman_filter.py" beforeDir="false" afterPath="$PROJECT_DIR$/kalman_filter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pairs.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pairs1.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pairs2.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pairs_new.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproject_3d_to_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproject_3d_to_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rvecs.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rvecs1.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rvecs2.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rvecs_new.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/temp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/temp2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.h5" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_nidaq.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_pose.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing_calib.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing_general.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing_mic.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tvecs.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tvecs1.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tvecs2.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tvecs_new.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/untitled" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/Untitled.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/accumulative_preference.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/audio_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/audio_processing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/geometry_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/geometry_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/squeaks_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/squeaks_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/statistics_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/statistics_utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,6 +252,12 @@
     <option name="SET_USER_NAME_GLOBALLY" value="false" />
     <option name="UPDATE_TYPE" value="REBASE" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "caraido"
+  }
+}]]></component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
       <filtered-out-file-type name="LOCAL_BRANCH" />
@@ -81,13 +266,12 @@
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
   </component>
-  <component name="GithubPullRequestsUISettings">
-    <option name="hiddenUrls">
-      <set>
-        <option value="https://github.com/caraido/bahavior_rig" />
-      </set>
-    </option>
-  </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Schwartz-Lab-NU/behavior_rig.git",
+    "accountId": "2aa67d66-d891-43a2-a133-116f8d3adeae"
+  }
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/main.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/behavior_gui/lib/settings.dart" root0="FORCE_HIGHLIGHTING" />
@@ -104,21 +288,28 @@
     <setting file="file://$PROJECT_DIR$/utils/calibration_utils.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ProcessingGroup.py" root0="FORCE_HIGHLIGHTING" />
   </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
   <component name="ProjectId" id="1jQfrwvAZUd2PIWAvEy6hv5Ofzt" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="DefaultHtmlFileTemplate" value="HTML File" />
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="dart.analysis.tool.window.visible" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/config" />
-    <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/Users/tlei/PycharmProjects/behavior_rig",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config" />
@@ -130,9 +321,10 @@
       <recent name="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\templates" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.behavior_rig">
     <configuration name="ProcessingGroup" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="bahavior_rig" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -156,6 +348,7 @@
     </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="bahavior_rig" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -178,6 +371,30 @@
     </configuration>
     <configuration name="bahavior_rig" type="PythonConfigurationType" factoryName="Python">
       <module name="bahavior_rig" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\SchwartzLab\anaconda3\envs\behavior_rig\python.exe" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/socketApp.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="behavior_rig" type="PythonConfigurationType" factoryName="Python">
+      <module name="behavior_rig" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -200,6 +417,7 @@
     </configuration>
     <configuration name="datajoint_utils" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="bahavior_rig" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -221,6 +439,7 @@
       <method v="2" />
     </configuration>
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -244,6 +463,7 @@
     </configuration>
     <configuration name="temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="bahavior_rig" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -266,6 +486,7 @@
     </configuration>
     <configuration name="pytest in test_nidaq.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
       <module name="bahavior_rig" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <option name="SDK_HOME" value="" />
@@ -282,6 +503,7 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.behavior_rig" />
       <item itemvalue="Python.bahavior_rig" />
       <item itemvalue="Python.ProcessingGroup" />
       <item itemvalue="Python.main" />
@@ -296,6 +518,14 @@
         <item itemvalue="Python tests.pytest in test_nidaq.py" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.159" />
+        <option value="bundled-python-sdk-e0ed3721d81e-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.159" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -375,6 +605,7 @@
       <workItem from="1664808750644" duration="8441000" />
       <workItem from="1665605697181" duration="5350000" />
       <workItem from="1669138594154" duration="7035000" />
+      <workItem from="1749145353816" duration="3505000" />
     </task>
     <task id="LOCAL-00038" summary="several changes to make the GUI work with the server on the preview function">
       <created>1610843676509</created>
@@ -726,6 +957,21 @@
     <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="test" />
+                </option>
+              </RecentGroup>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
     <option name="TAB_STATES">
       <map>
         <entry key="1">
@@ -774,22 +1020,6 @@
         </entry>
       </map>
     </option>
-    <option name="RECENT_FILTERS">
-      <map>
-        <entry key="Branch">
-          <value>
-            <list>
-              <RecentGroup>
-                <option name="FILTER_VALUES">
-                  <option value="test" />
-                </option>
-              </RecentGroup>
-            </list>
-          </value>
-        </entry>
-      </map>
-    </option>
-    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <ignored-roots>
@@ -837,7 +1067,6 @@
             <option name="notifyOnTerminate" value="true" />
           </properties>
         </breakpoint>
-        <breakpoint type="dart-exception" />
       </default-breakpoints>
     </breakpoint-manager>
   </component>

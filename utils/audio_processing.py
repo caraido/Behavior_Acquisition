@@ -68,13 +68,9 @@ def DFT_pshift(x, f, G, overlap=0):
     return y
 
 if __name__ == '__main__':
-    GregVoice_path = 'C:\\Users\\SchwartzLab\\Desktop\\2020-10-29-GregVoice\\'
-    AngryMouse_path = 'C:\\Users\\SchwartzLab\\Desktop\\2020-10-29-angry-female-mouse-held-close\\'
-    AlecMusic_path = 'C:\\Users\\SchwartzLab\\Desktop\\AlecMusic_grounded_01VPa_316\\'
-    Testing_path = 'C:\\Users\\SchwartzLab\\Desktop\\2020-11-17-mom\\'
 
     # get path
-    chosen_path = Testing_path
+    chosen_path = "your_path"
     # load data
     data, _ = read_audio(path=chosen_path)
 

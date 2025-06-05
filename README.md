@@ -26,7 +26,6 @@
 
 ## Contact
     Alec: tianhaolei2019@u.northwestern.edu
-    Zach: youremail@u.northwestern.edu
 
 
 

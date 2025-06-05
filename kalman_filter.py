@@ -276,8 +276,7 @@ def triangulate_kalman(tracked_path,config_path,top_model, side_model,causal = F
 
 
 def main():
-	rootdir = 'D:\\Desktop\\1218\\827_2021-09-22_female_unknown_social_status_female_2_males_(A)stranger_(B)stranger_(C)stranger\\'
-
+	rootdir = 'your_path'
 	triangulate_kalman(os.path.join(rootdir, 'DLC'), os.path.join(rootdir, 'config'), causal=False)
 	from reproject_3d_to_2d import reproject_3d_to_2d
 	reproject_3d_to_2d(os.path.join(rootdir,'raw'), os.path.join(rootdir, 'DLC'), os.path.join(rootdir, 'config'), os.path.join(rootdir, 'reproject'))

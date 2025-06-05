@@ -148,8 +148,6 @@ if __name__ == '__main__':
     working_path = r'/Users/tianhaolei/Downloads/pose-3'
     # get camera matrices
     cam_mat, intrinsic, extrinsic, dist_coeff = get_cam_mat(working_path)
-    # manually change the extrinsic matrix TODO
-    # extrinsic[1][0:3, 3] = np.array([-.9, -1.6, -.55351041])
 
     # define body parts,2d,3d points column
     body_parts = ['left_ear', 'right_ear', 'nose', 'tail_base']

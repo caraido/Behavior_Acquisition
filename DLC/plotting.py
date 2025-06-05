@@ -11,7 +11,7 @@ from functools import partial
 
 if __name__=='__main__':
 	# get config setup
-	config_folder_path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\config'
+	config_folder_path = r'.\config'
 	config = Config(config_folder_path)
 	circle_center = config.circle_center
 	corners = config.config_top_cam['corners']
@@ -23,7 +23,7 @@ if __name__=='__main__':
 	window_C = config.window_C
 
 	# get the pose estimation path
-	coord_path = 'C:\\Users\\SchwartzLab\\Downloads\\Acclimation_videos_1\\'
+	coord_path = r'.\Acclimation_videos_1'
 	all_file = os.listdir(coord_path)
 	name = [a for a in all_file if '.csv' in a]
 	coord = coord_path + name[0]
@@ -95,20 +95,6 @@ if __name__=='__main__':
 	window_A_angle_extra= np.array([i - 2 * np.pi if i > 0 else i + 2 * np.pi for i in window_A_angle])
 	window_B_angle_extra = np.array([i - 2 * np.pi if i > 0 else i + 2 * np.pi for i in window_B_angle])
 	window_C_angle_extra = np.array([i - 2 * np.pi if i > 0 else i + 2 * np.pi for i in window_C_angle])
-
-	'''
-	plt.figure()
-	plt.axvspan(xmin=window_A_angle[0], xmax=window_A_angle[1],facecolor='orange',alpha=0.3)
-	plt.axvspan(xmin=window_B_angle[0], xmax=window_B_angle[1],facecolor='red',alpha=0.3)
-	plt.axvspan(xmin=window_C_angle[0], xmax=window_C_angle[1],facecolor='magenta',alpha=0.3)
-	plt.axvspan(xmin=window_A_angle_extra[0], xmax=window_A_angle_extra[1],facecolor='orange',alpha=0.3)
-	plt.axvspan(xmin=window_B_angle_extra[0], xmax=window_B_angle_extra[1],facecolor='red',alpha=0.3)
-	plt.axvspan(xmin=window_C_angle_extra[0], xmax=window_C_angle_extra[1],facecolor='magenta',alpha=0.3)
-	handles = [Rectangle((0, 0), 1, 1, color=c, ec="k",alpha=0.3) for c in ['orange', 'red', 'magenta']]
-	labels = ["window A", "window B", "window C"]
-	plt.legend(handles, labels)
-	plt.show()
-	'''
 
 	# saving the angles
 	outer.to_csv(coord_path+"outer_angles.csv")

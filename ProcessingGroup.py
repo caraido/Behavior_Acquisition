@@ -710,7 +710,7 @@ def main():
 
 def not_main():
 	pg = ProcessingGroup()
-	pg('D:\\Desktop\\1257\\1132_2022-09-06_alec_testing_alec_testing_(A)empty_(B)empty_(C)empty')
+	pg('your_data_path')
 	# pg('D:\\Desktop\\')
 	pg.post_process(intrinsic=False,
 		alignment=False,

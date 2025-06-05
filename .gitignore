@@ -4,7 +4,8 @@ react/
 pose/
 *.pyc
 datajoint_configs.py
-
+.idea
 DLC
 !DLC/*.ipynb
 !DLC/*.py
+/.ipynb_checkpoints/

@@ -739,19 +739,8 @@ class Gaze_angle:
 if __name__ == '__main__':
     #import matlab.engine
 
-    #config_folder_path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\config'
-    #img_path = r'C:\\Users\\SchwartzLab\\PycharmProjects\\bahavior_rig\\test.png'
-    '''
-    path = r'D:\Desktop\2144\2021-06-17_habituation_dominant'
-    ob = Config(path, save_center=False)
-    video_path = path + r'\camera_17391304.MOV'
-    ob.set_img(video_path)
-    ob.get_loc_pixel()
-
-
-    '''
-    dlc_path = r'D:\Desktop\1085\2021-07-06_mother_(A)novel_object_(B)pup_(C)pups\DLC'
-    root_path = r'D:\Desktop\1085\2021-07-06_mother_(A)novel_object_(B)pup_(C)pups\config'
+    dlc_path = r'data_path\DLC'
+    root_path = r'data_path\config'
     gaze=Gaze_angle(root_path)
     result=gaze(dlc_path)
 

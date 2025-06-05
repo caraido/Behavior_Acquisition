@@ -66,7 +66,7 @@ def plotting(data_with:pd.DataFrame, data_without:pd.DataFrame,flag):
 	#plt.show()
 
 if __name__ == '__main__':
-	path = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\multimedia\videos'
+	path = r'\multimedia\videos'
 	items = os.listdir(path)
 
 	mono=[]
