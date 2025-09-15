@@ -1,8 +1,7 @@
 # Behavior Acquisition App
 
 ![License](https://img.shields.io/github/license/caraido/Behavior_Acquisition)
-![Last Commit](https://img.shields.io/github/last-commit/caraido/Behavior_Acquisition)
-![Paper](https://doi.org/10.1016/j.cub.2024.11.041)
+[![Paper](https://img.shields.io/badge/Paper)](https://doi.org/10.1016/j.cub.2024.11.041<object)
 
 ## Overview
 
@@ -87,7 +86,3 @@ pip install -r requirements.txt
 python setup.py install
 ```
 or contact tianhaolei2019@u.northwestern.edu
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
