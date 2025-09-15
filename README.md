@@ -1,7 +1,7 @@
 # Behavior Acquisition App
 
 ![License](https://img.shields.io/github/license/caraido/Behavior_Acquisition)
-[![Paper](https://img.shields.io/badge/Paper)](https://doi.org/10.1016/j.cub.2024.11.041<object)
+[![Website](https://img.shields.io/badge/Paper)](https://doi.org/10.1016/j.cub.2024.11.041)
 
 ## Overview
 
