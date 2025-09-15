@@ -1,28 +1,75 @@
-# Behavior Acquisition
+# Behavior Acquisition App
 
 ![License](https://img.shields.io/github/license/caraido/Behavior_Acquisition)
 ![Last Commit](https://img.shields.io/github/last-commit/caraido/Behavior_Acquisition)
+![Paper](https://doi.org/10.1016/j.cub.2024.11.041)
 
 ## Overview
 
-Behavior Acquisition is a software toolkit designed for researchers and practitioners to collect, process, and analyze behavioral data. This project provides a streamlined pipeline for acquiring behavioral measurements through various input methods, with a focus on reliability, reproducibility, and ease of use.
+Behavior Acquisition App is a lightweight (and extensible) software for orchestrating behavioral data acquisition devices/services and exposing their state over a real‑time socket server for a graphical user interface (GUI) or other controlling/monitoring clients.
+
+---
+
+## Quick Summary
+
+The application:
+
+1. Builds an Acquisition Group (AG) and a shared Status object via `setup()`.
+2. Registers event and data callbacks via `initCallbacks(ag, status)`.
+3. Starts a socket-based server (likely a Flask/Socket.IO style app) via `initServer(ag, status)`.
+4. Serves the live acquisition control & telemetry interface on port **5001**.
+5. Supports a "mock" mode for development/testing: `python main.py mock`.
+
+---
+
+## Core Concepts
+
+| Concept | Description |
+|--------|-------------|
+| Acquisition Group (`ag`) | Central orchestrator aggregating devices / streams (e.g., cameras, microphone, etc.) and providing coordinated start/stop & data dispatch. |
+| Status | Shared, mutable state object (health metrics, device statuses, session state, timestamps, counters) consumed by callbacks and the server layer. |
+| Callbacks (`initCallbacks`) | Register functions reacting to acquisition events (new frame, device error, state change) to update Status and emit socket events. |
+| Server (`initServer`) | Creates the web/socket interface—providing real‑time subscription channels and API endpoints for the GUI or automation clients. |
+| Mock Mode | Swaps real `setup` / `callbacks` with `mockSetup` / `mockCallbacks` to simulate devices and deterministic status updates. |
 
 ## Features
 
-- **Multi-modal Data Collection**: Capture behavioral data from various sources (video, sensors, manual input)
+- **Multi-modal Data Collection**: Capture behavioral data from various sources (video, microphone, optogenetic probe, manual inputs)
 - **Automated Processing Pipeline**: Convert raw data into structured formats suitable for analysis
 - **Customizable Analysis Tools**: Apply various analytical methods to extracted behavioral metrics
-- **Visualization Components**: Generate insightful visualizations of behavioral patterns and trends
-- **Integration Capabilities**: Compatible with common research and analysis frameworks
+- **Visualization Components**: Generate insightful visualizations of behavioral patterns
+- **Real-time telemetry & control via sockets**: supports low-latency updates from acquisition layer to GUI.
 
-## Architecture
+## Architecture Overview
 
-The software follows a modular architecture that separates concerns:
+```
++---------------------+
+|  Configuration Load |
++----------+----------+
+           |
+           v
++---------------------+        +------------------+
+|  Device Manager     | <----> |  Time Sync / CLK |
++----------+----------+        +------------------+
+           |
+           v
++---------------------+        +--------------------+
+| Acquisition Loop    | -----> |  Processing Stages |
+| (async / threads)   |        |  (e.g. decoding,   |
++----------+----------+        |   preprocessing)   |
+           |                   +---------+----------+
+           v                             |
++---------------------+                  v
+|  Data Buffer / MQ   |          +------------------+
++----------+----------+          |  Storage Writer  |
+           |                     |  (raw + meta)    |
+           v                     +--------+---------+
++---------------------+                   |
+|   Live Monitor / UI | <-----------------+
++---------------------+
+```
 
-1. **Data Acquisition Module**: Interfaces with hardware devices and data sources to collect raw behavioral data
-2. **Processing Engine**: Transforms raw data into standardized formats through filtering, normalization, and feature extraction
-3. **Analysis Framework**: Applies statistical methods and machine learning techniques to identify patterns and anomalies
-4. **Visualization Layer**: Renders results in an interpretable format through graphs, charts, and interactive displays
+
 
 ## Installation
 
@@ -39,81 +86,8 @@ pip install -r requirements.txt
 # Run setup script
 python setup.py install
 ```
-
-## Usage
-
-### Basic Example
-
-```python
-from behavior_acquisition import DataCollector, Processor, Analyzer
-
-# Initialize data collection
-collector = DataCollector(source_type="video", source_path="path/to/video.mp4")
-
-# Collect and process data
-raw_data = collector.collect()
-processor = Processor(raw_data)
-processed_data = processor.process(methods=["normalization", "feature_extraction"])
-
-# Analyze processed data
-analyzer = Analyzer(processed_data)
-results = analyzer.analyze(method="pattern_recognition")
-
-# Visualize results
-analyzer.visualize(results, plot_type="time_series")
-```
-
-### Advanced Configuration
-
-The system supports advanced configuration through YAML files:
-
-```yaml
-# config.yaml
-acquisition:
-  source_type: video
-  parameters:
-    framerate: 30
-    resolution: [1920, 1080]
-    
-processing:
-  pipeline:
-    - filter_type: gaussian
-      kernel_size: 5
-    - normalization: z_score
-    
-analysis:
-  methods:
-    - name: cluster_analysis
-      parameters:
-        algorithm: dbscan
-        eps: 0.5
-```
-
-## Applications
-
-This toolkit is particularly useful for:
-
-- **Neuroscience Research**: Tracking and analyzing animal or human movements in experimental settings
-- **Clinical Assessment**: Quantifying behavioral patterns for diagnostic or therapeutic purposes
-- **HCI Studies**: Measuring user interactions with systems or interfaces
-- **Behavioral Ecology**: Monitoring and analyzing animal behavior in natural environments
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+or contact tianhaolei2019@u.northwestern.edu
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Contributors and collaborators
-- Research groups and institutions using this software
-- Open-source projects that inspired or are used by this toolkit
